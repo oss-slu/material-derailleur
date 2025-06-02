@@ -1,0 +1,45 @@
+name: CI/CD Pipeline for Material Donor Mutual Assist
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '16'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Check Code Formatting
+        run: npm run prettier:check
+
+      - name: Run Unit Tests
+        run: npm test
+
+      - name: Validate Certificate Generation
+        run: |
+          cd server
+          node -e "const pdfkit = require('pdfkit'); const fs = require('fs'); const doc = new pdfkit(); doc.text('Test Donor: John Doe, Item: Book, Date: 2025-06-02'); doc.end(); doc.pipe(fs.createWriteStream('test-certificate.pdf'));"
+          if [ -f "test-certificate.pdf" ]; then echo "Certificate generation successful"; else exit 1; fi
+
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
