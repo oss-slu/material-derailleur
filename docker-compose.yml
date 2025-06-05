@@ -1,59 +1,41 @@
-version: "3.8"
-
 services:
-  mdma-database:
-    build: ./docker-files/database
-    image: mdma-database-image:latest 
-    container_name: mdma-database-container
-    env_file: ".env" 
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data1
-    ports:
-      - "5432:5432"
-    restart: always
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d mdma -U admin"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-  
-  mdma-frontend: 
+  mdma-frontend:
     build: ./client-app
-    image: mdma-frontend-image:latest
-    container_name: mdma-frontend-container
-    env_file: ".env"
-    environment:
-      PORT: ${FRONTEND_PORT}
-      REACT_APP_BACKEND_API_BASE_URL: ${REACT_APP_BACKEND_API_BASE_URL}
-    ports: 
-      - 3000:3000
+    ports:
+      - "3000:3000"
     depends_on:
       - mdma-backend
+    environment:
+      - REACT_APP_BACKEND_API_BASE_URL=http://localhost:5000/
 
   mdma-backend:
     build: ./server
-    image: mdma-backend-image:latest
-    container_name: mdma-backend-container
-    env_file: ".env"
-    environment: 
-      AZURE_STORAGE_ACCOUNT_NAME: ${AZURE_STORAGE_ACCOUNT_NAME}
-      AZURE_STORAGE_ACCESS_KEY: ${AZURE_STORAGE_ACCESS_KEY}
-      DATABASE_URL: ${DATABASE_URL}
-      PORT: ${BACKEND_PORT}
-      JWT_SECRET: ${JWT_SECRET}
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_SECURE: ${SMTP_SECURE}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASS: ${SMTP_PASS}
     ports:
-      - 5050:5000
+      - "5000:5000"
     depends_on:
-      mdma-database:
-        condition: service_healthy
+      - mdma-database
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@mdma-database:5432/mdma
+
+  mdma-database:
+    image: postgres
+    container_name: mdma-database-container
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  mongo:
+    image: mongo:4.4
+    container_name: mongo
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
 
 volumes:
-  postgres_data:
+  postgres-data:
