@@ -65,6 +65,21 @@ router.post(
     },
 );
 
+
+router.get('/test-rerum', async (req:Request, res:Response) => {
+  try {
+    const response = await fetch(process.env.RERUM_API_URL + '/health');
+    if (response.ok) {
+      const data = await response.json();
+      res.json({ message: 'Connected to Rerum API!', data });
+    } else {
+      res.status(response.status).json({ message: 'Rerum API responded with error' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Error connecting to Rerum API'});
+  }
+});
+
 // Route to login user
 router.post(
     '/login',

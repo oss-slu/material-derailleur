@@ -1,59 +1,107 @@
 version: "3.8"
 
 services:
-  mdma-database:
-    build: ./docker-files/database
-    image: mdma-database-image:latest 
-    container_name: mdma-database-container
-    env_file: ".env" 
+  # mdma-database:
+  #   build: ./docker-files/database
+  #   image: mdma-database-image:latest 
+  #   container_name: mdma-database-container
+  #   env_file: ".env"
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data1
+  #   ports:
+  #     - "5432:5432"
+  #   restart: always
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -d mdma -U admin"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # mdma-frontend: 
+  #   build: ./client-app
+  #   image: mdma-frontend-image:latest
+  #   container_name: mdma-frontend-container
+  #   env_file: ".env"
+  #   environment:
+  #     PORT: ${FRONTEND_PORT}
+  #     REACT_APP_BACKEND_API_BASE_URL: ${REACT_APP_BACKEND_API_BASE_URL}
+  #   ports: 
+  #     - 3000:3000
+  #   depends_on:
+  #     - mdma-backend
+
+  # mdma-backend:
+  #   build: ./server
+  #   image: mdma-backend-image:latest
+  #   container_name: mdma-backend-container
+  #   env_file: ".env"
+  #   environment: 
+  #     AZURE_STORAGE_ACCOUNT_NAME: ${AZURE_STORAGE_ACCOUNT_NAME}
+  #     AZURE_STORAGE_ACCESS_KEY: ${AZURE_STORAGE_ACCESS_KEY}
+  #     DATABASE_URL: ${DATABASE_URL}
+  #     PORT: ${BACKEND_PORT}
+  #     JWT_SECRET: ${JWT_SECRET}
+  #     SMTP_HOST: ${SMTP_HOST}
+  #     SMTP_PORT: ${SMTP_PORT}
+  #     SMTP_SECURE: ${SMTP_SECURE}
+  #     SMTP_USER: ${SMTP_USER}
+  #     SMTP_PASS: ${SMTP_PASS}
+  #   ports:
+  #     - 5050:5000
+  #   depends_on:
+  #     mdma-database:
+  #       condition: service_healthy
+  #     mongo:
+  #       condition: service_started
+
+  mongo:
+    image: mongo:latest
+    container_name: some-mongo
+    env_file: ".env"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data1
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     ports:
-      - "5432:5432"
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d mdma -U admin"]
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
-  
-  mdma-frontend: 
-    build: ./client-app
-    image: mdma-frontend-image:latest
-    container_name: mdma-frontend-container
-    env_file: ".env"
-    environment:
-      PORT: ${FRONTEND_PORT}
-      REACT_APP_BACKEND_API_BASE_URL: ${REACT_APP_BACKEND_API_BASE_URL}
-    ports: 
-      - 3000:3000
-    depends_on:
-      - mdma-backend
 
-  mdma-backend:
-    build: ./server
-    image: mdma-backend-image:latest
-    container_name: mdma-backend-container
-    env_file: ".env"
-    environment: 
-      AZURE_STORAGE_ACCOUNT_NAME: ${AZURE_STORAGE_ACCOUNT_NAME}
-      AZURE_STORAGE_ACCESS_KEY: ${AZURE_STORAGE_ACCESS_KEY}
-      DATABASE_URL: ${DATABASE_URL}
-      PORT: ${BACKEND_PORT}
-      JWT_SECRET: ${JWT_SECRET}
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_SECURE: ${SMTP_SECURE}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASS: ${SMTP_PASS}
+  rerum-api:
+    build:
+      context: "D:/SLU_FIRSTSEM/rerum_server_nodejs"
+    image: rerum-node-image:latest
+    container_name: rerum-node-container
+    env_file: "D:/SLU_FIRSTSEM/rerum_server_nodejs/.env"
+    environment:
+      MONGO_URI: "mongodb://mongo:27017/rerum"
     ports:
-      - 5050:5000
+      - "3001:3001"
     depends_on:
-      mdma-database:
-        condition: service_healthy
+      - mongo
+  
+  tiny:
+    build:
+      context:  "D:/SLU_FIRSTSEM/tiny_things"
+    container_name: tiny-container
+    ports:
+      - "4000:4000"
+    env_file:
+      - "D:/SLU_FIRSTSEM/tiny_things/.env"
+    environment:
+      PORT: 4000
+      RERUM_API_URL: "http://rerum-node-container:3001"
+    depends_on:
+      - rerum-api
 
 volumes:
   postgres_data:
+  mongo_data:

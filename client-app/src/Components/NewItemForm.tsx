@@ -23,6 +23,8 @@ interface Option {
     id?: number;
 }
 
+
+
 const NewItemForm: React.FC = () => {
     const maxImageSize = 5 * 1024 * 1024; // 5MB
 
@@ -251,59 +253,64 @@ const NewItemForm: React.FC = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-        setIsLoading(true);
-        event.preventDefault();
-        if (validateForm()) {
-            try {
-                const formDataToSubmit = new FormData();
-                formDataToSubmit.append('itemType', formData.itemType);
-                formDataToSubmit.append(
-                    'currentStatus',
-                    formData.currentStatus,
-                );
-                formDataToSubmit.append(
-                    'donorId',
-                    formData.donorId ? formData.donorId.toString() : '',
-                );
-                formDataToSubmit.append(
-                    'programId',
-                    formData.programId ? formData.programId.toString() : '',
-                );
-                formDataToSubmit.append('dateDonated', formData.dateDonated);
 
-                // Append image files directly as part of the FormData
-                formData.imageFiles.forEach(file => {
-                    formDataToSubmit.append('imageFiles', file);
-                });
 
-                const response = await axios.post(
-                    `${process.env.REACT_APP_BACKEND_API_BASE_URL}donatedItem`,
-                    formDataToSubmit,
-                    {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                            Authorization: localStorage.getItem('token'),
-                        },
-                    },
-                );
 
-                if (response.status === 201) {
-                    setSuccessMessage('Item added successfully!');
-                    handleRefresh();
-                    navigate('/donations');
-                }
-            } catch (error: any) {
-                setErrorMessage(
-                    error.response?.data?.error || 'Error adding item',
-                );
-            } finally {
-                setIsLoading(false);
-            }
-        } else {
-            setErrorMessage('Form has validation errors');
-        }
+const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  event.preventDefault();
+  setIsLoading(true);
+  setErrorMessage(null);
+  setSuccessMessage(null);
+
+  if (!validateForm()) {
+    setIsLoading(false);
+    return;
+  }
+
+  try {
+    const dataToSend = {
+      "@context": process.env.REACT_APP_RERUM_CONTEXT || "https://schema.org/",
+      "@type": "DonatedItem",
+      itemType: formData.itemType,
+      currentStatus: formData.currentStatus,
+      donorId: formData.donorId,
+      programId: formData.programId || null,
+      dateDonated: formData.dateDonated,
+      images: formData.imageFiles.map(file => file.name),
+      "__rerum": {
+        history: true
+      }
     };
+
+    const response = await axios.post(
+      `${process.env.REACT_APP_RERUM_PREFIX}create`, // Ensure this ends with a slash in .env
+      dataToSend,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.REACT_APP_RERUM_TOKEN}`,
+        },
+      }
+    );
+
+    if (response.status === 201 || response.status === 200) {
+      setSuccessMessage('Item added successfully!');
+    //   navigate('/donations');
+    } else {
+      setErrorMessage('Failed to add item.');
+    }
+  } catch (error: any) {
+    console.error('Error during submission:', error);
+    setErrorMessage(error.response?.data?.error || 'Error adding item.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
+
+
+
 
     const handleRefresh = () => {
         setIsLoading(true);

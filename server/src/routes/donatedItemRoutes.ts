@@ -17,7 +17,7 @@ import { date } from 'joi';
 import { DonatedItemStatus } from '../modals/DonatedItemStatusModal';
 import { sendDonationEmail } from '../services/emailService';
 import { authenticateUser } from './routeProtection';
-import { DonatedItem } from '@prisma/client';
+// import { DonatedItem } from '@prisma/client';
 
 const router = Router();
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // Max file size limit: 5MB

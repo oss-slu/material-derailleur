@@ -69,6 +69,10 @@ const startServer = async () => {
         console.error('Stack Trace:', (error as Error).stack);
     }
 };
+
+
+
+
 // Call the startServer function to start the server and connect to the DB
 startServer();
 process.on('SIGINT', async () => {

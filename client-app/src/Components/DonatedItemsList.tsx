@@ -10,25 +10,40 @@ import { Program } from '../Modals/ProgramModal';
 import { DonatedItem } from '../Modals/DonatedItemModal';
 import { DonatedItemStatus as Status } from '../Modals/DonatedItemStatusModal';
 import axios from 'axios';
+import CertificateTemplate from './CertificateTemplate';
 
 interface SelectedItemDetails extends DonatedItem {
     statuses: Status[];
 }
 
+
+
 const DonatedItemsList: React.FC = () => {
+
+
     const [searchInput, setSearchInput] = useState<string>('');
     const [filteredItems, setFilteredItems] = useState<DonatedItem[]>([]);
     const [selectedItemDetails, setSelectedItemDetails] =
         useState<SelectedItemDetails | null>(null);
-
     const [donatedItems, setDonatedItems] = useState<DonatedItem[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [programOptions, setProgramOptions] = useState<Program[]>([]);
     const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
     const [itemTypes, setItemTypes] = useState<Set<string>>(new Set());
-
     const navigate = useNavigate();
+
+ 
+const [certificateItem, setCertificateItem] = useState<DonatedItem | null>(null);
+
+
+const [viewCertificate,setViewCertificate]=useState(false)
+const onViewCertificate = (e: React.MouseEvent, item: DonatedItem) => {
+    e.stopPropagation();
+    localStorage.setItem('certificateItem', JSON.stringify(item));
+    setViewCertificate(true);
+};
+
 
     const fetchDonatedItems = async (): Promise<void> => {
         try {
@@ -192,7 +207,9 @@ const DonatedItemsList: React.FC = () => {
     }
 
     return (
-        <div>
+        <>
+      <div>
+        <div className='border border-red-800 '>
             <div className="header">
                 <div className="logo-container">
                     <img
@@ -271,6 +288,7 @@ const DonatedItemsList: React.FC = () => {
                     Add New Donation
                 </button>
             </div>
+            
 
             <table className="item-list">
                 <thead>
@@ -281,6 +299,7 @@ const DonatedItemsList: React.FC = () => {
                         <th>Status</th>
                         <th>Donation Date</th>
                         <th>Barcode</th>
+                        <th>Certificate</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -317,11 +336,30 @@ const DonatedItemsList: React.FC = () => {
                                         Download Barcode
                                     </button>
                                 </div>
+                            
                             </td>
+                            <td>
+                                
+                               <button
+                                 onClick={(e) => onViewCertificate(e, item)}
+                                 className="text-sm text-blue-600 hover:underline"> 
+                                  View Certificate
+                                </button>
+
+
+                            </td>
+
                         </tr>
                     ))}
                 </tbody>
             </table>
+
+
+
+                                <div className=' border w-[5rem]'>
+                                    
+                                    <CertificateTemplate/>
+                                </div>
 
             <Modal
                 isOpen={modalIsOpen}
@@ -396,8 +434,15 @@ const DonatedItemsList: React.FC = () => {
                 <button onClick={handleAddNewDonationClick}>
                     <FaPlus size={24} />
                 </button>
+
             </div>
         </div>
+
+
+        
+        </div>
+
+        </>
     );
 };
 
