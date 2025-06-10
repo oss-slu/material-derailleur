@@ -11,6 +11,8 @@ import { DonatedItem } from '../Modals/DonatedItemModal';
 import { DonatedItemStatus as Status } from '../Modals/DonatedItemStatusModal';
 import axios from 'axios';
 
+
+
 interface SelectedItemDetails extends DonatedItem {
     statuses: Status[];
 }
@@ -128,6 +130,15 @@ const DonatedItemsList: React.FC = () => {
         );
         setFilteredItems(filtered);
     };
+    const handleSendCertificate = async (item: DonatedItem) => {
+  try {
+    const res = await axios.post('/api/certificate/send', { item });
+    alert('Certificate sent successfully!');
+  } catch (err) {
+    alert('Failed to send certificate.');
+    console.error(err);
+  }
+};
 
     const handleFilterByProgram = (
         event: React.ChangeEvent<HTMLSelectElement>,
@@ -180,6 +191,37 @@ const DonatedItemsList: React.FC = () => {
                 );
         } else {
             console.error('Barcode element not found');
+        }
+    };
+
+    const handleDownloadCertificate = async (item: DonatedItem) => {
+        try {
+            const response = await fetch(
+                `${process.env.REACT_APP_BACKEND_API_BASE_URL}certificates/generate`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: localStorage.getItem('token') || '',
+                    },
+                    body: JSON.stringify({ item }),
+                },
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to generate certificate');
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `certificate_${item.id}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error('Error downloading certificate:', error);
         }
     };
 
@@ -281,6 +323,7 @@ const DonatedItemsList: React.FC = () => {
                         <th>Status</th>
                         <th>Donation Date</th>
                         <th>Barcode</th>
+                        <th>Certificate</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -318,6 +361,18 @@ const DonatedItemsList: React.FC = () => {
                                     </button>
                                 </div>
                             </td>
+                            <td>
+                                <button
+                                    onClick={e => {
+                                        e.stopPropagation(); // Prevent row click when opening modal
+                                        handleDownloadCertificate(item);
+                                    }}
+                                >
+                                    Download Certificate
+                                </button>
+                            </td>
+
+
                         </tr>
                     ))}
                 </tbody>
