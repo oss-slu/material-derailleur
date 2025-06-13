@@ -11,16 +11,16 @@ import { Readable } from 'stream';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // Max file size limit: 5MB
 
-export async function uploadToStorage(
-    file: Express.Multer.File,
-    filename: string,
-): Promise<string> {
+export async function uploadToStorage(file: Express.Multer.File, filename: string): Promise<string> {
     const containerName = 'mdma-dev';
+    console.log(`Uploading file "${filename}" to container "${containerName}"...`);
     await storage.putObject(containerName, filename, file.buffer, {
         'Content-Type': file.mimetype,
     });
+    console.log(`Upload complete for "${filename}"`);
     return `${containerName}/${filename}`;
 }
+
 
 //  Validate each file size (Max 5MB)
 export const validateIndividualFileSize = (
@@ -113,6 +113,7 @@ export const generateBlobSASUrl = async (url: string) => {
         permissions: BlobSASPermissions.parse('r'), // Read-only access
         expiresOn: expiryTime,
     };
+    
 
     // Generate SAS token
     const sasToken = generateBlobSASQueryParameters(

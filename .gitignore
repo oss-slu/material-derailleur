@@ -4,3 +4,4 @@ package-lock.json
 *.DS_Store
 .vscode
 .env
+rerum_server_nodejs/

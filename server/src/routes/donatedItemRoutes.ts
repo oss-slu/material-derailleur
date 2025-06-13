@@ -76,12 +76,20 @@ router.post(
                     imageFiles.map(async file => {
                         const fileExtension = getFileExtension(file.mimetype);
                         const formattedDate = new Date().toISOString();
-                        return uploadToStorage(
+                        const fileName = `item-${formattedDate}-${newItem.id}${fileExtension}`;
+                        console.log(`Uploading file with name: ${fileName}`);
+
+                        const uploadedUrl = await uploadToStorage(
                             file,
-                            `item-${formattedDate}-${newItem.id}${fileExtension}`,
+                            fileName,
                         );
+
+                        console.log(`Uploaded file URL: ${uploadedUrl}`);
+                        return uploadedUrl;
                     }),
                 );
+                
+                console.log('All files uploaded:', imageUrls);
 
                 const newStatus = await prisma.donatedItemStatus.create({
                     data: {

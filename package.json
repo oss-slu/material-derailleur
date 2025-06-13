@@ -1,7 +1,7 @@
 {
   "devDependencies": {
-    "prettier": "^3.4.2",
     "concurrently": "^8.2.2",
+    "prettier": "^3.4.2",
     "serve": "^14.2.4"
   },
   "scripts": {
@@ -16,5 +16,8 @@
     "start:frontend": "npx serve -s client-app/build",
     "start:backend": "npm run start --prefix server",
     "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\""
+  },
+  "dependencies": {
+    "pdfkit": "^0.17.1"
   }
 }

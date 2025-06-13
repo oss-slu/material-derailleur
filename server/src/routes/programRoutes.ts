@@ -13,6 +13,7 @@ if (!JWT_SECRET) {
     throw new Error('JWT_SECRET is not set in .env file!');
 }
 
+
 // Route to register a new user
 router.post(
     '/register',

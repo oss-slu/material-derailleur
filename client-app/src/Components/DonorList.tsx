@@ -1,5 +1,5 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaPlus } from 'react-icons/fa';
 import axios from 'axios';
 import Modal from 'react-modal';
@@ -25,12 +25,11 @@ const DonorList: React.FC = () => {
     const [filteredDonors, setFilteredDonors] = useState<Donor[]>([]);
     const [donorDetails, selectedDonorDetails] = useState<Donor | null>(null);
     const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
-    const [currentDonors, setCurrentDonors] = useState<Donor[]>([]); // initially empty array
+    const [currentDonors, setCurrentDonors] = useState<Donor[]>([]);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Fetch donor data from the backend API
         const fetchDonors = async () => {
             try {
                 const response = await axios.get<Donor[]>(
@@ -41,8 +40,7 @@ const DonorList: React.FC = () => {
                         },
                     },
                 );
-                console.log('Fetched donor data:', response.data); // Log the response data
-                setCurrentDonors(response.data); // Set the fetched data
+                setCurrentDonors(response.data);
             } catch (err) {
                 console.error('Error fetching donors:', err);
                 setError('Error fetching donor data');
@@ -76,12 +74,9 @@ const DonorList: React.FC = () => {
     };
 
     const handleEditDonorClick = (donor: Donor | null) => {
-        if (donor === null) {
-            console.error("Donor doesn't exist");
-        } else {
-            localStorage.setItem('donor', JSON.stringify(donor));
-            navigate('/donoredit');
-        }
+        if (!donor) return;
+        localStorage.setItem('donor', JSON.stringify(donor));
+        navigate('/donoredit');
     };
 
     return (
@@ -126,13 +121,14 @@ const DonorList: React.FC = () => {
                         <th>Last Name</th>
                         <th>Email</th>
                         <th>More Details</th>
+                        <th>Download</th>
                     </tr>
                 </thead>
                 <tbody>
                     {(filteredDonors.length > 0
                         ? filteredDonors
                         : currentDonors
-                    ).map((donor, index) => (
+                    ).map(donor => (
                         <tr key={donor.id}>
                             <td>{donor.id}</td>
                             <td>{donor.firstName}</td>
@@ -146,6 +142,15 @@ const DonorList: React.FC = () => {
                                 >
                                     View More Details
                                 </button>
+                            </td>
+                            <td>
+                                <a
+                                    href={`http://localhost:5000/api/certificates/${donor.id}/download`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <button>Download</button>
+                                </a>
                             </td>
                         </tr>
                     ))}
@@ -193,7 +198,7 @@ const DonorList: React.FC = () => {
             </Modal>
 
             <div style={{ position: 'fixed', bottom: '20px', right: '20px' }}>
-                <button onClick={() => handleAddNewDonorClick()}>
+                <button onClick={handleAddNewDonorClick}>
                     <FaPlus size={24} />
                 </button>
             </div>
