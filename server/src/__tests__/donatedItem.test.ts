@@ -86,7 +86,7 @@ describe('DonatedItem API Tests', () => {
             .send(updateItem);
         expect(response.status).toBe(200);
         expect(mockPrismaClient.donatedItem.update).toHaveBeenCalled();
-        expect(response.body.itemType).toBe(updateItem.itemType);
+        expect(response.body.data.itemType).toBe(updateItem.itemType);
     });
 
     it('returns error responses for invalid Program or Donor values', async () => {

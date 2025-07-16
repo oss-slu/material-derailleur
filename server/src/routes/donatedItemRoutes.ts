@@ -208,7 +208,7 @@ router.get('/:id', async (req: Request, res: Response) => {
     }
 });
 
-// PUT /donatedItem/details/:id - Update non-status details of a DonatedItem
+// PUT /donatedItem/details/:id - Update donated item details (excluding status)
 router.put(
     '/details/:id',
     donatedItemValidator,
@@ -216,6 +216,7 @@ router.put(
         try {
             const donorId = parseInt(req.body.donorId);
             const programId = parseInt(req.body.programId);
+
             try {
                 await validateDonor(donorId);
                 await validateProgram(programId);
@@ -225,17 +226,27 @@ router.put(
                 }
             }
 
+            const dateDonatedDateTime = new Date(req.body.dateDonated);
+
             const updatedItem = await prisma.donatedItem.update({
                 where: { id: Number(req.params.id) },
                 data: {
-                    ...req.body,
+                    itemType: req.body.itemType,
+                    dateDonated: dateDonatedDateTime,
                     donorId,
                     programId,
                     lastUpdated: new Date(),
                 },
             });
-            console.log('Donated item updated:', updatedItem);
-            res.json(updatedItem);
+
+            console.log(
+                'Donated item updated (admin-only, no status):',
+                updatedItem,
+            );
+            res.status(200).json({
+                message: 'Item updated successfully',
+                data: updatedItem,
+            });
         } catch (error) {
             console.error('Error updating donated item details:', error);
             res.status(500).json({

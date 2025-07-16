@@ -1,16 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Stepper, Step, StepLabel, StepContent, Button } from '@mui/material';
+import {
+    Stepper,
+    Step,
+    StepLabel,
+    StepContent,
+    Button,
+    TextField,
+    CircularProgress,
+    Alert,
+} from '@mui/material';
 import { useParams } from 'react-router-dom';
 import PersonIcon from '@mui/icons-material/Person';
 import CategoryIcon from '@mui/icons-material/Category';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import { SelectChangeEvent } from '@mui/material';
+
 import '../css/DonatedItemDetails.css'; // Import the new CSS file
-import { Donor } from '../Modals/DonorModal';
-import { Program } from '../Modals/ProgramModal';
-import { DonatedItemStatus } from '../Modals/DonatedItemStatusModal';
+
 import { DonatedItem } from '../Modals/DonatedItemModal';
 
 const DonatedItemDetails: React.FC = () => {
@@ -18,11 +27,12 @@ const DonatedItemDetails: React.FC = () => {
     const [donatedItem, setDonatedItem] = useState<DonatedItem | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>('');
+    const [isEditing, setIsEditing] = useState(false);
+    const [editData, setEditData] = useState({
+        itemType: '',
+        dateDonated: '',
+    }); // State to hold edited item details
     const navigate = useNavigate();
-
-    const handleAddNewDonationClick = (): void => {
-        navigate(`/donatedItem/status/${id}`);
-    };
 
     useEffect(() => {
         const fetchDonatedItemDetails = async () => {
@@ -37,8 +47,15 @@ const DonatedItemDetails: React.FC = () => {
                         },
                     },
                 );
+                const { itemType, dateDonated } = response.data;
 
                 setDonatedItem(response.data);
+                setEditData({
+                    itemType,
+                    dateDonated: new Date(dateDonated)
+                        .toISOString()
+                        .split('T')[0], // Format as YYYY-MM-DD
+                });
             } catch (err) {
                 if (axios.isAxiosError(err)) {
                     setError(
@@ -56,6 +73,71 @@ const DonatedItemDetails: React.FC = () => {
         fetchDonatedItemDetails();
     }, [id]);
 
+    // Toggle edit mode
+    const toggleEditMode = () => {
+        setIsEditing(!isEditing);
+        // Reset edit data if canceling
+        if (isEditing && donatedItem) {
+            setEditData({
+                itemType: donatedItem.itemType,
+                dateDonated: donatedItem.dateDonated.toString().split('T')[0],
+            });
+        }
+    };
+
+    // Handle input changes in the edit form
+    const handleInputChange = (
+        e:
+            | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+            | SelectChangeEvent<string>,
+    ) => {
+        const { name, value } = e.target;
+        setEditData(prev => ({ ...prev, [name]: value }));
+    };
+
+    // Save edited item details
+    const saveEditedItem = async () => {
+        if (!editData.itemType || !editData.dateDonated) {
+            setError('All fields are required.');
+            return;
+        }
+        try {
+            setLoading(true);
+            const API_BASE_URL =
+                process.env.REACT_APP_BACKEND_API_BASE_URL || '';
+
+            // Prepare payload with only the fields we want to update
+            const payload = {
+                itemType: editData.itemType,
+                dateDonated: editData.dateDonated,
+                currentStatus: donatedItem?.currentStatus,
+                donorId: donatedItem?.donorId,
+                programId: donatedItem?.programId,
+            };
+
+            const response = await axios.put(
+                `${API_BASE_URL}donatedItem/details/${id}`,
+                payload,
+            );
+
+            // Update local state with the response
+            setDonatedItem({
+                ...response.data.data,
+                donor: donatedItem?.donor,
+                program: donatedItem?.program,
+                statuses: donatedItem?.statuses || [],
+            });
+
+            setIsEditing(false);
+            setError('');
+        } catch (err) {
+            setError(
+                'Failed to update item details. Please check the inputs and try again.',
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
     const formatDate = (dateString: string, isUTC: boolean) => {
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return 'Invalid date';
@@ -65,7 +147,7 @@ const DonatedItemDetails: React.FC = () => {
     };
 
     if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error}</div>;
+    if (error && !isEditing) return <div>Error: {error}</div>;
     if (!donatedItem) return <div>No data available.</div>;
 
     return (
@@ -120,21 +202,83 @@ const DonatedItemDetails: React.FC = () => {
                         <div className="section-header">
                             <CategoryIcon className="icon" />
                             <h2>Item Details</h2>
+                            {/* Edit button to toggle edit mode */}
+                            <Button
+                                variant="contained"
+                                onClick={toggleEditMode}
+                                color={isEditing ? 'secondary' : 'primary'}
+                            >
+                                {isEditing ? 'Cancel' : 'Edit'}
+                            </Button>
                         </div>
-                        <p>
-                            <strong>Type:</strong> {donatedItem.itemType}
-                        </p>
-                        <p>
-                            <strong>Status:</strong> {donatedItem.currentStatus}
-                        </p>
-                        <p>
-                            <strong>Donated On:</strong>{' '}
-                            {formatDate(donatedItem.dateDonated, false)}
-                        </p>
-                        <p>
-                            <strong>Last Updated:</strong>{' '}
-                            {formatDate(donatedItem.lastUpdated, true)}
-                        </p>
+                        {isEditing ? (
+                            // Edit form
+                            <div className="edit-form">
+                                {/* ✅ Show error message if it exists */}
+                                {error && (
+                                    <Alert
+                                        severity="error"
+                                        style={{ marginBottom: '1rem' }}
+                                    >
+                                        {error}
+                                    </Alert>
+                                )}
+                                <TextField
+                                    name="itemType"
+                                    label="Item Type"
+                                    value={editData.itemType}
+                                    onChange={handleInputChange}
+                                    fullWidth
+                                    margin="normal"
+                                    required
+                                />
+
+                                <TextField
+                                    name="dateDonated"
+                                    label="Donated On"
+                                    type="date"
+                                    value={editData.dateDonated}
+                                    onChange={handleInputChange}
+                                    fullWidth
+                                    margin="normal"
+                                    required
+                                    InputLabelProps={{ shrink: true }}
+                                />
+
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={saveEditedItem}
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <CircularProgress size={24} />
+                                    ) : (
+                                        'Save Changes'
+                                    )}
+                                </Button>
+                            </div>
+                        ) : (
+                            // Display mode
+                            <div className="view-mode">
+                                <p>
+                                    <strong>Type:</strong>{' '}
+                                    {donatedItem.itemType}
+                                </p>
+                                <p>
+                                    <strong>Status:</strong>{' '}
+                                    {donatedItem.currentStatus}
+                                </p>
+                                <p>
+                                    <strong>Donated On:</strong>{' '}
+                                    {formatDate(donatedItem.dateDonated)}
+                                </p>
+                                <p>
+                                    <strong>Last Updated:</strong>{' '}
+                                    {formatDate(donatedItem.lastUpdated)}
+                                </p>
+                            </div>
+                        )}
                     </section>
 
                     <section className="donor-details-section">
