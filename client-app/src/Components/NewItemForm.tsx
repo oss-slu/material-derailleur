@@ -1,6 +1,7 @@
 import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import LoadingSpinner from './LoadingSpinner';
 import '../css/DonorForm.css'; // We should probably make a new CSS for this form in the future
 
 interface FormData {
@@ -46,12 +47,18 @@ const NewItemForm: React.FC = () => {
     const [errors, setErrors] = useState<FormErrors>({});
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         const fetchDonorEmails = async () => {
             try {
                 const response = await axios.get(
                     `${process.env.REACT_APP_BACKEND_API_BASE_URL}donor`,
+                    {
+                        headers: {
+                            Authorization: localStorage.getItem('token'),
+                        },
+                    },
                 );
                 const emailOptions = response.data.map((donor: any) => ({
                     value: donor.id,
@@ -68,6 +75,11 @@ const NewItemForm: React.FC = () => {
             try {
                 const response = await axios.get(
                     `${process.env.REACT_APP_BACKEND_API_BASE_URL}program`,
+                    {
+                        headers: {
+                            Authorization: localStorage.getItem('token'),
+                        },
+                    },
                 );
                 const programOptions = response.data.map((program: any) => ({
                     value: program.id,
@@ -240,6 +252,7 @@ const NewItemForm: React.FC = () => {
     };
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        setIsLoading(true);
         event.preventDefault();
         if (validateForm()) {
             try {
@@ -270,6 +283,7 @@ const NewItemForm: React.FC = () => {
                     {
                         headers: {
                             'Content-Type': 'multipart/form-data',
+                            Authorization: localStorage.getItem('token'),
                         },
                     },
                 );
@@ -283,6 +297,8 @@ const NewItemForm: React.FC = () => {
                 setErrorMessage(
                     error.response?.data?.error || 'Error adding item',
                 );
+            } finally {
+                setIsLoading(false);
             }
         } else {
             setErrorMessage('Form has validation errors');
@@ -290,6 +306,7 @@ const NewItemForm: React.FC = () => {
     };
 
     const handleRefresh = () => {
+        setIsLoading(true);
         setFormData({
             itemType: '',
             currentStatus: 'Received',
@@ -302,10 +319,13 @@ const NewItemForm: React.FC = () => {
         setErrors({});
         setErrorMessage(null);
         setSuccessMessage(null);
+        setIsLoading(false);
     };
 
     const handleBack = () => {
+        setIsLoading(true);
         navigate('/donations');
+        setIsLoading(false);
     };
 
     const renderFormField = (
@@ -429,13 +449,18 @@ const NewItemForm: React.FC = () => {
                 {renderFormField('Images (Max 5)', 'imageFiles', 'file', false)}
 
                 <div className="form-field full-width button-container">
-                    <button type="submit" className="submit-button">
+                    <button
+                        type="submit"
+                        className="submit-button"
+                        disabled={isLoading}
+                    >
                         Submit
                     </button>
                     <button
                         type="button"
                         onClick={handleRefresh}
                         className="refresh-button"
+                        disabled={isLoading}
                     >
                         Refresh
                     </button>
@@ -443,10 +468,12 @@ const NewItemForm: React.FC = () => {
                         type="button"
                         onClick={handleBack}
                         className="back-button"
+                        disabled={isLoading}
                     >
                         Back
                     </button>
                 </div>
+                {isLoading && <LoadingSpinner />}
             </form>
         </div>
     );

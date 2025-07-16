@@ -35,6 +35,11 @@ const DonorList: React.FC = () => {
             try {
                 const response = await axios.get<Donor[]>(
                     `${process.env.REACT_APP_BACKEND_API_BASE_URL}donor`,
+                    {
+                        headers: {
+                            Authorization: localStorage.getItem('token'),
+                        },
+                    },
                 );
                 console.log('Fetched donor data:', response.data); // Log the response data
                 setCurrentDonors(response.data); // Set the fetched data
@@ -68,6 +73,15 @@ const DonorList: React.FC = () => {
     const handleViewDetailsClick = (donor: Donor) => {
         selectedDonorDetails(donor);
         setModalIsOpen(true);
+    };
+
+    const handleEditDonorClick = (donor: Donor | null) => {
+        if (donor === null) {
+            console.error("Donor doesn't exist");
+        } else {
+            localStorage.setItem('donor', JSON.stringify(donor));
+            navigate('/donoredit');
+        }
     };
 
     return (
@@ -162,12 +176,20 @@ const DonorList: React.FC = () => {
                         </p>
                     </div>
                 )}
-                <button
-                    className="close-button"
-                    onClick={() => setModalIsOpen(false)}
-                >
-                    Close
-                </button>
+                <div>
+                    <button
+                        className="edit-button"
+                        onClick={() => handleEditDonorClick(donorDetails)}
+                    >
+                        Edit
+                    </button>
+                    <button
+                        className="close-button"
+                        onClick={() => setModalIsOpen(false)}
+                    >
+                        Close
+                    </button>
+                </div>
             </Modal>
 
             <div style={{ position: 'fixed', bottom: '20px', right: '20px' }}>

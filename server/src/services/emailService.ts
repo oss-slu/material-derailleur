@@ -55,24 +55,27 @@ export const sendWelcomeEmail = async (
 
 export const sendPasswordReset = async (
     recipientEmail: string,
-    token: string,
+    resetToken: string,
 ) => {
+    const resetUrl = `${process.env.FRONTEND_URL}reset-password?token=${resetToken}`;
     const mailOptions = {
         from: `Donation Team <${process.env.SMTP_USER}>`,
         to: recipientEmail,
         subject: 'Material Donor Mutual Assist Password Reset',
         html: `
             <h2>Hello there!</h2>
-            <p>We have recently received a request to change the password of the account linked to this email.</p>
-            <p>If this was you, please follow this link here ${process.env.FRONTEND_URL}reset-password?token=${token} to reset your password.</p>
-            <p>If this was not you, please feel free to disregard this email.</p>
+            <<p>We received a request to reset your password. If this was you, click the link below:</p>
+            <p><a href="${resetUrl}" style="color: blue; text-decoration: underline;">${resetUrl}</a></p>
+            <p><strong>This link will expire in 60 minutes.</strong></p>
+            <p>If this wasn’t you, please ignore this email.</p>
             <p>Best regards,</p>
             <p><strong>Donation Team</strong></p>
         `,
     };
 
     try {
-        const result = await transporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions);
+        console.log(`Password reset email sent to ${recipientEmail}`);
         transporter.close();
     } catch (error) {
         console.log('Error sending email:', error);
@@ -100,6 +103,7 @@ export const sendDonationEmail = async (
         year: 'numeric',
         month: 'long',
         day: 'numeric',
+        timeZone: 'UTC',
     });
     const imageSection =
         SASUrls.length > 0

@@ -1,5 +1,6 @@
 import React from 'react';
 import '../css/ProgramCard.css';
+import { useNavigate } from 'react-router-dom';
 
 interface ProgramProps {
     program: {
@@ -12,10 +13,17 @@ interface ProgramProps {
 }
 
 const ProgramCard: React.FC<ProgramProps> = ({ program }) => {
+    const navigate = useNavigate();
+
     // Function to format date and remove time
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
         return date.toISOString().split('T')[0]; // Extract only the date part (YYYY-MM-DD)
+    };
+
+    const handleEditClick = (program: ProgramProps['program']) => {
+        localStorage.setItem('program', JSON.stringify(program));
+        navigate('/editprogram');
     };
 
     return (
@@ -30,6 +38,12 @@ const ProgramCard: React.FC<ProgramProps> = ({ program }) => {
             <p>
                 <strong>Aim and Cause:</strong> {program.aimAndCause}
             </p>
+            <button
+                className="program-card"
+                onClick={() => handleEditClick(program)}
+            >
+                Edit
+            </button>
         </div>
     );
 };

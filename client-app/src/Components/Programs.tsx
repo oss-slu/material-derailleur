@@ -21,6 +21,11 @@ function Programs() {
             try {
                 const response = await axios.get<Program[]>(
                     `${process.env.REACT_APP_BACKEND_API_BASE_URL}program`,
+                    {
+                        headers: {
+                            Authorization: localStorage.getItem('token'),
+                        },
+                    },
                 );
                 setPrograms(response.data);
             } catch (err) {

@@ -61,15 +61,33 @@ const ResetPasswordPage: React.FC = () => {
                 },
             );
 
-            if (!response.ok) {
-                throw new Error('Failed to reset password');
-            }
-
             const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message);
+            }
             setMessage(data.message);
             setTimeout(() => navigate('/login'), 3000);
         } catch (error) {
-            setError('Error resetting password. Please try again.');
+            console.error('Error resetting password:', error);
+            const errorMessage =
+                error instanceof Error
+                    ? error.message
+                    : 'An unknown error occurred';
+            if (errorMessage.includes('expired')) {
+                setError(
+                    'This link has expired. Please submit another password reset request.',
+                );
+            } else if (errorMessage.includes('Invalid')) {
+                setError(
+                    'This token is no longer valid. Please ensure that the URL is correct or submit another password reset request.',
+                );
+            } else if (errorMessage.includes('Authentication')) {
+                setError(
+                    'Token authentication failed. Please ensure that the URL is correct or submit another password reset request.',
+                );
+            } else {
+                setError('Error resetting password. Please try again.');
+            }
         }
     };
 

@@ -1,8 +1,22 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import LoadingSpinner from './LoadingSpinner';
 import '../css/DonorForm.css';
+import LoadingSpinner from './LoadingSpinner';
+
+interface Donor {
+    id: number;
+    firstName: string;
+    lastName: string;
+    contact: string;
+    email: string;
+    addressLine1: string;
+    addressLine2: string;
+    city: string;
+    state: string;
+    zipcode: string;
+    emailOptIn: boolean;
+}
 
 interface FormData {
     firstName: string;
@@ -21,19 +35,30 @@ interface FormErrors {
     [key: string]: string;
 }
 
-const DonorForm: React.FC = () => {
+const DonorEdit: React.FC = () => {
     const navigate = useNavigate();
+    let donor = null;
+    const donorData = localStorage.getItem('donor');
+    if (donorData) {
+        donor = JSON.parse(donorData);
+    }
+    if (!donor) {
+        console.error('Donor does not exist!');
+        navigate('/donorlist');
+    }
+    const donorId = donor.id;
+    const oldEmail = donor.email;
     const [formData, setFormData] = useState<FormData>({
-        firstName: '',
-        lastName: '',
-        contact: '',
-        email: '',
-        addressLine1: '',
-        addressLine2: '',
-        state: '',
-        city: '',
-        zipcode: '',
-        emailOptIn: false,
+        firstName: donor.firstName,
+        lastName: donor.lastName,
+        contact: donor.contact,
+        email: donor.email,
+        addressLine1: donor.addressLine1,
+        addressLine2: donor.addressLine2,
+        state: donor.state,
+        city: donor.city,
+        zipcode: donor.zipcode,
+        emailOptIn: donor.emailOptIn,
     });
 
     const [errors, setErrors] = useState<FormErrors>({});
@@ -95,46 +120,26 @@ const DonorForm: React.FC = () => {
         event.preventDefault();
         setIsLoading(true);
         if (validateForm()) {
+            if (!donorId) {
+                setErrorMessage('Donor ID is missing!');
+                navigate('/donorlist');
+            }
             try {
+                const toSend = { ...formData, id: donorId, old: oldEmail };
+                console.log(toSend);
                 const response = await axios.post(
-                    `${process.env.REACT_APP_BACKEND_API_BASE_URL}donor`,
-                    formData,
-                    {
-                        headers: {
-                            Authorization: localStorage.getItem('token'),
-                        },
-                    },
+                    `${process.env.REACT_APP_BACKEND_API_BASE_URL}donor/edit`,
+                    toSend,
                 );
-                if (response.status === 201) {
-                    const login_response = await axios.post(
-                        `${process.env.REACT_APP_BACKEND_API_BASE_URL}donor/register`,
-                        { name: formData.firstName, email: formData.email },
-                    );
-                    if (login_response.status === 201) {
-                        setSuccessMessage('Donor added successfully!');
-                        setFormData({
-                            firstName: '',
-                            lastName: '',
-                            contact: '',
-                            email: '',
-                            addressLine1: '',
-                            addressLine2: '',
-                            state: '',
-                            city: '',
-                            zipcode: '',
-                            emailOptIn: false,
-                        });
-                        navigate('/donorlist');
-                    } else {
-                        setErrorMessage('Donor could not be registered');
-                    }
+                if (response.status === 200) {
+                    navigate('/donorlist');
                 } else {
-                    setErrorMessage('Donor not added');
+                    setErrorMessage('Error Updating Donor');
                 }
             } catch (error: unknown) {
                 const message =
                     (error as any).response?.data?.message ||
-                    'Error adding donor';
+                    'Error Updating donor';
                 setErrorMessage(message);
             } finally {
                 setIsLoading(false);
@@ -142,27 +147,6 @@ const DonorForm: React.FC = () => {
         } else {
             setErrorMessage('Form has validation errors');
         }
-    };
-
-    // Handle form reset
-    const handleRefresh = () => {
-        setIsLoading(true);
-        setFormData({
-            firstName: '',
-            lastName: '',
-            contact: '',
-            email: '',
-            addressLine1: '',
-            addressLine2: '',
-            state: '',
-            city: '',
-            zipcode: '',
-            emailOptIn: false,
-        });
-        setErrors({});
-        setErrorMessage(null);
-        setSuccessMessage(null);
-        setIsLoading(false);
     };
 
     const handleBack = () => {
@@ -200,7 +184,7 @@ const DonorForm: React.FC = () => {
     return (
         <div className="donor-form outer-container mx-auto p-10">
             <h1 className="text-2xl font-bold heading-centered">
-                Add Donor Details
+                Edit Donor Details
             </h1>
             {errorMessage && <p className="error-message">{errorMessage}</p>}
             {successMessage && (
@@ -249,15 +233,7 @@ const DonorForm: React.FC = () => {
                         className="submit-button"
                         disabled={isLoading}
                     >
-                        Add Donor
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleRefresh}
-                        className="refresh-button"
-                        disabled={isLoading}
-                    >
-                        Refresh
+                        Update Donor
                     </button>
                     <button
                         type="button"
@@ -274,4 +250,4 @@ const DonorForm: React.FC = () => {
     );
 };
 
-export default DonorForm;
+export default DonorEdit;

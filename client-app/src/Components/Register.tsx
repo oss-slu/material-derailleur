@@ -1,144 +1,102 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent, FormEvent } from 'react';
+import LoadingSpinner from './LoadingSpinner';
 import '../css/RegisterPage.css';
 
-const Register = () => {
-    const [credentials, setCredentials] = useState({
+interface Credentials {
+    name: string;
+    email: string;
+    password: string;
+    confirm_password: string;
+}
+
+const Register: React.FC = () => {
+    const [credentials, setCredentials] = useState<Credentials>({
         name: '',
         email: '',
         password: '',
+        confirm_password: '',
     });
-    const [passwordStrength, setPasswordStrength] = useState('weak');
-    const [successMessage, setSuccessMessage] = useState('');
-    const [errorMessage, setErrorMessage] = useState('');
+    const [passwordStrength, setPasswordStrength] = useState<
+        'weak' | 'medium' | 'strong'
+    >('weak');
+    const [successMessage, setSuccessMessage] = useState<string>('');
+    const [errorMessage, setErrorMessage] = useState<string>('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleChange = e => {
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setCredentials({ ...credentials, [name]: value });
 
-        // Determine password strength
-        if (value.length < 12) {
-            setPasswordStrength('weak');
-        } else if (value.length >= 12 && value.length <= 15) {
-            setPasswordStrength('medium');
-        } else {
-            setPasswordStrength('strong');
-        }
+        if (name === 'password' || name === 'confirm_password') {
+            // Determine password strength
+            if (value.length < 12) {
+                setPasswordStrength('weak');
+            } else if (value.length >= 12 && value.length <= 15) {
+                setPasswordStrength('medium');
+            } else {
+                setPasswordStrength('strong');
+            }
 
-        // Validate password length
-        if (value.length < 12) {
+            // Perform password validations only when password field is changed
+            validatePassword(value);
+        }
+    };
+
+    const validatePassword = (password: string) => {
+        if (password.length < 12) {
             setErrorMessage('Password must be at least 12 characters');
             return;
         }
 
-        // Check for username or email
-        if (value.match(credentials.name)) {
+        if (password.match(credentials.name)) {
             setErrorMessage('Password must not contain name');
             return;
         }
 
-        if (value.match(credentials.email)) {
+        if (password.match(credentials.email)) {
             setErrorMessage('Password must not contain email');
             return;
         }
 
-        // Check Password Rules
-        const missing = [];
+        const missing: string[] = [];
 
-        if (!value.match(/[A-Z]/)) {
-            missing.push('an uppercase');
-        }
-
-        if (!value.match(/[a-z]/)) {
-            missing.push('a lowercase');
-        }
-
-        if (!value.match(/[0-9]/)) {
-            missing.push('a number');
-        }
-
-        if (!value.match(/[$&+,:;=?@#|'<>.^*()%!-]/)) {
+        if (!password.match(/[A-Z]/)) missing.push('an uppercase');
+        if (!password.match(/[a-z]/)) missing.push('a lowercase');
+        if (!password.match(/[0-9]/)) missing.push('a number');
+        if (!password.match(/[$&+,:;=?@#|'<>.^*()%!-]/))
             missing.push('a special character');
-        }
 
         if (missing.length !== 0) {
             if (missing.length === 1) {
                 setErrorMessage('Password must contain ' + missing[0] + '!');
-                return;
+            } else {
+                const tmp = missing.pop();
+                setErrorMessage(
+                    'Password must contain ' +
+                        missing.join(', ') +
+                        ' and ' +
+                        tmp +
+                        '!',
+                );
             }
-            const tmp = missing.pop();
-            setErrorMessage(
-                'Password must contain ' +
-                    missing.join(', ') +
-                    ' and ' +
-                    tmp +
-                    '!',
-            );
             return;
         } else {
             setErrorMessage('');
         }
     };
 
-    const handleSubmit = async e => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setIsLoading(true);
 
-        // Check if passwords match
         if (credentials.password !== credentials.confirm_password) {
             setErrorMessage('Passwords do not match');
             return;
         }
 
-        // Validate password length
-        if (credentials.password.length < 12) {
-            setErrorMessage('Password must be at least 12 characters');
-            return;
-        }
-
-        // Check for username or email
-        if (credentials.password.match(credentials.name)) {
-            setErrorMessage('Password must not contain name');
-            return;
-        }
-
-        if (credentials.password.match(credentials.email)) {
-            setErrorMessage('Password must not contain email');
-            return;
-        }
-
-        // Check Password Rules
-        const missing = [];
-
-        if (!credentials.password.match(/[A-Z]/)) {
-            missing.push('an uppercase');
-        }
-
-        if (!credentials.password.match(/[a-z]/)) {
-            missing.push('a lowercase');
-        }
-
-        if (!credentials.password.match(/[0-9]/)) {
-            missing.push('a number');
-        }
-
-        if (!credentials.password.match(/[$&+,:;=?@#|'<>.^*()%!-]/)) {
-            missing.push('a special character');
-        }
-
-        if (missing.length !== 0) {
-            if (missing.length === 1) {
-                setErrorMessage('Password must contain ' + missing[0] + '!');
-                return;
-            }
-            const tmp = missing.pop();
-            setErrorMessage(
-                'Password must contain ' +
-                    missing.join(', ') +
-                    ' and ' +
-                    tmp +
-                    '!',
-            );
-            return;
-        }
+        // Revalidate password before sending
+        validatePassword(credentials.password);
+        if (errorMessage) return;
 
         try {
             const response = await fetch(
@@ -151,7 +109,7 @@ const Register = () => {
                     body: JSON.stringify({
                         name: credentials.name,
                         email: credentials.email,
-                        password: credentials.password, // Send only password (confirm_password removed)
+                        password: credentials.password,
                     }),
                 },
             );
@@ -169,7 +127,7 @@ const Register = () => {
                 });
 
                 setTimeout(() => {
-                    window.location.href = '/About'; // Redirect after success
+                    window.location.href = '/About';
                 }, 2000);
             } else {
                 setErrorMessage(data.message || 'Registration failed');
@@ -177,6 +135,8 @@ const Register = () => {
         } catch (error) {
             console.error('Error:', error);
             setErrorMessage('An error occurred. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -185,7 +145,7 @@ const Register = () => {
             <div className="rlogin-container">
                 <h2 className="rhead">Register</h2>
                 <div className="rlogin-box">
-                    <div className="bg-#a9d6e5 ">
+                    <div className="bg-#a9d6e5">
                         <form onSubmit={handleSubmit}>
                             <div>
                                 <label className="rlabelu">Name</label>
@@ -193,15 +153,10 @@ const Register = () => {
                                     type="text"
                                     className="ristyle"
                                     value={credentials.name}
-                                    onChange={e =>
-                                        setCredentials({
-                                            ...credentials,
-                                            name: e.target.value,
-                                        })
-                                    }
+                                    onChange={handleChange}
                                     id="name"
                                     name="name"
-                                    aria-describedby="emailHelp"
+                                    aria-describedby="nameHelp"
                                 />
                             </div>
                             <div>
@@ -210,12 +165,7 @@ const Register = () => {
                                     type="email"
                                     className="ristyle"
                                     value={credentials.email}
-                                    onChange={e =>
-                                        setCredentials({
-                                            ...credentials,
-                                            email: e.target.value,
-                                        })
-                                    }
+                                    onChange={handleChange}
                                     id="email"
                                     name="email"
                                     aria-describedby="emailHelp"
@@ -235,7 +185,7 @@ const Register = () => {
                                     className="password-strength-meter"
                                     style={{ display: 'flex' }}
                                 >
-                                    <p className="my-3">Password Strength:</p>{' '}
+                                    <p className="my-3">Password Strength:</p>
                                     <p
                                         className={`text-${passwordStrength} my-3 mx-2`}
                                         style={{
@@ -280,9 +230,14 @@ const Register = () => {
                                     {successMessage}
                                 </div>
                             )}
-                            <button type="submit" className="rbtSuccess">
+                            <button
+                                type="submit"
+                                className="rbtSuccess"
+                                disabled={isLoading}
+                            >
                                 Register
                             </button>
+                            {isLoading && <LoadingSpinner />}
                         </form>
                     </div>
                 </div>

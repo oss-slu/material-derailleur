@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom'; // Import Link for navigation
+import LoadingSpinner from './LoadingSpinner';
 import '../css/LoginPage.css'; // Import CSS file for styling
 import Popup from './LoginPopup';
 
@@ -24,6 +25,7 @@ const LoginPage: React.FC = () => {
     const [captcha, setCaptcha] = useState<string>('');
     const [captchaValue, setCaptchaValue] = useState<string>('');
     const [errorMessage, setErrorMessage] = useState<string>('');
+    const [isLoading, setIsLoading] = useState(false);
     const captchaCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const { usePopup } = Popup;
     const { triggerPopup } = usePopup();
@@ -64,6 +66,7 @@ const LoginPage: React.FC = () => {
         e: FormEvent<HTMLFormElement>,
     ): Promise<void> => {
         e.preventDefault();
+        setIsLoading(true);
 
         // Validate CAPTCHA
         if (captchaValue.toLowerCase() !== captcha.toLowerCase()) {
@@ -85,12 +88,25 @@ const LoginPage: React.FC = () => {
             if (response.ok) {
                 localStorage.setItem('token', data.token);
                 triggerPopup('Welcome ' + data.name + '!');
-                window.location.href = '/';
+
+                console.log('User logged in:', data);
+
+                if (data.role === 'ADMIN') {
+                    window.location.href = '/';
+                } else if (data.role === 'DONOR') {
+                    window.location.href = '/donor-profile';
+                } else {
+                    setErrorMessage(
+                        'Unknown user role. Please contact support.',
+                    );
+                }
             } else {
                 setErrorMessage(data.message || 'Invalid email or password.');
             }
         } catch (error) {
             setErrorMessage('Something went wrong. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -168,7 +184,7 @@ const LoginPage: React.FC = () => {
                                     className="btlSuccess"
                                     type="submit"
                                     name="login"
-                                    disabled={!captchaValue}
+                                    disabled={!captchaValue || isLoading}
                                 >
                                     Login
                                 </button>
@@ -179,6 +195,7 @@ const LoginPage: React.FC = () => {
                                     Forgot Password?
                                 </Link>{' '}
                             </div>
+                            {isLoading && <LoadingSpinner />}
                         </form>
                     </div>
                     <div className="register-link">

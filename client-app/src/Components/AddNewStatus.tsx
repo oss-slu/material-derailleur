@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import ItemStatus from '../constants/Enums';
+import LoadingSpinner from './LoadingSpinner';
 import '../css/AddStatus.css';
 
 interface FormData {
@@ -29,6 +30,7 @@ const AddNewStatus: React.FC = () => {
     const [images, setImages] = useState<File[]>([]); // Store selected images
     const [previewUrls, setPreviewUrls] = useState<string[]>([]); // Store image preview URLs
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [currentPreviewImage, setCurrentPreviewImage] = useState<
         string | null
     >(null);
@@ -100,6 +102,7 @@ const AddNewStatus: React.FC = () => {
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        setIsLoading(true);
         if (validateForm()) {
             try {
                 const formDataToSubmit = new FormData();
@@ -119,6 +122,7 @@ const AddNewStatus: React.FC = () => {
                     {
                         headers: {
                             'Content-Type': 'multipart/form-data',
+                            Authorization: localStorage.getItem('token'),
                         },
                     },
                 );
@@ -134,6 +138,8 @@ const AddNewStatus: React.FC = () => {
                 setErrorMessage(
                     error.response?.data?.message || 'Error updating item',
                 );
+            } finally {
+                setIsLoading(false);
             }
         } else {
             setErrorMessage('Form has validation errors');
@@ -141,10 +147,13 @@ const AddNewStatus: React.FC = () => {
     };
 
     const handleBack = () => {
+        setIsLoading(true);
         navigate(`/donations/${id}`);
+        setIsLoading(false);
     };
 
     const handleRefresh = () => {
+        setIsLoading(true);
         setFormData({
             statusType: 'Received',
             dateModified: '',
@@ -155,6 +164,7 @@ const AddNewStatus: React.FC = () => {
         setErrors({});
         setErrorMessage(null);
         setSuccessMessage(null);
+        setIsLoading(false);
     };
 
     return (
@@ -297,13 +307,18 @@ const AddNewStatus: React.FC = () => {
                 )}
 
                 <div className="form-field full-width button-container">
-                    <button type="submit" className="submit-button">
+                    <button
+                        type="submit"
+                        className="submit-button"
+                        disabled={isLoading}
+                    >
                         Update
                     </button>
                     <button
                         type="button"
                         onClick={handleRefresh}
                         className="refresh-button"
+                        disabled={isLoading}
                     >
                         Refresh
                     </button>
@@ -311,10 +326,12 @@ const AddNewStatus: React.FC = () => {
                         type="button"
                         onClick={handleBack}
                         className="back-button"
+                        disabled={isLoading}
                     >
                         Back
                     </button>
                 </div>
+                {isLoading && <LoadingSpinner />}
             </form>
         </div>
     );

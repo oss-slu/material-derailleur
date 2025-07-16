@@ -30,3 +30,15 @@
 .program-card p strong {
     font-weight: bold;
 }
+
+.program-card button {
+    float: right;
+    height: 10%;
+    width: 20%;
+    background-color: #f00;
+    color: #fff;
+    cursor: pointer;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 0%;
+}

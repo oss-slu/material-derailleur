@@ -26,7 +26,7 @@ const ForgotPassword: React.FC = () => {
                 throw new Error(data.message);
             }
             console.log('Email sent:', data.message);
-            alert('Password reset link sent to your email.');
+            alert('A password reset link has been sent to your email.');
         } catch (error) {
             console.error('Error sending password reset email:', error);
             const errorMessage =

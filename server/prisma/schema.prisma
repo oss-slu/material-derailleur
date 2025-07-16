@@ -18,7 +18,7 @@ model Donor {
   firstName    String  @db.VarChar(50)
   lastName     String  @db.VarChar(50)
   contact      String? @db.VarChar(10)
-  email        String  @db.VarChar(100)
+  email        String  @db.VarChar(100)@unique
   addressLine1 String? @db.VarChar(50)
   addressLine2 String? @db.VarChar(50)
   state        String? @db.VarChar(15)
@@ -70,6 +70,9 @@ model User {
   name     String
   email    String @unique
   password String
+  role     Role?
   createdAt DateTime @default(now())
-  role      Role?
+  firstLogin        Boolean  @default(true)
+  resetToken        String?
+  resetTokenExpiry  DateTime?
 }

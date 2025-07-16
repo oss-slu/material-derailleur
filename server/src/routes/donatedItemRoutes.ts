@@ -16,6 +16,7 @@ import {
 import { date } from 'joi';
 import { DonatedItemStatus } from '../modals/DonatedItemStatusModal';
 import { sendDonationEmail } from '../services/emailService';
+import { authenticateUser } from './routeProtection';
 import { DonatedItem } from '@prisma/client';
 
 const router = Router();
@@ -31,79 +32,82 @@ router.post(
     [upload.array('imageFiles', 5), donatedItemValidator], // Allow up to 5 image files
     async (req: Request, res: Response) => {
         try {
-            const imageFiles = req.files as Express.Multer.File[];
-            // Call service functions for validation
-            validateIndividualFileSize(imageFiles);
+            const permGranted = await authenticateUser(req, res, true);
+            if (permGranted) {
+                const imageFiles = req.files as Express.Multer.File[];
+                // Call service functions for validation
+                validateIndividualFileSize(imageFiles);
 
-            const donorId = parseInt(req.body.donorId);
-            const programId = parseInt(req.body.programId);
-            const { dateDonated, ...rest } = req.body;
+                const donorId = parseInt(req.body.donorId);
+                const programId = parseInt(req.body.programId);
+                const { dateDonated, ...rest } = req.body;
 
-            try {
-                await validateDonor(donorId);
-                await validateProgram(programId);
-            } catch (error) {
-                if (error instanceof Error) {
-                    console.log('error', error);
-                    return res.status(400).json({ error: error.message });
+                try {
+                    await validateDonor(donorId);
+                    await validateProgram(programId);
+                } catch (error) {
+                    if (error instanceof Error) {
+                        console.log('error', error);
+                        return res.status(400).json({ error: error.message });
+                    }
                 }
-            }
-            const dateDonatedDateTime = new Date(dateDonated);
-            dateDonatedDateTime.setUTCHours(0, 0, 0, 0); // Set time to 00:00:00 UTC
+                const dateDonatedDateTime = new Date(dateDonated);
+                dateDonatedDateTime.setUTCHours(0, 0, 0, 0); // Set time to 00:00:00 UTC
 
-            const newItem = await prisma.donatedItem.create({
-                data: {
-                    ...rest, //spread the rest of the fields
-                    donorId,
-                    programId,
-                    dateDonated: dateDonatedDateTime,
-                },
-                include: {
-                    donor: true, // Ensure donor details are fetched
-                    statuses: {
-                        orderBy: {
-                            dateModified: 'asc', // Ensure they are ordered chronologically
+                const newItem = await prisma.donatedItem.create({
+                    data: {
+                        ...rest, //spread the rest of the fields
+                        donorId,
+                        programId,
+                        dateDonated: dateDonatedDateTime,
+                    },
+                    include: {
+                        donor: true, // Ensure donor details are fetched
+                        statuses: {
+                            orderBy: {
+                                dateModified: 'asc', // Ensure they are ordered chronologically
+                            },
                         },
                     },
-                },
-            });
+                });
 
-            // Upload images to cloud storage and get their filenames
-            const imageUrls = await Promise.all(
-                imageFiles.map(async file => {
-                    const fileExtension = getFileExtension(file.mimetype);
-                    const formattedDate = new Date().toISOString();
-                    return uploadToStorage(
-                        file,
-                        `item-${formattedDate}-${newItem.id}${fileExtension}`,
-                    );
-                }),
-            );
-
-            const newStatus = await prisma.donatedItemStatus.create({
-                data: {
-                    statusType: 'Received',
-                    dateModified: dateDonatedDateTime, // Use the same date as dateDonated
-                    donatedItemId: newItem.id,
-                    imageUrls: imageUrls,
-                },
-            });
-
-            // Send email notification to the donor
-            if (newItem.donor?.email) {
-                await sendDonationEmail(
-                    newItem.donor.email,
-                    `${newItem.donor.firstName} ${newItem.donor.lastName}`,
-                    newItem.itemType,
-                    newItem.dateDonated,
-                    newStatus.imageUrls,
+                // Upload images to cloud storage and get their filenames
+                const imageUrls = await Promise.all(
+                    imageFiles.map(async file => {
+                        const fileExtension = getFileExtension(file.mimetype);
+                        const formattedDate = new Date().toISOString();
+                        return uploadToStorage(
+                            file,
+                            `item-${formattedDate}-${newItem.id}${fileExtension}`,
+                        );
+                    }),
                 );
-            }
 
-            res.status(201).json({
-                donatedItem: newItem,
-                donatedItemStatus: newStatus,
-            });
+                const newStatus = await prisma.donatedItemStatus.create({
+                    data: {
+                        statusType: 'Received',
+                        dateModified: dateDonatedDateTime, // Use the same date as dateDonated
+                        donatedItemId: newItem.id,
+                        imageUrls: imageUrls,
+                    },
+                });
+
+                // Send email notification to the donor
+                if (newItem.donor?.email) {
+                    await sendDonationEmail(
+                        newItem.donor.email,
+                        `${newItem.donor.firstName} ${newItem.donor.lastName}`,
+                        newItem.itemType,
+                        newItem.dateDonated,
+                        newStatus.imageUrls,
+                    );
+                }
+
+                res.status(201).json({
+                    donatedItem: newItem,
+                    donatedItemStatus: newStatus,
+                });
+            }
         } catch (error) {
             // Handle errors for exceeding file size limit
             if (
@@ -126,18 +130,21 @@ router.post(
 // GET /donatedItem - Fetch all donated items
 router.get('/', async (req: Request, res: Response) => {
     try {
-        const donatedItems = await prisma.donatedItem.findMany({
-            include: {
-                donor: true, // Include all donor details
-                program: true, // Include all program details
-                statuses: {
-                    orderBy: {
-                        dateModified: 'asc', // Ensure they are ordered chronologically
+        const permGranted = await authenticateUser(req, res, true);
+        if (permGranted) {
+            const donatedItems = await prisma.donatedItem.findMany({
+                include: {
+                    donor: true, // Include all donor details
+                    program: true, // Include all program details
+                    statuses: {
+                        orderBy: {
+                            dateModified: 'asc', // Ensure they are ordered chronologically
+                        },
                     },
                 },
-            },
-        });
-        res.json(donatedItems);
+            });
+            res.json(donatedItems);
+        }
     } catch (error) {
         if (error instanceof Error) {
             console.error('Error fetching donated item:', error.message);
@@ -154,37 +161,40 @@ router.get('/', async (req: Request, res: Response) => {
 // GET /donatedItem - Fetch donated item by ID
 router.get('/:id', async (req: Request, res: Response) => {
     try {
-        const donatedItemId = parseInt(req.params.id);
-        await validateDonatedItem(donatedItemId);
-        const donatedItem = await prisma.donatedItem.findUnique({
-            where: { id: donatedItemId },
-            include: {
-                donor: true, // Include all donor details
-                program: true, // Include all program details
-                statuses: {
-                    orderBy: {
-                        dateModified: 'asc', // Ensure they are ordered chronologically
+        const permGranted = await authenticateUser(req, res, true);
+        if (permGranted) {
+            const donatedItemId = parseInt(req.params.id);
+            await validateDonatedItem(donatedItemId);
+            const donatedItem = await prisma.donatedItem.findUnique({
+                where: { id: donatedItemId },
+                include: {
+                    donor: true, // Include all donor details
+                    program: true, // Include all program details
+                    statuses: {
+                        orderBy: {
+                            dateModified: 'asc', // Ensure they are ordered chronologically
+                        },
                     },
                 },
-            },
-        });
-
-        if (!donatedItem) {
-            return res.status(404).json({
-                error: `Donated item with ID ${donatedItemId} not found`,
             });
+
+            if (!donatedItem) {
+                return res.status(404).json({
+                    error: `Donated item with ID ${donatedItemId} not found`,
+                });
+            }
+
+            // Process each status to fetch and encode its images
+            await Promise.all(
+                donatedItem.statuses.map(async (status: DonatedItemStatus) => {
+                    const filenames = status.imageUrls || [];
+                    const encodedImages = await fetchImagesFromCloud(filenames);
+                    status.images = encodedImages;
+                }),
+            );
+
+            res.json(donatedItem);
         }
-
-        // Process each status to fetch and encode its images
-        await Promise.all(
-            donatedItem.statuses.map(async (status: DonatedItemStatus) => {
-                const filenames = status.imageUrls || [];
-                const encodedImages = await fetchImagesFromCloud(filenames);
-                status.images = encodedImages;
-            }),
-        );
-
-        res.json(donatedItem);
     } catch (error) {
         if (error instanceof Error) {
             console.error('Error fetching donated item:', error.message);

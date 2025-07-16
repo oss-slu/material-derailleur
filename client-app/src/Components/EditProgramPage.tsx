@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import LoadingSpinner from './LoadingSpinner';
 import '../css/AddProgramPage.css';
 import axios from 'axios';
+import LoadingSpinner from './LoadingSpinner';
 
 interface ProgramData {
     name: string;
@@ -11,18 +11,28 @@ interface ProgramData {
     aimAndCause: string;
 }
 
-const AddProgramPage = () => {
-    const [formData, setFormData] = useState<ProgramData>({
-        name: '',
-        description: '',
-        startDate: '',
-        aimAndCause: '',
-    });
-
+const EditProgramPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+
+    let program = null;
+    const programData = localStorage.getItem('program');
+    if (programData) {
+        program = JSON.parse(programData);
+    }
+    if (!program) {
+        console.error('Program does not exist!');
+        navigate('/programs');
+    }
+    const programId = program.id;
+    const [formData, setFormData] = useState<ProgramData>({
+        name: program.name,
+        description: program.description,
+        startDate: program.startDate.toString().split('T')[0],
+        aimAndCause: program.aimAndCause,
+    });
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -38,17 +48,12 @@ const AddProgramPage = () => {
         setIsLoading(true);
         try {
             const response = await axios.post(
-                `${process.env.REACT_APP_BACKEND_API_BASE_URL}program`,
-                formData,
-                {
-                    headers: {
-                        Authorization: localStorage.getItem('token'),
-                    },
-                },
+                `${process.env.REACT_APP_BACKEND_API_BASE_URL}program/edit`,
+                { ...formData, id: programId },
             );
 
-            if (response.status === 201) {
-                setSuccess('Program created successfully!');
+            if (response.status === 200) {
+                setSuccess('Program edited successfully! Returning...');
                 setError(null);
 
                 setFormData({
@@ -76,17 +81,6 @@ const AddProgramPage = () => {
         }
     };
 
-    const handleClear = () => {
-        setIsLoading(true);
-        setFormData({
-            name: '',
-            description: '',
-            startDate: '',
-            aimAndCause: '',
-        });
-        setIsLoading(false);
-    };
-
     return (
         <div className="container">
             <form
@@ -96,7 +90,7 @@ const AddProgramPage = () => {
                     handleSave();
                 }}
             >
-                <h1 className="heading">Add Program</h1>
+                <h1 className="heading">Edit Program</h1>
                 <div className="form-group">
                     <label className="label">
                         Name <span className="required">*</span>
@@ -157,14 +151,6 @@ const AddProgramPage = () => {
                     >
                         Save
                     </button>
-                    <button
-                        className="clear-button"
-                        type="button"
-                        disabled={isLoading}
-                        onClick={handleClear}
-                    >
-                        Clear
-                    </button>
                 </div>
                 <div className="back-to-programs">
                     <Link to="/programs">
@@ -179,4 +165,4 @@ const AddProgramPage = () => {
     );
 };
 
-export default AddProgramPage;
+export default EditProgramPage;

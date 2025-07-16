@@ -9,6 +9,7 @@ import Barcode from 'react-barcode';
 import { Program } from '../Modals/ProgramModal';
 import { DonatedItem } from '../Modals/DonatedItemModal';
 import { DonatedItemStatus as Status } from '../Modals/DonatedItemStatusModal';
+import axios from 'axios';
 
 interface SelectedItemDetails extends DonatedItem {
     statuses: Status[];
@@ -32,14 +33,15 @@ const DonatedItemsList: React.FC = () => {
     const fetchDonatedItems = async (): Promise<void> => {
         try {
             setLoading(true);
-            const response = await fetch(
+            const response = await axios.get<DonatedItem[]>(
                 `${process.env.REACT_APP_BACKEND_API_BASE_URL}donatedItem`,
+                {
+                    headers: {
+                        Authorization: localStorage.getItem('token'),
+                    },
+                },
             );
-            if (!response.ok) {
-                throw new Error('Failed to fetch donated items');
-            }
-            const data: DonatedItem[] = await response.json();
-            setDonatedItems(data);
+            setDonatedItems(response.data);
             setLoading(false);
         } catch (err) {
             const error = err as Error;
@@ -296,9 +298,10 @@ const DonatedItemsList: React.FC = () => {
                             <td>{item.itemType}</td>
                             <td>{item.currentStatus}</td>
                             <td>
-                                {new Date(
-                                    item.dateDonated,
-                                ).toLocaleDateString()}
+                                {new Date(item.dateDonated).toLocaleDateString(
+                                    undefined,
+                                    { timeZone: 'UTC' },
+                                )}
                             </td>
                             <td>
                                 <div>
@@ -336,14 +339,18 @@ const DonatedItemsList: React.FC = () => {
                             Date Donated:{' '}
                             {new Date(
                                 selectedItemDetails.dateDonated,
-                            ).toLocaleDateString()}
+                            ).toLocaleDateString(undefined, {
+                                timeZone: 'UTC',
+                            })}
                         </p>
                         {selectedItemDetails.lastUpdated && (
                             <p>
                                 Last Updated:{' '}
                                 {new Date(
                                     selectedItemDetails.lastUpdated,
-                                ).toLocaleDateString()}
+                                ).toLocaleDateString(undefined, {
+                                    timeZone: 'UTC',
+                                })}
                             </p>
                         )}
                         <p>
@@ -370,7 +377,10 @@ const DonatedItemsList: React.FC = () => {
                                                     {status.statusType} -{' '}
                                                     {new Date(
                                                         status.dateModified,
-                                                    ).toLocaleDateString()}
+                                                    ).toLocaleDateString(
+                                                        undefined,
+                                                        { timeZone: 'UTC' },
+                                                    )}
                                                 </li>
                                             ),
                                         )}
