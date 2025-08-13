@@ -139,3 +139,60 @@ This command creates and applies a new migration based on the changes in your Pr
 
 - **Keeping Schema in Sync**: It is important to run migrations whenever changes are made to your Prisma models. This keeps your database schema in sync with your application's data model.
 - **Environment Variables**: Ensure that your `.env` file is never committed to your version control system. Add it to your `.gitignore` file to prevent it from being uploaded to shared repositories.
+
+## Troubleshooting Common Issues
+
+### 1. `FATAL: role "postgres" does not exist`
+
+```
+# Create the postgres role
+createuser postgres
+```
+
+---
+
+### 2. `Database "<your-username>" does not exist`
+
+```
+# Create a database with your username
+createdb <your-username>
+```
+
+---
+
+### 3. Port already in use
+
+Change the `.env` file:
+```
+PORT=5050
+```
+
+Restart your server and access via:
+```
+http://localhost:5050
+```
+
+---
+
+### 4. Unable to connect to server in pgAdmin
+
+**Start PostgreSQL:**
+```
+sudo service postgresql start
+```
+
+**Test connection:**
+```
+psql -U postgres -h localhost
+```
+
+**In pgAdmin, use the following connection settings:**
+- **Host:** `localhost`
+- **Port:** `5432`
+- **Username:** `postgres`
+- **Password:** *(the one you set earlier)*
+```
+
+You can save this as `troubleshooting.md` and it will be ready to use.  
+
+Do you also want me to **add more troubleshooting tips** so the file covers both common PostgreSQL and pgAdmin issues?

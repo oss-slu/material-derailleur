@@ -1,133 +1,198 @@
-# Material Donor Mutual Assist
+# Development Setup
 
-## Overview
-The Material Donor Mutual Assist project by BWorks is designed to streamline the process of managing donations, providing a transparent view into the journey of each donated item. This initiative allows donors to track their contributions from the moment they are donated to their ultimate use, offering them a detailed view of how their items are making a difference. By keeping donors informed about the status and use of their donations, the project fosters a sense of trust and community, encouraging continued support and involvement. The system simplifies the administrative tasks involved in updating and managing donations, making it easier to attract and retain donors who are motivated by seeing the tangible impact of their contributions.
+Follow these steps to set up your development environment.
 
-## License
+## Prerequisites
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- **Node.js**: Ensure that Node.js is installed on your system. If it's not installed, download and install it from [Node.js Official Website](https://nodejs.org/).
 
-## Develop With docker compose
+- **PostgreSQL**: Ensure that PostgreSQL is installed on your system. If it's not installed, download and install it from [PostgreSQL Official Website](https://www.postgresql.org/download/).
 
-### Prerequisites
-Ensure you have the following installed on your machine:
+  > **Note**: During PostgreSQL installation, remember to note down the **username** and **password** you set for the PostgreSQL server. You will need these for setting up your `.env` file.
 
-- [Docker](https://www.docker.com/products/docker-desktop/)
+## Step-by-Step Setup
 
-### Clone the Repository
-   Clone the repository to your local machine.
+### 1. Set Up PostgreSQL
+
+#### Option 1: Using the Terminal
+
+- **Windows/Linux/Mac**:
+  - Open your terminal or command prompt.
+  - Run `psql` to enter the PostgreSQL command line interface.
+  - Create a new database with the command:
+    ```sql
+    CREATE DATABASE dbname;
     ```
-    git clone https://github.com/oss-slu/material-donor-mutual-assist.git
-    ```
+  - Replace `dbname` with the name you want to give your database.
 
-### Navigate to the Project Directory  
-   Move into the project folder.
-   ```
-   cd material-donor-mutual-assist
-   ```
+#### Option 2: Using pgAdmin
 
-## Create Environment Variables
-Create a .env file and define the necessary environment variables:
-```
-# database service
-POSTGRES_USER="admin"
-POSTGRES_PASSWORD="admin"
+- **pgAdmin**:
+  - Open pgAdmin and connect to your PostgreSQL server.
+  - Right-click on 'Databases', then select 'Create' -> 'Database'.
+  - Enter the desired name for your database in the 'Database Name' field and save.
 
-# frontend service
-FRONTEND_PORT="3000"
-REACT_APP_BACKEND_API_BASE_URL="http://localhost:5050/"
+### 2. Navigate to the server directory
 
-# backend service
+To navigate to the server directory where your backend files reside, run:
+
+    cd server
+
+### 3. Create Environment Variables
+
+Create a `.env` file and define the necessary environment variables:
+
+```plaintext
+DATABASE_URL="postgresql://username:password@localhost:5432/dbname"
+PORT=5000
 AZURE_STORAGE_ACCOUNT_NAME="mdmaproject"
 AZURE_STORAGE_ACCESS_KEY="<enter-azure-storage-access-key>"
-BACKEND_PORT=5000
-DATABASE_URL="postgresql://admin:admin@mdma-database-container:5432/mdma"
 JWT_SECRET="mymdmaSuperKey"
 SMTP_HOST="smtp.gmail.com"
 SMTP_PORT="587"
 SMTP_SECURE="false"
 SMTP_USER="enter your gmail"
 SMTP_PASS="enter you App password"
+FRONTEND_URL="http://localhost:3000/"
 ```
 
-### Start the Development Environment
+Replace `username`, `password`, and `dbname` with your PostgreSQL username, password, and the name of the database you created.
 
-Run the following command to build and start the services:
-```
-docker-compose up -d
-```
-This will start all necessary containers in the background.
+Replace `SMTP_USER` with you regular gmail 
 
-### Accessing the Application
-- After the applications starts, navigate to ttp://localhost:3000 in your web browser
+Replace `SMTP_PASS` with your App password which is not you regular gmail password
+
+Steps to Generate an App Password for Gmail
+
+1. Go to Google Account Security
+
+    https://myaccount.google.com/security
+
+2. Enable 2-Step Verification (If Not Already Enabled)
+
+    Scroll down to "Signing in to Google".
+
+    Click "2-Step Verification" and complete the setup.
+
+3. Generate an App Password
+
+    Scroll down to "App Passwords" and click on it.
+
+    Select App: Mail.
+
+    Select Device: Other (Custom Name) 
+
+    Click Generate.
+
+    Copy the generated password (it will be a 16-character string, like abcd efgh ijkl mnop).
 
 
-### Stop the Devlopment Environment 
 
-```
-docker compose down
-```
+### 4. Install Dependencies
 
-## Development Setup
+Run the following command in your project directory to install required dependencies:
 
-Follow these steps to set up your development environment.
-
-### Prerequisites
-
-- **Node.js**: Ensure that Node.js is installed on your system. If it's not installed, download and install it from [Node.js Official Website](https://nodejs.org/).
-
-### Installation
-
-1. **Clone the Repository**:  
-   Clone the repository to your local machine.
-
-    ```bash
-    git clone https://github.com/oss-slu/material-donor-mutual-assist.git
-    ```
-
-2. **Navigate to the Project Directory**:  
-   Move into the project folder.
-
-    ```bash
-    cd material-donor-mutual-assist
-    ```
-
-3. **Install Dependencies**:  
-   Run the following command in your project directory to install required dependencies:
-
-    ```bash
     npm install
-    ```
 
-    This command installs all the packages defined in your `package.json` file (both dependencies and devDependencies).
+This command installs all the packages defined in your `package.json` file (both dependencies and devDependencies).
 
-### Frontend Setup
+### 5. Run Migrations
 
-The frontend application is located in the `client-app` folder.  
-Follow the instructions provided in the [Frontend Setup Guide](https://github.com/oss-slu/material-donor-mutual-assist/blob/main/client-app/README.md).
+To synchronize your database schema with your Prisma model and update the Prisma Client, run:
 
-### Server Setup
+    npx prisma migrate dev
 
-The Node.js server resides in the `server` folder, which communicates with a PostgreSQL database.  
-Follow the instructions provided in the [Server Setup Guide](https://github.com/oss-slu/material-donor-mutual-assist/blob/main/server/README.md).
+This command applies all pending migrations to your database and updates the Prisma Client to ensure it matches the new schema. This is crucial for keeping all developers' environments in sync with the latest database schema.
 
-## Code Formatting
+### 6. Start the Development Server
 
-We use Prettier to ensure consistent code formatting across the project. Before pushing your code to the remote repository, follow these steps:
+Start your development server by running:
 
-1. **Format the Code**:  
-   To automatically format your code, run the following command:
+    npm run dev
 
-    ```bash
-    npm run prettier:write
-    ```
+This command starts the server using `nodemon`, which will automatically restart the server if any changes are detected in your source files.
 
-2. **Check Code Formatting**:  
-   After formatting, run this command to ensure everything is properly formatted:
+### 7. Access the Server
 
-    ```bash
-    npm run prettier:check
-    ```
+Once the server is running, it will be accessible at:
 
-   Only push the code to the repository once all formatting issues have been resolved.
+    http://localhost:5000
 
+You can access your API endpoints via this URL using a web browser or tools like Postman for testing API requests.
+
+## Prisma Commands
+After updating the Prisma schema, you have to generate migrations to keep your database schema in sync with your application's data model. Use the following command:
+
+``` bash
+npx prisma migrate dev --name migration-name
+```
+
+For example, if you add a new model called `DonatedItem` to your Prisma schema, you can run:
+
+``` bash
+npx prisma migrate dev --name create-donateditem
+```
+This command creates and applies a new migration based on the changes in your Prisma schema, ensuring your database schema is up-to-date.
+
+
+## Additional Information
+
+- **Keeping Schema in Sync**: It is important to run migrations whenever changes are made to your Prisma models. This keeps your database schema in sync with your application's data model.
+- **Environment Variables**: Ensure that your `.env` file is never committed to your version control system. Add it to your `.gitignore` file to prevent it from being uploaded to shared repositories.
+
+## Troubleshooting Common Issues
+
+### 1. `FATAL: role "postgres" does not exist`
+
+```
+# Create the postgres role
+createuser postgres
+```
+
+---
+
+### 2. `Database "<your-username>" does not exist`
+
+```
+# Create a database with your username
+createdb <your-username>
+```
+
+---
+
+### 3. Port already in use
+
+Change the `.env` file:
+```
+PORT=5050
+```
+
+Restart your server and access via:
+```
+http://localhost:5050
+```
+
+---
+
+### 4. Unable to connect to server in pgAdmin
+
+**Start PostgreSQL:**
+```
+sudo service postgresql start
+```
+
+**Test connection:**
+```
+psql -U postgres -h localhost
+```
+
+**In pgAdmin, use the following connection settings:**
+- **Host:** `localhost`
+- **Port:** `5432`
+- **Username:** `postgres`
+- **Password:** *(the one you set earlier)*
+```
+
+You can save this as `troubleshooting.md` and it will be ready to use.  
+
+Do you also want me to **add more troubleshooting tips** so the file covers both common PostgreSQL and pgAdmin issues?
