@@ -17,19 +17,21 @@ const Register: React.FC = () => {
         confirm_password: '',
     });
     const [passwordStrength, setPasswordStrength] = useState<
-        'weak' | 'medium' | 'strong'
-    >('weak');
+        'weak' | 'medium' | 'strong' | null
+    >(null);
     const [successMessage, setSuccessMessage] = useState<string>('');
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setCredentials({ ...credentials, [name]: value });
+        setCredentials(prev => ({ ...prev, [name]: value }));
 
-        if (name === 'password' || name === 'confirm_password') {
-            // Determine password strength
-            if (value.length < 12) {
+        if (name === 'password') {
+            if (value.length === 0) {
+                setPasswordStrength(null);
+                setErrorMessage('');
+            } else if (value.length < 12) {
                 setPasswordStrength('weak');
             } else if (value.length >= 12 && value.length <= 15) {
                 setPasswordStrength('medium');
@@ -37,66 +39,76 @@ const Register: React.FC = () => {
                 setPasswordStrength('strong');
             }
 
-            // Perform password validations only when password field is changed
-            validatePassword(value);
+            // validate password on input change
+            const validationError = validatePassword(value);
+            setErrorMessage(validationError);
+        }
+
+        if (name === 'confirm_password') {
+            if (value !== credentials.password) {
+                setErrorMessage('Passwords do not match');
+            } else {
+                setErrorMessage('');
+            }
         }
     };
 
-    const validatePassword = (password: string) => {
+    const validatePassword = (password: string): string => {
         if (password.length < 12) {
-            setErrorMessage('Password must be at least 12 characters');
-            return;
+            return 'Password must be at least 12 characters';
         }
 
-        if (password.match(credentials.name)) {
-            setErrorMessage('Password must not contain name');
-            return;
+        if (credentials.name && password.includes(credentials.name)) {
+            return 'Password must not contain name';
         }
 
-        if (password.match(credentials.email)) {
-            setErrorMessage('Password must not contain email');
-            return;
+        if (credentials.email && password.includes(credentials.email)) {
+            return 'Password must not contain email';
         }
 
         const missing: string[] = [];
 
-        if (!password.match(/[A-Z]/)) missing.push('an uppercase');
-        if (!password.match(/[a-z]/)) missing.push('a lowercase');
-        if (!password.match(/[0-9]/)) missing.push('a number');
-        if (!password.match(/[$&+,:;=?@#|'<>.^*()%!-]/))
+        if (!/[A-Z]/.test(password)) missing.push('an uppercase letter');
+        if (!/[a-z]/.test(password)) missing.push('a lowercase letter');
+        if (!/[0-9]/.test(password)) missing.push('a number');
+        if (!/[$&+,:;=?@#|'<>.^*()%!-]/.test(password))
             missing.push('a special character');
 
-        if (missing.length !== 0) {
+        if (missing.length > 0) {
             if (missing.length === 1) {
-                setErrorMessage('Password must contain ' + missing[0] + '!');
+                return 'Password must contain ' + missing[0] + '!';
             } else {
-                const tmp = missing.pop();
-                setErrorMessage(
+                const last = missing.pop();
+                return (
                     'Password must contain ' +
-                        missing.join(', ') +
-                        ' and ' +
-                        tmp +
-                        '!',
+                    missing.join(', ') +
+                    ' and ' +
+                    last +
+                    '!'
                 );
             }
-            return;
-        } else {
-            setErrorMessage('');
         }
+
+        return ''; // no error
     };
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsLoading(true);
 
+        // final validation check
         if (credentials.password !== credentials.confirm_password) {
             setErrorMessage('Passwords do not match');
+            setIsLoading(false);
             return;
         }
 
-        // Revalidate password before sending
-        validatePassword(credentials.password);
-        if (errorMessage) return;
+        const validationError = validatePassword(credentials.password);
+        if (validationError) {
+            setErrorMessage(validationError);
+            setIsLoading(false);
+            return;
+        }
 
         try {
             const response = await fetch(
@@ -125,6 +137,7 @@ const Register: React.FC = () => {
                     password: '',
                     confirm_password: '',
                 });
+                setPasswordStrength(null);
 
                 setTimeout(() => {
                     window.location.href = '/About';
@@ -137,6 +150,22 @@ const Register: React.FC = () => {
             setErrorMessage('An error occurred. Please try again.');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    // Map strength to colors
+    const getStrengthColor = (
+        strength: 'weak' | 'medium' | 'strong' | null,
+    ) => {
+        switch (strength) {
+            case 'weak':
+                return 'red';
+            case 'medium':
+                return 'orange';
+            case 'strong':
+                return 'green';
+            default:
+                return 'black';
         }
     };
 
@@ -181,22 +210,29 @@ const Register: React.FC = () => {
                                     name="password"
                                     id="password"
                                 />
-                                <div
-                                    className="password-strength-meter"
-                                    style={{ display: 'flex' }}
-                                >
-                                    <p className="my-3">Password Strength:</p>
-                                    <p
-                                        className={`text-${passwordStrength} my-3 mx-2`}
-                                        style={{
-                                            marginTop: '5px',
-                                            textAlign: 'center',
-                                            fontWeight: 'bold',
-                                        }}
+                                {passwordStrength && (
+                                    <div
+                                        className="password-strength-meter"
+                                        style={{ display: 'flex' }}
                                     >
-                                        {passwordStrength.toUpperCase()}
-                                    </p>
-                                </div>
+                                        <p className="my-3">
+                                            Password Strength:
+                                        </p>
+                                        <p
+                                            className="my-3 mx-2"
+                                            style={{
+                                                marginTop: '5px',
+                                                textAlign: 'center',
+                                                fontWeight: 'bold',
+                                                color: getStrengthColor(
+                                                    passwordStrength,
+                                                ),
+                                            }}
+                                        >
+                                            {passwordStrength.toUpperCase()}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                             <div className="mb-3 position-relative">
                                 <label
