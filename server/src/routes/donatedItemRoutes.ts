@@ -18,6 +18,7 @@ import { DonatedItemStatus } from '../modals/DonatedItemStatusModal';
 import { sendDonationEmail } from '../services/emailService';
 import { authenticateUser } from './routeProtection';
 import { DonatedItem } from '@prisma/client';
+import { submitRerumDonation } from '../services/RerumServices';
 
 const router = Router();
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // Max file size limit: 5MB
@@ -83,6 +84,8 @@ router.post(
                     }),
                 );
 
+                const rerumID = submitRerumDonation(JSON.stringify(newItem), newItem.id.toString());
+                
                 const newStatus = await prisma.donatedItemStatus.create({
                     data: {
                         statusType: 'Received',
