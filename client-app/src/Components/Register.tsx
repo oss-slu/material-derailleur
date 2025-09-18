@@ -10,7 +10,7 @@ interface Credentials {
 }
 
 /** Config */
-const MIN_LEN = 8;
+const MIN_LEN = 12;
 
 type MaybeBool = boolean | null;
 
@@ -22,6 +22,14 @@ type RuleState = {
     special: boolean;
     noName: MaybeBool; // null until we can evaluate
     noEmail: MaybeBool; // null until we can evaluate
+};
+
+/** Single REGEX source */
+const REGEX = {
+    upper: /[A-Z]/,
+    lower: /[a-z]/,
+    number: /[0-9]/,
+    special: /[$&+,:;=?@#|'<>.^*()%!-]/,
 };
 
 const initialRules: RuleState = {
@@ -86,10 +94,10 @@ const Register: React.FC = () => {
 
         return {
             length: password.length >= MIN_LEN,
-            upper: /[A-Z]/.test(password),
-            lower: /[a-z]/.test(password),
-            number: /[0-9]/.test(password),
-            special: /[$&+,:;=?@#|'<>.^*()%!-]/.test(password),
+            upper: REGEX.upper.test(password),
+            lower: REGEX.lower.test(password),
+            number: REGEX.number.test(password),
+            special: REGEX.special.test(password),
             noName: hasNameToken ? !containsName : null,
             noEmail: hasEmailToken ? !containsEmail : null,
         };
@@ -111,10 +119,10 @@ const Register: React.FC = () => {
         let score = 0;
         if (password.length >= MIN_LEN) score += 1;
         if (password.length >= MIN_LEN + 3) score += 1;
-        if (/[A-Z]/.test(password)) score += 1;
-        if (/[a-z]/.test(password)) score += 1;
-        if (/[0-9]/.test(password)) score += 1;
-        if (/[$&+,:;=?@#|'<>.^*()%!-]/.test(password)) score += 1;
+        if (REGEX.upper.test(password)) score += 1;
+        if (REGEX.lower.test(password)) score += 1;
+        if (REGEX.number.test(password)) score += 1;
+        if (REGEX.special.test(password)) score += 1;
 
         if (score <= 2) return 'weak';
         if (score <= 4) return 'medium';
@@ -143,8 +151,8 @@ const Register: React.FC = () => {
         if (name === 'password' || name === 'name' || name === 'email') {
             const r = computeRules(next.password, next.name, next.email);
             setRules(r);
-            // Show once user starts, hide automatically when valid
-            setShowGuidelines(next.password.length > 0 && !isPasswordValid(r));
+            // ⇩ Always show guidelines once there is any input
+            setShowGuidelines(next.password.length > 0);
         }
     };
 
@@ -244,22 +252,31 @@ const Register: React.FC = () => {
     };
 
     // ---------- UI helpers ----------
-    const strengthColor = (s: typeof passwordStrength) =>
-        s === 'weak'
-            ? '#dc2626'
-            : s === 'medium'
-              ? '#d97706'
-              : s === 'strong'
-                ? '#16a34a'
-                : '#6b7280';
-    const strengthWidth = (s: typeof passwordStrength) =>
-        s === 'weak'
-            ? '33%'
-            : s === 'medium'
-              ? '66%'
-              : s === 'strong'
-                ? '100%'
-                : '0%';
+    const strengthColor = (s: typeof passwordStrength) => {
+        switch (s) {
+            case 'weak':
+                return '#dc2626';
+            case 'medium':
+                return '#d97706';
+            case 'strong':
+                return '#16a34a';
+            default:
+                return '#6b7280';
+        }
+    };
+
+    const strengthWidth = (s: typeof passwordStrength) => {
+        switch (s) {
+            case 'weak':
+                return '33%';
+            case 'medium':
+                return '66%';
+            case 'strong':
+                return '100%';
+            default:
+                return '0%';
+        }
+    };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-200">
@@ -315,23 +332,14 @@ const Register: React.FC = () => {
                                                 credentials.password,
                                             ),
                                         );
-                                        setShowGuidelines(
-                                            credentials.password.length > 0 &&
-                                                !isPasswordValid(r),
-                                        );
+                                        // ⇩ Always show on focus
+                                        setShowGuidelines(true);
                                     }}
                                     onBlur={() => {
-                                        // hide if empty or already valid
-                                        const r = computeRules(
-                                            credentials.password,
-                                            credentials.name,
-                                            credentials.email,
-                                        );
-                                        if (
-                                            !credentials.password ||
-                                            isPasswordValid(r)
-                                        )
+                                        // ⇩ Hide only if empty on blur (keep visible otherwise)
+                                        if (!credentials.password) {
                                             setShowGuidelines(false);
+                                        }
                                     }}
                                     name="password"
                                     id="password"
@@ -388,8 +396,8 @@ const Register: React.FC = () => {
                                     />
                                 </div>
 
-                                {/* SHORT 3-point note: shows only while invalid */}
-                                {showGuidelines && !isPasswordValid(rules) && (
+                                {/* SHORT 3-point note: always visible once there is any input */}
+                                {showGuidelines && (
                                     <ul
                                         className="password-note"
                                         style={{
