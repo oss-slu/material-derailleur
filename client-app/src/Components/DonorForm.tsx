@@ -21,6 +21,10 @@ interface FormErrors {
     [key: string]: string;
 }
 
+// Letters (incl. accents) + spaces ONLY for city/state
+const ALPHA_SPACE_PATTERN = /^[A-Za-zÀ-ÿ ]+$/;
+const ALPHA_SPACE_PATTERN_STR = '^[A-Za-zÀ-ÿ ]+$'; // for HTML pattern
+
 const DonorForm: React.FC = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState<FormData>({
@@ -41,19 +45,17 @@ const DonorForm: React.FC = () => {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Handle input change for all fields
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
-        setFormData(prevState => ({
-            ...prevState,
+        setFormData(prev => ({
+            ...prev,
             [name]: type === 'checkbox' ? checked : value,
         }));
-        setErrors(prevState => ({ ...prevState, [name]: '' })); // Reset errors on change
+        setErrors(prev => ({ ...prev, [name]: '' }));
         setErrorMessage(null);
         setSuccessMessage(null);
     };
 
-    // Generalized validation function to reduce code repetition
     const validateField = (name: string, value: string) => {
         const requiredFields = [
             'firstName',
@@ -67,30 +69,46 @@ const DonorForm: React.FC = () => {
         ];
 
         if (requiredFields.includes(name) && !value.trim()) {
-            return `${name.replace(/([A-Z])/g, ' $1')} is required`; // Add spaces to camelCase names
+            return `${name.replace(/([A-Z])/g, ' $1')} is required`;
         }
+
         if (name === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
             return 'Invalid email format';
-        } else if (name === 'contact' && value && !/^[0-9]{10}$/.test(value)) {
+        }
+
+        if (name === 'contact' && value && !/^[0-9]{10}$/.test(value)) {
             return 'Contact must be a 10-digit number';
-        } else if (name === 'zipcode' && !/^\d{5}$/.test(value)) {
+        }
+
+        if (name === 'zipcode' && !/^\d{5}$/.test(value)) {
             return 'Invalid zip code format';
         }
+
+        // City/State: letters + spaces only
+        if (
+            (name === 'city' || name === 'state') &&
+            value &&
+            !ALPHA_SPACE_PATTERN.test(value)
+        ) {
+            return 'Only letters and spaces are allowed';
+        }
+
         return '';
     };
 
-    // Validation for entire form
     const validateForm = (): boolean => {
         const newErrors: FormErrors = {};
-        Object.keys(formData).forEach(field => {
-            const error = validateField(field, (formData as any)[field]);
-            if (error) newErrors[field] = error;
+        (
+            Object.entries(formData) as [keyof FormData, string | boolean][]
+        ).forEach(([field, value]) => {
+            if (typeof value === 'boolean') return;
+            const error = validateField(field as string, value as string);
+            if (error) newErrors[field as string] = error;
         });
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    // Handle form submission
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setIsLoading(true);
@@ -101,15 +119,17 @@ const DonorForm: React.FC = () => {
                     formData,
                     {
                         headers: {
-                            Authorization: localStorage.getItem('token'),
+                            Authorization: localStorage.getItem('token') || '',
                         },
                     },
                 );
+
                 if (response.status === 201) {
                     const login_response = await axios.post(
                         `${process.env.REACT_APP_BACKEND_API_BASE_URL}donor/register`,
                         { name: formData.firstName, email: formData.email },
                     );
+
                     if (login_response.status === 201) {
                         setSuccessMessage('Donor added successfully!');
                         setFormData({
@@ -141,10 +161,10 @@ const DonorForm: React.FC = () => {
             }
         } else {
             setErrorMessage('Form has validation errors');
+            setIsLoading(false);
         }
     };
 
-    // Handle form reset
     const handleRefresh = () => {
         setIsLoading(true);
         setFormData({
@@ -171,42 +191,88 @@ const DonorForm: React.FC = () => {
         setIsLoading(false);
     };
 
-    // Reusable function to render form fields (text and checkbox)
     const renderFormField = (
         label: string,
         name: keyof FormData,
-        type = 'text',
+        type: 'text' | 'email' = 'text',
         required = true,
-    ) => (
-        <div className="form-field">
-            <label htmlFor={name} className="block text-sm font-semibold mb-1">
-                {label}
-                {required && <span className="text-red-500">&nbsp;*</span>}
-            </label>
-            <input
-                type={type}
-                id={name}
-                name={name}
-                value={formData[name] as string}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 rounded border ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
-            />
-            {errors[name] && (
-                <p className="text-red-500 text-sm mt-1">{errors[name]}</p>
-            )}
-        </div>
-    );
+    ) => {
+        const isAlphaSpace = name === 'city' || name === 'state';
+        const isNumeric = name === 'contact' || name === 'zipcode';
+        const zipPattern = '^\\d{5}$';
+        const hasError = Boolean(errors[name]);
+
+        return (
+            <div className="form-field">
+                <label
+                    htmlFor={name}
+                    className="block text-sm font-semibold mb-1"
+                >
+                    {label}
+                    {required && <span className="text-red-500">&nbsp;*</span>}
+                </label>
+
+                <input
+                    type={type}
+                    id={name}
+                    name={name}
+                    value={formData[name] as string}
+                    onChange={handleChange}
+                    inputMode={isNumeric ? 'numeric' : 'text'}
+                    pattern={
+                        isAlphaSpace
+                            ? ALPHA_SPACE_PATTERN_STR
+                            : name === 'zipcode'
+                              ? zipPattern
+                              : undefined
+                    }
+                    title={
+                        isAlphaSpace
+                            ? 'Only letters and spaces are allowed'
+                            : name === 'zipcode'
+                              ? 'Use 5 digits (e.g., 63103)'
+                              : undefined
+                    }
+                    className={`w-full px-3 py-2 rounded border ${hasError ? 'border-red-500' : 'border-gray-300'}`}
+                    aria-invalid={hasError}
+                    aria-describedby={hasError ? `${name}-error` : undefined}
+                />
+
+                {errors[name] && (
+                    <p
+                        className="text-red-700 font-bold text-sm mt-1"
+                        id={`${name}-error`}
+                        role="alert"
+                    >
+                        {errors[name]}
+                    </p>
+                )}
+            </div>
+        );
+    };
 
     return (
         <div className="donor-form outer-container mx-auto p-10">
             <h1 className="text-2xl font-bold heading-centered">
                 Add Donor Details
             </h1>
-            {errorMessage && <p className="error-message">{errorMessage}</p>}
-            {successMessage && (
-                <p className="success-message">{successMessage}</p>
+
+            {errorMessage && (
+                <p
+                    className="error-message text-red-700 font-bold"
+                    role="alert"
+                >
+                    {errorMessage}
+                </p>
             )}
-            <form onSubmit={handleSubmit} className="form-grid">
+            {successMessage && (
+                <p className="success-message" role="status">
+                    {successMessage}
+                </p>
+            )}
+
+            {/* Disable native browser validation popups/tooltips */}
+            <form onSubmit={handleSubmit} className="form-grid" noValidate>
                 {renderFormField('First Name', 'firstName')}
                 {renderFormField('Last Name', 'lastName')}
                 {renderFormField('Contact', 'contact')}
@@ -243,6 +309,7 @@ const DonorForm: React.FC = () => {
                         </span>
                     </div>
                 </div>
+
                 <div className="form-field full-width button-container">
                     <button
                         type="submit"
@@ -268,6 +335,7 @@ const DonorForm: React.FC = () => {
                         Back
                     </button>
                 </div>
+
                 {isLoading && <LoadingSpinner />}
             </form>
         </div>
