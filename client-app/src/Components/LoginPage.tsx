@@ -68,9 +68,10 @@ const LoginPage: React.FC = () => {
         e.preventDefault();
         setIsLoading(true);
 
-        // Validate CAPTCHA
-        if (captchaValue.toLowerCase() !== captcha.toLowerCase()) {
+        // Validate CAPTCHA (case-sensitive)
+        if (captchaValue !== captcha) {
             setErrorMessage('Incorrect CAPTCHA. Please try again.');
+            setIsLoading(false);
             return;
         }
 
