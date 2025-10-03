@@ -13,7 +13,6 @@
     overflow: hidden; /* stop scrollbars */
 }
 
-
 .login-left {
     flex: 1;
     display: flex;
@@ -35,7 +34,6 @@
     flex-direction: column;
     gap: 1rem;
 }
-
 
 .istyle,
 .istyleu {
@@ -94,7 +92,6 @@
     text-decoration: underline;
 }
 
-
 .captcha-container {
     display: flex;
     flex-direction: column;
@@ -125,7 +122,6 @@
     padding-left: 80px;
 }
 
-
 .login-right {
     flex: 1;
     display: flex;
@@ -134,12 +130,10 @@
     position: relative;
 }
 
-
 .circle-wrapper {
     position: relative;
     display: inline-block;
 }
-
 
 .circle {
     border-radius: 50%;
@@ -149,7 +143,6 @@
         0 0 0 8px #4db8ff,
         0 4px 12px rgba(0, 0, 0, 0.3); /* shadow */
 }
-
 
 .circle.large {
     width: 270px;
