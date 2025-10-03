@@ -1,159 +1,184 @@
 .login-container {
     display: flex;
-    flex-direction: column;
-    /* Arrange items vertically */
-    align-items: center;
     min-height: 100vh;
-    background-color: #6096ba;
-    padding: 8%;
-}
-.login-box {
-    padding: 4%;
-    width: 50%;
-    margin: auto;
-    background-color: #a9d6e5;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
-.login-label {
-    font-size: 2rem;
-    color: white;
-    font-family: 'Roboto', sans-serif;
-    font-weight: bold;
-    margin-bottom: 0%;
-}
-.istyle {
-    padding: 8px 16px;
-    margin-top: 8px;
-    border: 2px solid #6096ba !important;
-    color: #6096ba;
-    border-radius: 4px;
-    width: 100%;
-    box-sizing: border-box;
-    max-width: 100%;
-}
-.istyleu {
-    padding: 8px 16px;
-    margin-top: 8px;
-    border: 2px solid #6096ba !important;
-    color: #6096ba;
-    margin-bottom: 5px !important;
-}
-.buttongroups {
-    padding: 1%;
-    display: grid;
+    top: 20px;
+    bottom: 30px;
+    left: 0;
+    right: 0;
+    background-color: #ecf9fd;
+    display: flex;
     justify-content: center;
     align-items: center;
-    /* background-color: aquamarine; */
+    z-index: 1;
+    overflow: hidden; /* stop scrollbars */
 }
-.btn-style {
-    background-color: #3498db;
+
+.login-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 5% 8%;
+}
+
+.login-label {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #222;
+    margin-bottom: 1rem;
+}
+
+.login-form {
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.istyle,
+.istyleu {
+    padding: 10px;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    width: 100%;
+    font-size: 1rem;
+}
+
+/* Password toggle */
+.password-wrapper {
+    position: relative;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
     border: none;
-    color: white;
-    padding: 10px 10px;
-    text-align: center;
-    text-decoration: none;
-    display: inline;
-    font-size: 16px;
-    border-radius: 4px;
     cursor: pointer;
 }
 
-.btn-style:hover {
-    background-color: #2980b9;
+/* Buttons */
+.buttongroups {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .btlSuccess {
-    background-color: #29b982;
+    background-color: rgb(0, 171, 250);
     border: none;
-    color: white;
-    width: 100%;
-    padding: 10px 10px;
-    text-align: center;
-    text-decoration: none;
-    display: block;
-    font-size: 16px;
-    border-radius: 4px;
+    color: #fff;
+    padding: 10px;
+    border-radius: 6px;
     cursor: pointer;
-}
-#emailHelp {
-    padding-bottom: 15px;
-}
-.captha {
-    justify-content: center;
-    align-items: center;
-    margin-top: 10px;
+    font-size: 1rem;
+    transition: background 0.3s;
 }
 
-.btSuccess:hover {
-    background-color: #29b982;
-}
-.register-link {
-    margin-top: 10px;
-    text-align: center;
-}
-/* Login popup */
-.popup {
-    position: fixed;
-    top: 60px;
-    right: 0px;
-    background-color: #8cc969;
-    color: white;
-    padding: 15px 35px;
-    font-size: 24px;
-    border-radius: 5px;
-    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
-    animation: fadeInOut 5s ease-in-out;
+.btlSuccess:hover {
+    background-color: rgb(0, 171, 250);
 }
 
-/* Smooth fade-in and fade-out effect */
-@keyframes fadeInOut {
-    0% {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    20% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    80% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    100% {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
+.btn-link {
+    font-size: 0.9rem;
+    color: #1c7ed6;
+    text-decoration: none;
+}
+
+.btn-link:hover {
+    text-decoration: underline;
 }
 
 .captcha-container {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 8px;
 }
 
 .captcha-row {
     display: flex;
-    align-items: center; /* Keeps everything on the same line */
-    gap: 8px; /* Adjust spacing between label, image, and button */
-}
-
-.captcha-label {
-    font-weight: normal; /* Normal text, not bold */
-    margin-right: 5px;
+    align-items: center;
+    gap: 8px;
 }
 
 .captcha-input {
-    padding: 5px;
+    padding: 8px;
     border: 1px solid #ccc;
-    border-radius: 5px;
-    width: 100%; /* Adjust width as needed */
+    border-radius: 6px;
 }
 
 .refresh-icon {
+    cursor: pointer;
     transition: transform 0.2s ease-in-out;
 }
 
 .refresh-icon:hover {
     transform: rotate(90deg);
+}
+.register-link {
+    padding-left: 80px;
+}
+
+.login-right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.circle-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.circle {
+    border-radius: 50%;
+    overflow: hidden;
+    border: 8px solid #fff;
+    box-shadow:
+        0 0 0 8px #4db8ff,
+        0 4px 12px rgba(0, 0, 0, 0.3); /* shadow */
+}
+
+.circle.large {
+    width: 270px;
+    height: 270px;
+
+    position: relative;
+    z-index: 1;
+}
+
+/* Small circle overlapping the big one */
+.circle.small {
+    width: 140px;
+    height: 140px;
+    position: absolute;
+    top: 10px;
+    bottom: 20px;
+    right: 50px;
+    z-index: 2;
+}
+
+/* Make sure image fills circle */
+.circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .login-container {
+        flex-direction: column;
+    }
+    .login-right {
+        display: none;
+    }
+    .login-left {
+        padding: 10%;
+    }
 }

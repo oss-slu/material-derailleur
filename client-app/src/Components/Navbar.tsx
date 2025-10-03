@@ -52,7 +52,7 @@ const Navbar: React.FC = () => {
     };
 
     return (
-        <nav className="navbar navbar-expand-lg navbar-light bg-light">
+        <nav className="navbar navbar-expand-lg custom-navbar">
             <div className="container-fluid">
                 <Link className="navbar-brand" to="/">
                     <img
