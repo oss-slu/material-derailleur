@@ -69,7 +69,7 @@ const LoginPage: React.FC = () => {
         e.preventDefault();
         setIsLoading(true);
 
-        // ✅ Keep case-insensitive CAPTCHA check
+        
         if (captchaValue.toLowerCase() !== captcha.toLowerCase()) {
             setErrorMessage('Incorrect CAPTCHA. Please try again.');
             setIsLoading(false);
