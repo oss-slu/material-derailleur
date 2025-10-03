@@ -34,7 +34,7 @@ const LoginPage: React.FC = () => {
         generateCaptcha();
     }, []);
 
-    // Generate random captcha and draw on canvas
+    // Generate random captcha and draw on canvas (original logic kept)
     const generateCaptcha = (): void => {
         const randomCaptcha = Math.random().toString(36).substring(7);
         setCaptcha(randomCaptcha);
@@ -63,13 +63,11 @@ const LoginPage: React.FC = () => {
         setCaptchaValue(e.target.value);
     };
 
-    const handleSubmit = async (
-        e: FormEvent<HTMLFormElement>,
-    ): Promise<void> => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
         e.preventDefault();
         setIsLoading(true);
 
-        
+        // Case-insensitive captcha validation
         if (captchaValue.toLowerCase() !== captcha.toLowerCase()) {
             setErrorMessage('Incorrect CAPTCHA. Please try again.');
             setIsLoading(false);
@@ -88,6 +86,7 @@ const LoginPage: React.FC = () => {
 
             const data = await response.json();
             if (response.ok) {
+                //  Note: Using localStorage is less secure than HttpOnly cookies
                 localStorage.setItem('token', data.token);
                 triggerPopup('Welcome ' + data.name + '!');
 
@@ -96,9 +95,7 @@ const LoginPage: React.FC = () => {
                 } else if (data.role === 'DONOR') {
                     window.location.href = '/donor-profile';
                 } else {
-                    setErrorMessage(
-                        'Unknown user role. Please contact support.',
-                    );
+                    setErrorMessage('Unknown user role. Please contact support.');
                 }
             } else {
                 setErrorMessage(data.message || 'Invalid email or password.');
@@ -116,9 +113,7 @@ const LoginPage: React.FC = () => {
             <div className="login-left">
                 <h2 className="login-label">Welcome to SLU BWORKS Platform</h2>
 
-                {errorMessage && (
-                    <div className="error-message">{errorMessage}</div>
-                )}
+                {errorMessage && <div className="error-message">{errorMessage}</div>}
 
                 <form onSubmit={handleSubmit} className="login-form">
                     <label htmlFor="email">Username/Email</label>
@@ -150,22 +145,14 @@ const LoginPage: React.FC = () => {
                             className="toggle-password"
                             onClick={() => setShowPassword(!showPassword)}
                         >
-                            {showPassword ? (
-                                <EyeOff size={18} />
-                            ) : (
-                                <Eye size={18} />
-                            )}
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                     </div>
 
                     {/* Captcha */}
                     <div className="captcha-container">
                         <div className="captcha-row">
-                            <canvas
-                                ref={captchaCanvasRef}
-                                width="100"
-                                height="30"
-                            ></canvas>
+                            <canvas ref={captchaCanvasRef} width="100" height="30"></canvas>
                             <RefreshCw
                                 className="refresh-icon"
                                 size={20}
