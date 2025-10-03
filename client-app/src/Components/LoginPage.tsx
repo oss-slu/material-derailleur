@@ -34,6 +34,7 @@ const LoginPage: React.FC = () => {
         generateCaptcha();
     }, []);
 
+    // Generate random captcha and draw on canvas
     const generateCaptcha = (): void => {
         const randomCaptcha = Math.random().toString(36).substring(7);
         setCaptcha(randomCaptcha);
@@ -68,6 +69,7 @@ const LoginPage: React.FC = () => {
         e.preventDefault();
         setIsLoading(true);
 
+        // ✅ Keep case-insensitive CAPTCHA check
         if (captchaValue.toLowerCase() !== captcha.toLowerCase()) {
             setErrorMessage('Incorrect CAPTCHA. Please try again.');
             setIsLoading(false);

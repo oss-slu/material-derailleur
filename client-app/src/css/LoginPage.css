@@ -1,7 +1,7 @@
 .login-container {
     display: flex;
     min-height: 100vh;
-    position: fixed;
+
     top: 20px;
     bottom: 30px;
     left: 0;
