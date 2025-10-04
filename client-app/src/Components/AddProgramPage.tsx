@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import LoadingSpinner from './LoadingSpinner';
 import '../css/AddProgramPage.css';
 import axios from 'axios';
+import { MAX_TEXT } from '../constants/validation';
 
 interface ProgramData {
     name: string;
@@ -11,18 +12,17 @@ interface ProgramData {
     aimAndCause: string;
 }
 
-const MAX_TEXT = 500;
 const isTooLong = (s: string) => s.trim().length > MAX_TEXT;
-const isEmpty = (s: string) => s.trim().length === 0;
+const isBlank = (s: string) => s.trim().length === 0;
 const isFormValid = (d: ProgramData) =>
-    !isEmpty(d.name) &&
-    !isEmpty(d.startDate) &&
-    !isEmpty(d.description) &&
-    !isEmpty(d.aimAndCause) &&
+    !isBlank(d.name) &&
+    !isBlank(d.startDate) &&
+    !isBlank(d.description) &&
+    !isBlank(d.aimAndCause) &&
     !isTooLong(d.description) &&
     !isTooLong(d.aimAndCause);
 
-const AddProgramPage = () => {
+const AddProgramPage: React.FC = () => {
     const [formData, setFormData] = useState<ProgramData>({
         name: '',
         description: '',
@@ -33,48 +33,53 @@ const AddProgramPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [submitAttempted, setSubmitAttempted] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
         const { name, value } = e.target;
-        setFormData({
-            ...formData,
-            [name]: value,
-        });
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleBlur = (
+        e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>,
+    ) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value.trim() }));
     };
 
     const handleSave = async () => {
+        setSubmitAttempted(true);
         if (!isFormValid(formData)) return;
+
         setIsLoading(true);
+        setError(null);
+        setSuccess(null);
+
         try {
             const response = await axios.post(
                 `${process.env.REACT_APP_BACKEND_API_BASE_URL}program`,
                 formData,
                 {
                     headers: {
-                        Authorization: localStorage.getItem('token'),
+                        Authorization: localStorage.getItem('token') || '',
                     },
                 },
             );
 
             if (response.status === 201) {
                 setSuccess('Program created successfully!');
-                setError(null);
-                setTimeout(() => {
-                    navigate('/programs');
-                }, 1200);
+                setTimeout(() => navigate('/programs'), 1200);
             } else {
                 setError('Failed to create program.');
-                setSuccess(null);
             }
-        } catch (error: unknown) {
+        } catch (err: unknown) {
             const message =
-                (error as any).response?.data?.message ||
+                (err as any)?.response?.data?.message ||
                 'Error creating program';
             setError(message);
-            setSuccess(null);
         } finally {
             setIsLoading(false);
         }
@@ -89,7 +94,13 @@ const AddProgramPage = () => {
         });
         setError(null);
         setSuccess(null);
+        setSubmitAttempted(false);
     };
+
+    const showNameEmpty = submitAttempted && isBlank(formData.name);
+    const showDateEmpty = submitAttempted && isBlank(formData.startDate);
+    const showDescEmpty = submitAttempted && isBlank(formData.description);
+    const showAimEmpty = submitAttempted && isBlank(formData.aimAndCause);
 
     return (
         <div className="container">
@@ -99,8 +110,18 @@ const AddProgramPage = () => {
                     e.preventDefault();
                     handleSave();
                 }}
+                noValidate
             >
                 <h1 className="heading">Add Program</h1>
+
+                {submitAttempted && !isFormValid(formData) && (
+                    <p className="error-message">
+                        Please fix the highlighted fields. (Spaces don’t count.)
+                    </p>
+                )}
+                {error && <p className="error-message">{error}</p>}
+                {success && <p className="success-message">{success}</p>}
+
                 <div className="form-group">
                     <label className="label">
                         Name <span className="required">*</span>
@@ -111,9 +132,17 @@ const AddProgramPage = () => {
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        aria-invalid={showNameEmpty}
                         required
                     />
+                    {showNameEmpty && (
+                        <p className="error-message">
+                            Field cannot be empty (spaces don’t count).
+                        </p>
+                    )}
                 </div>
+
                 <div className="form-group">
                     <label className="label">
                         Description <span className="required">*</span>
@@ -123,14 +152,26 @@ const AddProgramPage = () => {
                         name="description"
                         value={formData.description}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        aria-invalid={
+                            submitAttempted &&
+                            (showDescEmpty || isTooLong(formData.description))
+                        }
                         required
                     />
-                    {isTooLong(formData.description) && (
+                    {showDescEmpty && (
                         <p className="error-message">
-                            This field accepts a maximum of 500 characters.
+                            Field cannot be empty (spaces don’t count).
+                        </p>
+                    )}
+                    {!showDescEmpty && isTooLong(formData.description) && (
+                        <p className="error-message">
+                            This field accepts a maximum of {MAX_TEXT}{' '}
+                            characters.
                         </p>
                     )}
                 </div>
+
                 <div className="form-group">
                     <label className="label">
                         Start Date <span className="required">*</span>
@@ -141,9 +182,15 @@ const AddProgramPage = () => {
                         name="startDate"
                         value={formData.startDate}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        aria-invalid={showDateEmpty}
                         required
                     />
+                    {showDateEmpty && (
+                        <p className="error-message">Field cannot be empty.</p>
+                    )}
                 </div>
+
                 <div className="form-group">
                     <label className="label">
                         Aim and Cause <span className="required">*</span>
@@ -153,16 +200,26 @@ const AddProgramPage = () => {
                         name="aimAndCause"
                         value={formData.aimAndCause}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        aria-invalid={
+                            submitAttempted &&
+                            (showAimEmpty || isTooLong(formData.aimAndCause))
+                        }
                         required
                     />
-                    {isTooLong(formData.aimAndCause) && (
+                    {showAimEmpty && (
                         <p className="error-message">
-                            This field accepts a maximum of 500 characters.
+                            Field cannot be empty (spaces don’t count).
+                        </p>
+                    )}
+                    {!showAimEmpty && isTooLong(formData.aimAndCause) && (
+                        <p className="error-message">
+                            This field accepts a maximum of {MAX_TEXT}{' '}
+                            characters.
                         </p>
                     )}
                 </div>
-                {error && <p className="error-message">{error}</p>}
-                {success && <p className="success-message">{success}</p>}
+
                 <div className="button-group">
                     <button
                         className="save-button"
@@ -180,6 +237,7 @@ const AddProgramPage = () => {
                         Clear
                     </button>
                 </div>
+
                 <div className="back-to-programs">
                     <Link to="/programs">
                         <button className="back-button" disabled={isLoading}>
@@ -187,6 +245,7 @@ const AddProgramPage = () => {
                         </button>
                     </Link>
                 </div>
+
                 {isLoading && <LoadingSpinner />}
             </form>
         </div>

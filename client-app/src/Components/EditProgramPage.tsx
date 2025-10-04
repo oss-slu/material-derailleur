@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../css/AddProgramPage.css';
 import axios from 'axios';
 import LoadingSpinner from './LoadingSpinner';
+import { MAX_TEXT } from '../constants/validation';
 
 interface ProgramData {
     name: string;
@@ -11,80 +12,95 @@ interface ProgramData {
     aimAndCause: string;
 }
 
-const MAX_TEXT = 500;
+interface StoredProgram extends ProgramData {
+    id: number | string;
+}
+
 const isTooLong = (s: string) => s.trim().length > MAX_TEXT;
-const isEmpty = (s: string) => s.trim().length === 0;
+const isBlank = (s: string) => s.trim().length === 0;
 const isFormValid = (d: ProgramData) =>
-    !isEmpty(d.name) &&
-    !isEmpty(d.startDate) &&
-    !isEmpty(d.description) &&
-    !isEmpty(d.aimAndCause) &&
+    !isBlank(d.name) &&
+    !isBlank(d.startDate) &&
+    !isBlank(d.description) &&
+    !isBlank(d.aimAndCause) &&
     !isTooLong(d.description) &&
     !isTooLong(d.aimAndCause);
 
-const EditProgramPage = () => {
+const EditProgramPage: React.FC = () => {
+    const navigate = useNavigate();
+
+    const stored: StoredProgram | null = useMemo(() => {
+        try {
+            const raw = localStorage.getItem('program');
+            return raw ? (JSON.parse(raw) as StoredProgram) : null;
+        } catch {
+            return null;
+        }
+    }, []);
+
+    const [formData, setFormData] = useState<ProgramData>({
+        name: stored?.name ?? '',
+        description: stored?.description ?? '',
+        startDate: stored?.startDate
+            ? String(stored.startDate).split('T')[0]
+            : '',
+        aimAndCause: stored?.aimAndCause ?? '',
+    });
+
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
+    const [submitAttempted, setSubmitAttempted] = useState(false);
 
-    let program = null as any;
-    const programData = localStorage.getItem('program');
-    if (programData) {
-        program = JSON.parse(programData);
-    }
-    if (!program) {
-        navigate('/programs');
-    }
-    const programId = program?.id;
-    const [formData, setFormData] = useState<ProgramData>({
-        name: program?.name ?? '',
-        description: program?.description ?? '',
-        startDate: program?.startDate
-            ? program.startDate.toString().split('T')[0]
-            : '',
-        aimAndCause: program?.aimAndCause ?? '',
-    });
+    useEffect(() => {
+        if (!stored?.id) navigate('/programs');
+    }, [stored?.id, navigate]);
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
         const { name, value } = e.target;
-        setFormData({
-            ...formData,
-            [name]: value,
-        });
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleBlur = (
+        e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>,
+    ) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value.trim() }));
     };
 
     const handleSave = async () => {
-        if (!isFormValid(formData)) return;
+        setSubmitAttempted(true);
+        if (!isFormValid(formData) || !stored?.id) return;
         setIsLoading(true);
+        setError(null);
+        setSuccess(null);
         try {
             const response = await axios.post(
                 `${process.env.REACT_APP_BACKEND_API_BASE_URL}program/edit`,
-                { ...formData, id: programId },
+                { ...formData, id: stored.id },
             );
-
             if (response.status === 200) {
                 setSuccess('Program edited successfully! Returning...');
-                setError(null);
-                setTimeout(() => {
-                    navigate('/programs');
-                }, 1200);
+                setTimeout(() => navigate('/programs'), 1200);
             } else {
                 setError('Failed to edit program.');
-                setSuccess(null);
             }
-        } catch (error: unknown) {
+        } catch (err: unknown) {
             const message =
-                (error as any).response?.data?.message ||
+                (err as any)?.response?.data?.message ||
                 'Error editing program';
             setError(message);
-            setSuccess(null);
         } finally {
             setIsLoading(false);
         }
     };
+
+    const showNameEmpty = submitAttempted && isBlank(formData.name);
+    const showDateEmpty = submitAttempted && isBlank(formData.startDate);
+    const showDescEmpty = submitAttempted && isBlank(formData.description);
+    const showAimEmpty = submitAttempted && isBlank(formData.aimAndCause);
 
     return (
         <div className="container">
@@ -94,8 +110,18 @@ const EditProgramPage = () => {
                     e.preventDefault();
                     handleSave();
                 }}
+                noValidate
             >
                 <h1 className="heading">Edit Program</h1>
+
+                {submitAttempted && !isFormValid(formData) && (
+                    <p className="error-message">
+                        Please fix the highlighted fields. (Spaces don’t count.)
+                    </p>
+                )}
+                {error && <p className="error-message">{error}</p>}
+                {success && <p className="success-message">{success}</p>}
+
                 <div className="form-group">
                     <label className="label">
                         Name <span className="required">*</span>
@@ -106,9 +132,17 @@ const EditProgramPage = () => {
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        aria-invalid={showNameEmpty}
                         required
                     />
+                    {showNameEmpty && (
+                        <p className="error-message">
+                            Field cannot be empty (spaces don’t count).
+                        </p>
+                    )}
                 </div>
+
                 <div className="form-group">
                     <label className="label">
                         Description <span className="required">*</span>
@@ -118,14 +152,26 @@ const EditProgramPage = () => {
                         name="description"
                         value={formData.description}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        aria-invalid={
+                            submitAttempted &&
+                            (showDescEmpty || isTooLong(formData.description))
+                        }
                         required
                     />
-                    {isTooLong(formData.description) && (
+                    {showDescEmpty && (
                         <p className="error-message">
-                            This field accepts a maximum of 500 characters.
+                            Field cannot be empty (spaces don’t count).
+                        </p>
+                    )}
+                    {!showDescEmpty && isTooLong(formData.description) && (
+                        <p className="error-message">
+                            This field accepts a maximum of {MAX_TEXT}{' '}
+                            characters.
                         </p>
                     )}
                 </div>
+
                 <div className="form-group">
                     <label className="label">
                         Start Date <span className="required">*</span>
@@ -136,9 +182,15 @@ const EditProgramPage = () => {
                         name="startDate"
                         value={formData.startDate}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        aria-invalid={showDateEmpty}
                         required
                     />
+                    {showDateEmpty && (
+                        <p className="error-message">Field cannot be empty.</p>
+                    )}
                 </div>
+
                 <div className="form-group">
                     <label className="label">
                         Aim and Cause <span className="required">*</span>
@@ -148,16 +200,26 @@ const EditProgramPage = () => {
                         name="aimAndCause"
                         value={formData.aimAndCause}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        aria-invalid={
+                            submitAttempted &&
+                            (showAimEmpty || isTooLong(formData.aimAndCause))
+                        }
                         required
                     />
-                    {isTooLong(formData.aimAndCause) && (
+                    {showAimEmpty && (
                         <p className="error-message">
-                            This field accepts a maximum of 500 characters.
+                            Field cannot be empty (spaces don’t count).
+                        </p>
+                    )}
+                    {!showAimEmpty && isTooLong(formData.aimAndCause) && (
+                        <p className="error-message">
+                            This field accepts a maximum of {MAX_TEXT}{' '}
+                            characters.
                         </p>
                     )}
                 </div>
-                {error && <p className="error-message">{error}</p>}
-                {success && <p className="success-message">{success}</p>}
+
                 <div className="button-group">
                     <button
                         className="save-button"
@@ -167,6 +229,7 @@ const EditProgramPage = () => {
                         Save
                     </button>
                 </div>
+
                 <div className="back-to-programs">
                     <Link to="/programs">
                         <button className="back-button" disabled={isLoading}>
@@ -174,6 +237,7 @@ const EditProgramPage = () => {
                         </button>
                     </Link>
                 </div>
+
                 {isLoading && <LoadingSpinner />}
             </form>
         </div>
