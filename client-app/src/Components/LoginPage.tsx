@@ -5,10 +5,10 @@ import React, {
     useEffect,
     useRef,
 } from 'react';
-import { RefreshCw } from 'lucide-react';
-import { Link } from 'react-router-dom'; // Import Link for navigation
+import { RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import LoadingSpinner from './LoadingSpinner';
-import '../css/LoginPage.css'; // Import CSS file for styling
+import '../css/LoginPage.css';
 import Popup from './LoginPopup';
 
 interface Credentials {
@@ -31,9 +31,10 @@ const LoginPage: React.FC = () => {
     const { triggerPopup } = usePopup();
 
     useEffect(() => {
-        generateCaptcha(); // Generate CAPTCHA on first load
+        generateCaptcha();
     }, []);
 
+    // Generate random captcha and draw on canvas (original logic kept)
     const generateCaptcha = (): void => {
         const randomCaptcha = Math.random().toString(36).substring(7);
         setCaptcha(randomCaptcha);
@@ -49,7 +50,7 @@ const LoginPage: React.FC = () => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.font = '20px Arial';
                 ctx.fillStyle = 'black';
-                ctx.fillText(text, 20, 25);
+                ctx.fillText(text, 10, 22);
             }
         }
     };
@@ -87,10 +88,9 @@ const LoginPage: React.FC = () => {
 
             const data = await response.json();
             if (response.ok) {
+                //  Note: Using localStorage is less secure than HttpOnly cookies
                 localStorage.setItem('token', data.token);
                 triggerPopup('Welcome ' + data.name + '!');
-
-                console.log('User logged in:', data);
 
                 if (data.role === 'ADMIN') {
                     window.location.href = '/';
@@ -112,98 +112,108 @@ const LoginPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-200">
-            <div className="login-container">
-                <h2 className="login-label">Login</h2>
-                <div className="login-box">
-                    <div className="bg-#a9d6e5 shadow-md rounded px-8 pt-6 pb-8 mb-4">
-                        {errorMessage && (
-                            <p style={{ color: 'red' }}>{errorMessage}</p>
-                        )}
-                        <form onSubmit={handleSubmit}>
-                            <div>
-                                <input
-                                    type="email"
-                                    className="istyleu"
-                                    id="email"
-                                    name="email"
-                                    placeholder="Email"
-                                    value={credentials.email}
-                                    onChange={onChange}
-                                />
-                                <div id="emailHelp" className="form-text">
-                                    We'll never share your email with anyone
-                                    else.
-                                </div>
-                            </div>
+        <div className="login-container">
+            {/* Left side - Form */}
+            <div className="login-left">
+                <h2 className="login-label">Welcome to SLU BWORKS Platform</h2>
 
-                            <div>
-                                <input
-                                    type="password"
-                                    className="istyle"
-                                    value={credentials.password}
-                                    placeholder="Password*"
-                                    id="password"
-                                    onChange={onChange}
-                                    name="password"
-                                    required
-                                />
-                            </div>
-                            <div className="captcha-container">
-                                <div className="captcha-row">
-                                    <label
-                                        htmlFor="captcha"
-                                        className="captcha-label"
-                                    >
-                                        CAPTCHA:
-                                    </label>
-                                    <canvas
-                                        ref={captchaCanvasRef}
-                                        width="100"
-                                        height="30"
-                                    ></canvas>
-                                    <RefreshCw
-                                        className="refresh-icon"
-                                        size={20}
-                                        onClick={generateCaptcha}
-                                        style={{ cursor: 'pointer' }}
-                                        aria-label="Refresh CAPTCHA"
-                                    />
-                                </div>
-                                <input
-                                    type="text"
-                                    className="captcha-input"
-                                    value={captchaValue}
-                                    onChange={handleCaptchaChange}
-                                    id="captcha"
-                                    name="captcha"
-                                />
-                            </div>
+                {errorMessage && (
+                    <div className="error-message">{errorMessage}</div>
+                )}
 
-                            <div className="buttongroups">
-                                <button
-                                    className="btlSuccess"
-                                    type="submit"
-                                    name="login"
-                                    disabled={!captchaValue || isLoading}
-                                >
-                                    Login
-                                </button>
-                                <Link
-                                    to="/forgot-password"
-                                    className="btn btn-link"
-                                >
-                                    Forgot Password?
-                                </Link>{' '}
-                            </div>
-                            {isLoading && <LoadingSpinner />}
-                        </form>
+                <form onSubmit={handleSubmit} className="login-form">
+                    <label htmlFor="email">Username/Email</label>
+                    <input
+                        type="email"
+                        className="istyleu"
+                        id="email"
+                        name="email"
+                        placeholder="Enter your email"
+                        value={credentials.email}
+                        onChange={onChange}
+                        required
+                    />
+
+                    <label htmlFor="password">Password</label>
+                    <div className="password-wrapper">
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            className="istyle"
+                            id="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            value={credentials.password}
+                            onChange={onChange}
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="toggle-password"
+                            onClick={() => setShowPassword(!showPassword)}
+                        >
+                            {showPassword ? (
+                                <EyeOff size={18} />
+                            ) : (
+                                <Eye size={18} />
+                            )}
+                        </button>
                     </div>
-                    <div className="register-link">
-                        <p>
-                            Not a User? <Link to="/register">Register</Link>
-                        </p>
+
+                    {/* Captcha */}
+                    <div className="captcha-container">
+                        <div className="captcha-row">
+                            <canvas
+                                ref={captchaCanvasRef}
+                                width="100"
+                                height="30"
+                            ></canvas>
+                            <RefreshCw
+                                className="refresh-icon"
+                                size={20}
+                                onClick={generateCaptcha}
+                                aria-label="Refresh CAPTCHA"
+                            />
+                        </div>
+                        <input
+                            type="text"
+                            className="captcha-input"
+                            value={captchaValue}
+                            onChange={handleCaptchaChange}
+                            placeholder="Enter CAPTCHA"
+                            id="captcha"
+                            name="captcha"
+                            required
+                        />
                     </div>
+
+                    <div className="buttongroups">
+                        <button
+                            className="btlSuccess"
+                            type="submit"
+                            disabled={!captchaValue || isLoading}
+                        >
+                            {isLoading ? <LoadingSpinner /> : 'Login'}
+                        </button>
+                        <Link to="/forgot-password" className="btn btn-link">
+                            Forgot Password?
+                        </Link>
+                    </div>
+                </form>
+
+                <div className="register-link">
+                    <p>
+                        New to BWorks? <Link to="/register"> Register</Link>
+                    </p>
+                </div>
+            </div>
+
+            {/* Right side - Overlapping Circles */}
+            <div className="login-right">
+                <div className="circle large">
+                    <img src="/cycle.jpg" alt="BWorks bike" />
+                </div>
+                <div className="circle small">
+                    <img src="/image.jpg" alt="BWorks kids" />
                 </div>
             </div>
         </div>

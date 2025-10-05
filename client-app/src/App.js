@@ -36,7 +36,7 @@ function App() {
                 flexDirection: 'column',
                 minHeight: '100vh',
                 position: 'relative',
-                paddingBottom: '80px', // Reserve space for fixed footer
+                paddingBottom: '50px', // remove the white space keeping space reserved for footer
             }}
         >
             <Popup.PopupProvider>
