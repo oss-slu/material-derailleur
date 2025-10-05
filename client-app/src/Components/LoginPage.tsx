@@ -69,7 +69,7 @@ const LoginPage: React.FC = () => {
         e.preventDefault();
         setIsLoading(true);
 
-        // Validate CAPTCHA (case-sensitive) due to overrride loginpage logic was changed 
+        // Validate CAPTCHA (case-sensitive) due to overrride loginpage logic was changed
         if (captchaValue !== captcha) {
             setErrorMessage('Incorrect CAPTCHA. Please try again.');
             setIsLoading(false);
