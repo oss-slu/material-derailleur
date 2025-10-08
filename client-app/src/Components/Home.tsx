@@ -7,11 +7,26 @@ const Home: React.FC = () => {
         <div className="login-container">
             {/* Left side - Text */}
             <div className="login-left">
-                <h1 className="login-label" style={{ fontSize: '2rem', fontWeight: 'bold', color: '#222' }}>
+                <h1
+                    className="login-label"
+                    style={{
+                        fontSize: '2rem',
+                        fontWeight: 'bold',
+                        color: '#222',
+                    }}
+                >
                     MATERIAL DONOR MUTUAL ASSIST.
                 </h1>
-                <p style={{ marginTop: '2rem', fontSize: '1.1rem', color: '#333' }}>
-                    This application is for maintaining the donor details, tracking donations, and sending donors timely emails. This encourages engagement with donors.
+                <p
+                    style={{
+                        marginTop: '2rem',
+                        fontSize: '1.1rem',
+                        color: '#333',
+                    }}
+                >
+                    This application is for maintaining the donor details,
+                    tracking donations, and sending donors timely emails. This
+                    encourages engagement with donors.
                 </p>
             </div>
             {/* Right side - Overlapping Circles */}

@@ -25,12 +25,12 @@ const Footer = () => {
     return (
         <footer style={footerStyle}>
             <div>
-                <span style={{ fontWeight: 600, fontSize: '1.1rem' }}>© 2025 St. Louis BWorks</span> &nbsp;|&nbsp;
-                2414 Menard Street, St. Louis, MO 63104 &nbsp;|&nbsp; (314) 664-0828
-                <a
-                    href="/contact"
-                    style={linkStyle}
-                >
+                <span style={{ fontWeight: 600, fontSize: '1.1rem' }}>
+                    © 2025 St. Louis BWorks
+                </span>{' '}
+                &nbsp;|&nbsp; 2414 Menard Street, St. Louis, MO 63104
+                &nbsp;|&nbsp; (314) 664-0828
+                <a href="/contact" style={linkStyle}>
                     Contact Page
                 </a>
             </div>
