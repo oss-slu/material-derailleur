@@ -22,8 +22,8 @@ type RuleState = {
     lower: boolean;
     number: boolean;
     special: boolean;
-    noName: MaybeBool; // null until we can evaluate
-    noEmail: MaybeBool; // null until we can evaluate
+    noName: MaybeBool;
+    noEmail: MaybeBool;
 };
 
 /** Single REGEX source */
@@ -65,7 +65,6 @@ const Register: React.FC = () => {
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
 
-    // ---------- Rules / Strength ----------
     const computeRules = (
         password: string,
         name: string,
@@ -114,7 +113,7 @@ const Register: React.FC = () => {
         r.number &&
         r.special &&
         r.noName !== false &&
-        r.noEmail !== false; // null counts as OK
+        r.noEmail !== false;
 
     const computeStrength = (
         password: string,
@@ -151,11 +150,9 @@ const Register: React.FC = () => {
             );
         }
 
-        // keep rules + guidelines visibility in sync
         if (name === 'password' || name === 'name' || name === 'email') {
             const r = computeRules(next.password, next.name, next.email);
             setRules(r);
-            // ⇩ Always show guidelines once there is any input
             setShowGuidelines(next.password.length > 0);
         }
     };
@@ -240,7 +237,7 @@ const Register: React.FC = () => {
                 });
                 setPasswordStrength(null);
                 setRules(initialRules);
-                setShowGuidelines(false); // hide after success
+                setShowGuidelines(false);
                 setTimeout(() => {
                     window.location.href = '/About';
                 }, 2000);
@@ -288,36 +285,11 @@ const Register: React.FC = () => {
             <div className="login-left">
                 <h2 className="login-label">Welcome to SLU BWORKS Platform</h2>
 
-                {/* success/error */}
                 {errorMessage && (
-                    <div
-                        style={{
-                            background: '#fdecea',
-                            color: '#b71c1c',
-                            border: '1px solid #f5c6cb',
-                            padding: '8px 10px',
-                            borderRadius: 6,
-                            marginBottom: 10,
-                            maxWidth: 350,
-                        }}
-                    >
-                        {errorMessage}
-                    </div>
+                    <div className="alert alert-danger">{errorMessage}</div>
                 )}
                 {successMessage && (
-                    <div
-                        style={{
-                            background: '#e8f5e9',
-                            color: '#1b5e20',
-                            border: '1px solid #c8e6c9',
-                            padding: '8px 10px',
-                            borderRadius: 6,
-                            marginBottom: 10,
-                            maxWidth: 350,
-                        }}
-                    >
-                        {successMessage}
-                    </div>
+                    <div className="alert alert-success">{successMessage}</div>
                 )}
 
                 <form onSubmit={handleSubmit} className="login-form">
@@ -348,7 +320,7 @@ const Register: React.FC = () => {
                     />
 
                     <label htmlFor="password">Password</label>
-                    <div style={{ position: 'relative' }}>
+                    <div className="password-wrapper">
                         <input
                             type={showPassword ? 'text' : 'password'}
                             className="istyle"
@@ -367,9 +339,8 @@ const Register: React.FC = () => {
                                 setShowGuidelines(true);
                             }}
                             onBlur={() => {
-                                if (!credentials.password) {
+                                if (!credentials.password)
                                     setShowGuidelines(false);
-                                }
                             }}
                             name="password"
                             id="password"
@@ -382,15 +353,7 @@ const Register: React.FC = () => {
                                 showPassword ? 'Hide password' : 'Show password'
                             }
                             onClick={() => setShowPassword(!showPassword)}
-                            style={{
-                                position: 'absolute',
-                                right: 10,
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                background: 'none',
-                                border: 'none',
-                                cursor: 'pointer',
-                            }}
+                            className="password-toggle"
                         >
                             {showPassword ? (
                                 <EyeOff size={18} />
@@ -400,21 +363,13 @@ const Register: React.FC = () => {
                         </button>
                     </div>
 
-                    {/* Strength label */}
                     {passwordStrength && (
-                        <div
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 8,
-                                marginTop: 8,
-                            }}
-                        >
-                            <div style={{ fontWeight: 600 }}>Strength:</div>
+                        <div className="strength-row">
+                            <div className="strength-title">Strength:</div>
                             <div
+                                className="strength-value"
                                 style={{
                                     color: strengthColor(passwordStrength),
-                                    fontWeight: 700,
                                 }}
                             >
                                 {passwordStrength.toUpperCase()}
@@ -422,42 +377,18 @@ const Register: React.FC = () => {
                         </div>
                     )}
 
-                    {/* Slim progress bar */}
-                    <div
-                        aria-hidden="true"
-                        style={{
-                            marginTop: 6,
-                            height: 6,
-                            background: '#e5e7eb',
-                            borderRadius: 9999,
-                            overflow: 'hidden',
-                        }}
-                    >
+                    <div className="strength-bar" aria-hidden="true">
                         <div
+                            className="strength-fill"
                             style={{
                                 width: strengthWidth(passwordStrength),
-                                height: '100%',
                                 background: strengthColor(passwordStrength),
-                                transition: 'width 160ms ease',
                             }}
                         />
                     </div>
 
-                    {/* SHORT 3-point note: always visible once there is any input */}
                     {showGuidelines && (
-                        <ul
-                            className="password-note"
-                            style={{
-                                marginTop: 10,
-                                background: '#eef6ff',
-                                border: '1px solid #bfdbfe',
-                                borderRadius: 8,
-                                padding: '10px 12px',
-                                fontSize: '0.9rem',
-                                listStyle: 'disc',
-                                paddingLeft: 22,
-                            }}
-                        >
+                        <ul className="password-note">
                             <li>
                                 Use at least{' '}
                                 <strong>{MIN_LEN} characters</strong>.
@@ -476,7 +407,7 @@ const Register: React.FC = () => {
                     )}
 
                     <label htmlFor="confirm_password">Confirm Password</label>
-                    <div style={{ position: 'relative' }}>
+                    <div className="password-wrapper">
                         <input
                             type={showConfirm ? 'text' : 'password'}
                             className="istyle"
@@ -493,15 +424,7 @@ const Register: React.FC = () => {
                                 showConfirm ? 'Hide password' : 'Show password'
                             }
                             onClick={() => setShowConfirm(!showConfirm)}
-                            style={{
-                                position: 'absolute',
-                                right: 10,
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                background: 'none',
-                                border: 'none',
-                                cursor: 'pointer',
-                            }}
+                            className="password-toggle"
                         >
                             {showConfirm ? (
                                 <EyeOff size={18} />
@@ -519,7 +442,7 @@ const Register: React.FC = () => {
                         {isLoading ? <LoadingSpinner /> : 'Register'}
                     </button>
 
-                    <div className="register-link">
+                    <div className="register-link" style={{ paddingLeft: 0 }}>
                         <p>
                             Already have an account?{' '}
                             <Link to="/login">Login</Link>
@@ -528,7 +451,7 @@ const Register: React.FC = () => {
                 </form>
             </div>
 
-            {/* Right side - Overlapping Circles (same pattern as Login) */}
+            {/* Right side - Overlapping Circles */}
             <div className="login-right">
                 <div className="circle large">
                     <img src="/cycle.jpg" alt="BWorks bike" />
