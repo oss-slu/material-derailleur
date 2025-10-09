@@ -1,4 +1,6 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import LoadingSpinner from './LoadingSpinner';
 import '../css/RegisterPage.css';
 
@@ -53,9 +55,11 @@ const Register: React.FC = () => {
     const [passwordStrength, setPasswordStrength] = useState<
         'weak' | 'medium' | 'strong' | null
     >(null);
-
     const [rules, setRules] = useState<RuleState>(initialRules);
     const [showGuidelines, setShowGuidelines] = useState(false);
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
 
     const [successMessage, setSuccessMessage] = useState<string>('');
     const [errorMessage, setErrorMessage] = useState<string>('');
@@ -279,206 +283,258 @@ const Register: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-200">
-            <div className="rlogin-container">
-                <h2 className="rhead">Register</h2>
-                <div className="rlogin-box">
-                    <div className="bg-#a9d6e5">
-                        <form onSubmit={handleSubmit}>
-                            <div>
-                                <label className="rlabelu">Name</label>
-                                <input
-                                    type="text"
-                                    className="ristyle"
-                                    value={credentials.name}
-                                    onChange={handleChange}
-                                    id="name"
-                                    name="name"
-                                    aria-describedby="nameHelp"
-                                    autoComplete="name"
-                                />
-                            </div>
+        <div className="login-container">
+            {/* Left side - Form */}
+            <div className="login-left">
+                <h2 className="login-label">Welcome to SLU BWORKS Platform</h2>
 
-                            <div>
-                                <label className="rlabelu">Email address</label>
-                                <input
-                                    type="email"
-                                    className="ristyle"
-                                    value={credentials.email}
-                                    onChange={handleChange}
-                                    id="email"
-                                    name="email"
-                                    aria-describedby="emailHelp"
-                                    autoComplete="email"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="rlabelu">Password</label>
-                                <input
-                                    type="password"
-                                    className="ristyle"
-                                    value={credentials.password}
-                                    onChange={handleChange}
-                                    onFocus={() => {
-                                        const r = computeRules(
-                                            credentials.password,
-                                            credentials.name,
-                                            credentials.email,
-                                        );
-                                        setRules(r);
-                                        setPasswordStrength(
-                                            computeStrength(
-                                                credentials.password,
-                                            ),
-                                        );
-                                        // ⇩ Always show on focus
-                                        setShowGuidelines(true);
-                                    }}
-                                    onBlur={() => {
-                                        // ⇩ Hide only if empty on blur (keep visible otherwise)
-                                        if (!credentials.password) {
-                                            setShowGuidelines(false);
-                                        }
-                                    }}
-                                    name="password"
-                                    id="password"
-                                    autoComplete="new-password"
-                                />
-
-                                {/* Strength label */}
-                                {passwordStrength && (
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 8,
-                                            marginTop: 8,
-                                        }}
-                                    >
-                                        <div style={{ fontWeight: 600 }}>
-                                            Strength:
-                                        </div>
-                                        <div
-                                            style={{
-                                                color: strengthColor(
-                                                    passwordStrength,
-                                                ),
-                                                fontWeight: 700,
-                                            }}
-                                        >
-                                            {passwordStrength.toUpperCase()}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Slim progress bar */}
-                                <div
-                                    aria-hidden="true"
-                                    style={{
-                                        marginTop: 6,
-                                        height: 6,
-                                        background: '#e5e7eb',
-                                        borderRadius: 9999,
-                                        overflow: 'hidden',
-                                    }}
-                                >
-                                    <div
-                                        style={{
-                                            width: strengthWidth(
-                                                passwordStrength,
-                                            ),
-                                            height: '100%',
-                                            background:
-                                                strengthColor(passwordStrength),
-                                            transition: 'width 160ms ease',
-                                        }}
-                                    />
-                                </div>
-
-                                {/* SHORT 3-point note: always visible once there is any input */}
-                                {showGuidelines && (
-                                    <ul
-                                        className="password-note"
-                                        style={{
-                                            marginTop: 10,
-                                            background: '#eef6ff',
-                                            border: '1px solid #bfdbfe',
-                                            borderRadius: 8,
-                                            padding: '10px 12px',
-                                            fontSize: '0.9rem',
-                                            listStyle: 'disc',
-                                            paddingLeft: 22,
-                                        }}
-                                    >
-                                        <li>
-                                            Use at least{' '}
-                                            <strong>
-                                                {MIN_LEN} characters
-                                            </strong>
-                                            .
-                                        </li>
-                                        <li>
-                                            Include an{' '}
-                                            <strong>uppercase</strong>,{' '}
-                                            <strong>lowercase</strong>,{' '}
-                                            <strong>number</strong>, and{' '}
-                                            <strong>special character</strong>.
-                                        </li>
-                                        <li>
-                                            Avoid using your{' '}
-                                            <strong>name</strong> or{' '}
-                                            <strong>email</strong>.
-                                        </li>
-                                    </ul>
-                                )}
-                            </div>
-
-                            <div className="mb-3 position-relative">
-                                <label
-                                    htmlFor="confirm_password"
-                                    className="rlabelu"
-                                >
-                                    Confirm Password
-                                </label>
-                                <input
-                                    type="password"
-                                    className="ristyle"
-                                    value={credentials.confirm_password}
-                                    onChange={handleChange}
-                                    name="confirm_password"
-                                    id="confirm_password"
-                                    autoComplete="new-password"
-                                />
-                            </div>
-
-                            {errorMessage && (
-                                <div
-                                    className="alert alert-danger"
-                                    role="alert"
-                                >
-                                    {errorMessage}
-                                </div>
-                            )}
-                            {successMessage && (
-                                <div
-                                    className="alert alert-success"
-                                    role="alert"
-                                >
-                                    {successMessage}
-                                </div>
-                            )}
-
-                            <button
-                                type="submit"
-                                className="rbtSuccess"
-                                disabled={isLoading}
-                            >
-                                Register
-                            </button>
-                            {isLoading && <LoadingSpinner />}
-                        </form>
+                {/* success/error */}
+                {errorMessage && (
+                    <div
+                        style={{
+                            background: '#fdecea',
+                            color: '#b71c1c',
+                            border: '1px solid #f5c6cb',
+                            padding: '8px 10px',
+                            borderRadius: 6,
+                            marginBottom: 10,
+                            maxWidth: 350,
+                        }}
+                    >
+                        {errorMessage}
                     </div>
+                )}
+                {successMessage && (
+                    <div
+                        style={{
+                            background: '#e8f5e9',
+                            color: '#1b5e20',
+                            border: '1px solid #c8e6c9',
+                            padding: '8px 10px',
+                            borderRadius: 6,
+                            marginBottom: 10,
+                            maxWidth: 350,
+                        }}
+                    >
+                        {successMessage}
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="login-form">
+                    <label htmlFor="name">Name</label>
+                    <input
+                        type="text"
+                        className="istyleu"
+                        value={credentials.name}
+                        onChange={handleChange}
+                        id="name"
+                        name="name"
+                        aria-describedby="nameHelp"
+                        autoComplete="name"
+                        placeholder="Enter your name"
+                    />
+
+                    <label htmlFor="email">Email address</label>
+                    <input
+                        type="email"
+                        className="istyleu"
+                        value={credentials.email}
+                        onChange={handleChange}
+                        id="email"
+                        name="email"
+                        aria-describedby="emailHelp"
+                        autoComplete="email"
+                        placeholder="Enter your email"
+                    />
+
+                    <label htmlFor="password">Password</label>
+                    <div style={{ position: 'relative' }}>
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            className="istyle"
+                            value={credentials.password}
+                            onChange={handleChange}
+                            onFocus={() => {
+                                const r = computeRules(
+                                    credentials.password,
+                                    credentials.name,
+                                    credentials.email,
+                                );
+                                setRules(r);
+                                setPasswordStrength(
+                                    computeStrength(credentials.password),
+                                );
+                                setShowGuidelines(true);
+                            }}
+                            onBlur={() => {
+                                if (!credentials.password) {
+                                    setShowGuidelines(false);
+                                }
+                            }}
+                            name="password"
+                            id="password"
+                            autoComplete="new-password"
+                            placeholder="Create a strong password"
+                        />
+                        <button
+                            type="button"
+                            aria-label={
+                                showPassword ? 'Hide password' : 'Show password'
+                            }
+                            onClick={() => setShowPassword(!showPassword)}
+                            style={{
+                                position: 'absolute',
+                                right: 10,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            {showPassword ? (
+                                <EyeOff size={18} />
+                            ) : (
+                                <Eye size={18} />
+                            )}
+                        </button>
+                    </div>
+
+                    {/* Strength label */}
+                    {passwordStrength && (
+                        <div
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                marginTop: 8,
+                            }}
+                        >
+                            <div style={{ fontWeight: 600 }}>Strength:</div>
+                            <div
+                                style={{
+                                    color: strengthColor(passwordStrength),
+                                    fontWeight: 700,
+                                }}
+                            >
+                                {passwordStrength.toUpperCase()}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Slim progress bar */}
+                    <div
+                        aria-hidden="true"
+                        style={{
+                            marginTop: 6,
+                            height: 6,
+                            background: '#e5e7eb',
+                            borderRadius: 9999,
+                            overflow: 'hidden',
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: strengthWidth(passwordStrength),
+                                height: '100%',
+                                background: strengthColor(passwordStrength),
+                                transition: 'width 160ms ease',
+                            }}
+                        />
+                    </div>
+
+                    {/* SHORT 3-point note: always visible once there is any input */}
+                    {showGuidelines && (
+                        <ul
+                            className="password-note"
+                            style={{
+                                marginTop: 10,
+                                background: '#eef6ff',
+                                border: '1px solid #bfdbfe',
+                                borderRadius: 8,
+                                padding: '10px 12px',
+                                fontSize: '0.9rem',
+                                listStyle: 'disc',
+                                paddingLeft: 22,
+                            }}
+                        >
+                            <li>
+                                Use at least{' '}
+                                <strong>{MIN_LEN} characters</strong>.
+                            </li>
+                            <li>
+                                Include an <strong>uppercase</strong>,{' '}
+                                <strong>lowercase</strong>,{' '}
+                                <strong>number</strong>, and{' '}
+                                <strong>special character</strong>.
+                            </li>
+                            <li>
+                                Avoid using your <strong>name</strong> or{' '}
+                                <strong>email</strong>.
+                            </li>
+                        </ul>
+                    )}
+
+                    <label htmlFor="confirm_password">Confirm Password</label>
+                    <div style={{ position: 'relative' }}>
+                        <input
+                            type={showConfirm ? 'text' : 'password'}
+                            className="istyle"
+                            value={credentials.confirm_password}
+                            onChange={handleChange}
+                            name="confirm_password"
+                            id="confirm_password"
+                            autoComplete="new-password"
+                            placeholder="Re-enter your password"
+                        />
+                        <button
+                            type="button"
+                            aria-label={
+                                showConfirm ? 'Hide password' : 'Show password'
+                            }
+                            onClick={() => setShowConfirm(!showConfirm)}
+                            style={{
+                                position: 'absolute',
+                                right: 10,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            {showConfirm ? (
+                                <EyeOff size={18} />
+                            ) : (
+                                <Eye size={18} />
+                            )}
+                        </button>
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="btlSuccess"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? <LoadingSpinner /> : 'Register'}
+                    </button>
+
+                    <div className="register-link">
+                        <p>
+                            Already have an account?{' '}
+                            <Link to="/login">Login</Link>
+                        </p>
+                    </div>
+                </form>
+            </div>
+
+            {/* Right side - Overlapping Circles (same pattern as Login) */}
+            <div className="login-right">
+                <div className="circle large">
+                    <img src="/cycle.jpg" alt="BWorks bike" />
+                </div>
+                <div className="circle small">
+                    <img src="/image.jpg" alt="BWorks kids" />
                 </div>
             </div>
         </div>
