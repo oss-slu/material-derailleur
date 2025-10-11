@@ -1,0 +1,129 @@
+/* Page canvas like the screenshot */
+.contact-page {
+    background: #e9f6ff; /* very light blue */
+    padding: 100px 24px;
+}
+.contact-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 48px;
+    align-items: start;
+}
+
+/* Left column */
+.contact-title {
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: #0e2430;
+    margin: 0 0 24px;
+    text-transform: none;
+}
+
+.contact-lead {
+    font-size: 20px;
+    line-height: 1.7;
+    color: #475569;
+    margin: 0 0 16px;
+}
+
+.contact-list {
+    margin: 0 0 16px 24px;
+    color: #0e2430;
+    font-size: 20px;
+    line-height: 1.7;
+}
+
+.contact-link {
+    color: #1c87e2;
+    text-decoration: underline;
+}
+
+.contact-note {
+    font-size: 18px;
+    font-style: italic;
+    color: #475569;
+    margin-top: 12px;
+}
+
+/* Right column: overlapping circular photos with blue rings */
+.contact-photos {
+    position: relative;
+    min-height: 360px;
+}
+
+.photo {
+    position: absolute;
+    border-radius: 9999px;
+    overflow: hidden;
+    /* ring: white inner + sky blue outer, like the screenshot */
+    box-shadow:
+        0 0 0 8px #ffffff,
+        0 0 0 16px #38a8ff,
+        0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo--lg {
+    width: 270px;
+    height: 270px;
+    top: 0;
+    right: 24px;
+}
+.photo--sm {
+    width: 140px;
+    height: 140px;
+    top: 30px;
+    right: -50px;
+}
+
+@media (max-width: 980px) {
+    .contact-wrap {
+        grid-template-columns: 1fr;
+    }
+    .contact-photos {
+        min-height: 420px;
+        margin-top: 24px;
+    }
+    .photo--lg {
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+    }
+    .photo--sm {
+        left: 60%;
+        right: auto;
+        transform: translateX(-50%);
+    }
+}
+
+@media (max-width: 520px) {
+    .photo--lg {
+        width: 280px;
+        height: 280px;
+    }
+    .photo--sm {
+        width: 140px;
+        height: 140px;
+        top: 100px;
+        left: 70%;
+    }
+}
+
+:root {
+    --page-bg: #e9f6ff;
+}
+
+html,
+body {
+    height: 100%;
+    background: var(--page-bg); /* removes white beyond content */
+}
