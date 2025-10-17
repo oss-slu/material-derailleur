@@ -1,5 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+/**
+ * Type definition for the PopupContext.
+ * @interface PopupContextType
+ * @property {boolean} showPopup - Whether the popup is visible.
+ * @property {string} message - The message to display in the popup.
+ * @property {Function} triggerPopup - Function to trigger the popup with a custom message.
+ */
+
 interface PopupContextType {
     showPopup: boolean;
     message: string;
@@ -8,7 +16,13 @@ interface PopupContextType {
 
 const PopupContext = createContext<PopupContextType | undefined>(undefined);
 
-// Context Provider Component
+/**
+ * PopupProvider component to manage the popup context.
+ * @component
+ * @description This component wraps its children with the PopupContext, 
+ * allowing other components to access and trigger the popup.
+ * @param {React.ReactNode} children - The components that are wrapped by the provider.
+ */
 const PopupProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
