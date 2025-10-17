@@ -19,7 +19,7 @@ const PopupContext = createContext<PopupContextType | undefined>(undefined);
 /**
  * PopupProvider component to manage the popup context.
  * @component
- * @description This component wraps its children with the PopupContext, 
+ * @description This component wraps its children with the PopupContext,
  * allowing other components to access and trigger the popup.
  * @param {React.ReactNode} children - The components that are wrapped by the provider.
  */

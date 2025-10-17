@@ -22,7 +22,6 @@ interface ProgramProps {
     };
 }
 
-
 /**
  * ProgramCard component displays information about a single program.
  * @component
