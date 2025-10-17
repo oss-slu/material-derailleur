@@ -155,6 +155,7 @@ const DonorList: React.FC = () => {
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={() => setModalIsOpen(false)}
+                overlayClassName="modal-overlay"
                 className="modal-container"
             >
                 <h2 className="modal-header">Details</h2>

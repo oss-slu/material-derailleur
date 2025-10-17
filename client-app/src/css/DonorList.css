@@ -5,72 +5,103 @@
 .donor-list {
     width: 90%;
     border-collapse: collapse;
-    margin: 0 auto; /* This will center the table horizontally */
+    margin: 0 auto; /* center table */
 }
 
 .donor-list th,
 .donor-list td {
     border: 1px solid #ddd;
     padding: 8px;
-    text-align: center; /* Center text horizontally */
-    vertical-align: middle; /* Center text vertically */
+    text-align: center; /* horiz center */
+    vertical-align: middle; /* vert center */
 }
 
 .div-topAddDonor {
     display: flex;
     justify-content: flex-end;
-    button {
-        margin: 20px 6px;
-        padding: 10px 20px 12px;
-        width: 200px;
-        text-align: center;
-    }
+}
+
+.div-topAddDonor button {
+    margin: 20px 6px;
+    padding: 10px 20px 12px;
+    width: 200px;
+    text-align: center;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
 }
 
 .modal-container {
-    padding: 20px;
-    background-color: #fff;
-    max-width: 500px;
-    margin: 0 auto;
-    text-align: justify;
-    overflow: auto;
-    position: relative;
-    top: 5%;
+    background: #fff;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 640px;
+    max-height: 85vh;
+    overflow: auto;
+    box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.18),
+        0 2px 8px rgba(0, 0, 0, 0.12);
+    padding: 20px;
+    text-align: left;
 }
 
 .modal-header {
     font-size: 24px;
     font-weight: bold;
-    margin-bottom: 10px;
-    text-align: center;
+    margin-bottom: 12px;
+    text-align: left;
 }
 
 .modal-content {
-    position: static;
     font-size: 16px;
     color: #333;
 }
 
+.edit-button,
 .close-button {
-    margin: 15px 30px;
+    margin-top: 15px;
     padding: 8px 12px;
-    background-color: #007bff;
     color: #fff;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
-    text-align: center;
+}
+
+.ReactModal__Overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+.ReactModal__Content {
+    border: none;
+    inset: auto !important;
 }
 
 .edit-button {
-    margin-top: 15px;
-    padding: 8px 12px;
-    background-color: #f00;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    text-align: center;
+    background-color: #e53935;
+    margin-right: 8px;
+}
+
+.close-button {
+    background-color: #1c7ed6;
+}
+
+@media (max-width: 600px) {
+    .modal-container {
+        max-width: 100%;
+        padding: 16px;
+    }
 }
