@@ -4,6 +4,7 @@ import LoadingSpinner from './LoadingSpinner';
 import '../css/AddProgramPage.css';
 import axios from 'axios';
 import { MAX_TEXT } from '../constants/validation';
+import { isTooLong, isBlank, isFormValid } from '../constants/programValChecks';
 
 interface ProgramData {
     name: string;
@@ -11,16 +12,6 @@ interface ProgramData {
     startDate: string;
     aimAndCause: string;
 }
-
-const isTooLong = (s: string) => s.trim().length > MAX_TEXT;
-const isBlank = (s: string) => s.trim().length === 0;
-const isFormValid = (d: ProgramData) =>
-    !isBlank(d.name) &&
-    !isBlank(d.startDate) &&
-    !isBlank(d.description) &&
-    !isBlank(d.aimAndCause) &&
-    !isTooLong(d.description) &&
-    !isTooLong(d.aimAndCause);
 
 const AddProgramPage: React.FC = () => {
     const [formData, setFormData] = useState<ProgramData>({
