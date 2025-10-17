@@ -7,7 +7,7 @@ The Material Donor Mutual Assist project by BWorks is designed to streamline the
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Develop With docker compose
+## Develop With Docker Compose
 
 ### Prerequisites
 Ensure you have the following installed on your machine:
@@ -15,19 +15,19 @@ Ensure you have the following installed on your machine:
 - [Docker](https://www.docker.com/products/docker-desktop/)
 
 ### Clone the Repository
-   Clone the repository to your local machine.
-    ```
-    git clone https://github.com/oss-slu/material-donor-mutual-assist.git
-    ```
+Clone the repository to your local machine.
+```
+git clone https://github.com/oss-slu/material-donor-mutual-assist.git
+```
 
 ### Navigate to the Project Directory  
-   Move into the project folder.
-   ```
-   cd material-donor-mutual-assist
-   ```
+Move into the project folder.
+```
+cd material-donor-mutual-assist
+```
 
 ## Create Environment Variables
-Create a .env file and define the necessary environment variables:
+Create a `.env` file and define the necessary environment variables:
 ```
 # database service
 POSTGRES_USER="admin"
@@ -47,7 +47,7 @@ SMTP_HOST="smtp.gmail.com"
 SMTP_PORT="587"
 SMTP_SECURE="false"
 SMTP_USER="enter your gmail"
-SMTP_PASS="enter you App password"
+SMTP_PASS="enter your App password"
 ```
 
 ### Start the Development Environment
@@ -59,10 +59,9 @@ docker-compose up -d
 This will start all necessary containers in the background.
 
 ### Accessing the Application
-- After the applications starts, navigate to ttp://localhost:3000 in your web browser
+After the application starts, navigate to http://localhost:3000 in your web browser.
 
-
-### Stop the Devlopment Environment 
+### Stop the Development Environment 
 
 ```
 docker compose down
@@ -74,7 +73,7 @@ Follow these steps to set up your development environment.
 
 ### Prerequisites
 
-- **Node.js**: Ensure that Node.js is installed on your system. If it's not installed, download and install it from [Node.js Official Website](https://nodejs.org/).
+- **Node.js**: Ensure that Node.js is installed on your system. If it's not installed, download and install it from the [Node.js Official Website](https://nodejs.org/).
 
 ### Installation
 
@@ -93,7 +92,7 @@ Follow these steps to set up your development environment.
     ```
 
 3. **Install Dependencies**:  
-   Run the following command in your project directory to install required dependencies:
+   Run the following command in your project directory to install the required dependencies:
 
     ```bash
     npm install
@@ -130,4 +129,3 @@ We use Prettier to ensure consistent code formatting across the project. Before 
     ```
 
    Only push the code to the repository once all formatting issues have been resolved.
-
