@@ -1,133 +1,185 @@
 .container {
-    padding-top: 40px;
+    padding-top: 60px;
+    padding-bottom: 10px;
     display: flex;
     justify-content: center;
 }
 
-/* Styling for the form as a grid layout */
 .form {
+    width: min(740px, 92vw);
+    background: #fff;
+    color: #111827;
+    border-radius: 18px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    padding: 0;
+    font-family:
+        system-ui,
+        -apple-system,
+        Segoe UI,
+        Roboto,
+        Arial,
+        sans-serif;
     display: grid;
-    grid-template-columns: 1fr; /* Single-column grid for all fields */
-    gap: 20px; /* Space between each grid item */
-    width: 50vw;
-    max-width: 500px;
-    background-color: #212430; /* Darker background for the form */
-    padding: 15px 25px 15px 25px;
-    border-radius: 25px;
-    box-shadow: 0 4px 8px rgba(63, 60, 60, 0.1); /* Adding box shadow for better visibility */
-    margin-top: 30px;
+    grid-template-columns: 1fr;
+    row-gap: 18px;
 }
 
-/* Styling for the title inside the form */
 .heading {
-    color: #66fcf1; /* Sky blue color for the heading */
+    margin: 0;
+    padding: 16px 24px;
     text-align: center;
-    font-size: 28px; /* Font size for the heading */
-    grid-column: 1 / -1; /* Span the entire width of the grid */
-    margin-bottom: 5px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1f2937;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.form > *:not(.heading):not(.button-group) {
+    padding: 0 24px;
 }
 
 .label {
     display: block;
-    margin-bottom: 5px;
-    color: #ffffff; /* Label text color to stand out against the dark background */
+    margin: 8px 0 6px;
+    color: #374151;
+    font-weight: 600;
+    font-size: 0.95rem;
 }
 
-/* Red asterisk for required fields */
 .required {
-    color: red;
+    color: #ef4444;
 }
 
-/* Styling for input and textarea fields */
 .input,
 .textarea {
     width: 100%;
-    padding: 8px !important;
-    margin-top: 4px;
-    margin-bottom: 0 !important;
-    border-radius: 8px;
-    border: 1px solid #66fcf1;
-    font-size: 14px;
-    background-color: #f9f9f9;
-    color: #333;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f3f4f6;
+    color: #111827;
+    font-size: 0.95rem;
+    outline: none;
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease;
     box-sizing: border-box;
 }
 
-/* Increasing size of description and aimAndCause text areas */
+.input:focus,
+.textarea:focus {
+    background: #fff;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25);
+}
+
 .textarea {
-    width: 100%;
-    min-height: 100px;
-    padding: 8px; /* Ensure text starts from top-left corner */
-    resize: none; /* Disable resizing if not required */
-    box-sizing: border-box;
-    overflow: auto; /* Allow scrolling if content exceeds size */
+    min-height: 110px;
+    resize: vertical;
 }
 
-/* Centering the button group */
+/* Button row: horizontal with left and right aligned buttons */
 .button-group {
+    grid-column: 1 / -1;
     display: flex;
-    justify-content: center;
-    gap: 10px; /* Add space between the buttons */
-    grid-column: 1 / -1; /* Span the entire width of the grid */
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px 20px;
 }
 
-/* Styling for save and clear buttons */
+/* Place the buttons */
+.clear-button {
+    padding: 10px 20px;
+}
 .save-button {
     padding: 10px 20px;
+}
+
+/* Button look */
+.clear-button,
+.back-button,
+.save-button {
     border: none;
-    border-radius: 4px;
-    background-color: #28a745;
-    color: white;
+    border-radius: 10px;
+    font-size: 0.95rem;
     cursor: pointer;
+    transition:
+        background-color 0.18s ease,
+        transform 0.12s ease;
 }
 
 .clear-button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-}
-
-.back-button {
-    padding: 5px 20px;
-    border: none;
-    border-radius: 4px;
-    background-color: #a56f25;
-    color: white;
-    cursor: pointer;
-    margin: 0 auto;
-    text-align: center;
-    display: block;
-    grid-column: 1 / -1;
-}
-
-/* Hover effect changes */
-.save-button:hover {
-    background-color: #4dac63;
+    background: #e5e7eb;
+    color: #111827;
 }
 .clear-button:hover {
-    background-color: #43a0c8;
+    background: #d1d5db;
+}
+
+.save-button {
+    background: #3b82f6;
+    color: #fff;
+}
+.save-button:hover {
+    background: #2563eb;
+}
+
+.clear-button:hover,
+.save-button:hover {
+    transform: translateY(-1px);
+}
+
+/* Centered back button below the main row (spans full width) */
+.back-button {
+    display: block;
+    margin: 10px auto 18px;
+    background: #e5e7eb;
+    color: #111827;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
 }
 .back-button:hover {
-    background-color: #a96403;
+    background: #d1d5db;
 }
 
-/* Success message styling for better visibility */
 .success-message {
-    color: white;
-    font-weight: bold;
+    color: #065f46;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    padding: 10px 12px;
+    margin: 8px 24px 0;
+    border-radius: 10px;
     text-align: center;
-    margin-top: 10px;
-    font-size: 14px;
+    font-weight: 600;
 }
 
-/* Error message */
 .error-message {
-    color: red;
-    font-weight: bold;
-    margin-top: 10px;
-    font-size: 14px;
+    color: #991b1b;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    padding: 10px 12px;
+    margin: 8px 24px 0;
+    border-radius: 10px;
     text-align: center;
+    font-weight: 600;
+}
+
+/* Mobile: keep layout responsive */
+@media (max-width: 520px) {
+    .button-group {
+        flex-direction: row;
+        gap: 8px;
+    }
+    .clear-button {
+        justify-self: start;
+    }
+    .save-button {
+        justify-self: end;
+    }
 }

@@ -221,13 +221,7 @@ const AddProgramPage: React.FC = () => {
                 </div>
 
                 <div className="button-group">
-                    <button
-                        className="save-button"
-                        type="submit"
-                        disabled={isLoading || !isFormValid(formData)}
-                    >
-                        Save
-                    </button>
+                    {/* Clear on the left */}
                     <button
                         className="clear-button"
                         type="button"
@@ -236,15 +230,23 @@ const AddProgramPage: React.FC = () => {
                     >
                         Clear
                     </button>
+
+                    {/* Save on the right */}
+                    <button
+                        className="save-button"
+                        type="submit"
+                        disabled={isLoading || !isFormValid(formData)}
+                    >
+                        Save
+                    </button>
                 </div>
 
-                <div className="back-to-programs">
-                    <Link to="/programs">
-                        <button className="back-button" disabled={isLoading}>
-                            Back to Programs
-                        </button>
-                    </Link>
-                </div>
+                {/* Centered Back button below */}
+                <Link to="/programs">
+                    <button className="back-button" disabled={isLoading}>
+                        Back to Programs
+                    </button>
+                </Link>
 
                 {isLoading && <LoadingSpinner />}
             </form>
