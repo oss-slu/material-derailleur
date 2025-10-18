@@ -71,7 +71,9 @@ const AddProgramPage: React.FC = () => {
 
             if (response.status === 201) {
                 setSuccess('Program created successfully!');
-                setTimeout(() => navigate('/programs'), 1200);
+                setIsLoading(false);
+                navigate('/programs');
+                return;
             } else {
                 setError('Failed to create program.');
             }
