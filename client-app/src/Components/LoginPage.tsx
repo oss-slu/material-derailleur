@@ -41,6 +41,11 @@ const LoginPage: React.FC = () => {
         drawCaptcha(randomCaptcha);
     };
 
+    const resetCaptcha = ()=>{
+        generateCaptcha();
+        setCaptchaValue('');
+    }
+
     const drawCaptcha = (text: string): void => {
         if (captchaCanvasRef.current) {
             const canvas = captchaCanvasRef.current;
@@ -57,10 +62,12 @@ const LoginPage: React.FC = () => {
 
     const onChange = (e: ChangeEvent<HTMLInputElement>): void => {
         setCredentials(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        setErrorMessage('');
     };
 
     const handleCaptchaChange = (e: ChangeEvent<HTMLInputElement>): void => {
         setCaptchaValue(e.target.value);
+        setErrorMessage('');
     };
 
     const handleSubmit = async (
@@ -73,6 +80,7 @@ const LoginPage: React.FC = () => {
         if (captchaValue !== captcha) {
             setErrorMessage('Incorrect CAPTCHA. Please try again.');
             setIsLoading(false);
+            resetCaptcha();
             return;
         }
 
@@ -100,12 +108,15 @@ const LoginPage: React.FC = () => {
                     setErrorMessage(
                         'Unknown user role. Please contact support.',
                     );
+                    resetCaptcha();
                 }
             } else {
                 setErrorMessage(data.message || 'Invalid email or password.');
+                resetCaptcha();
             }
         } catch (error) {
             setErrorMessage('Something went wrong. Please try again.');
+            resetCaptcha();
         } finally {
             setIsLoading(false);
         }
@@ -170,7 +181,7 @@ const LoginPage: React.FC = () => {
                             <RefreshCw
                                 className="refresh-icon"
                                 size={20}
-                                onClick={generateCaptcha}
+                                onClick={resetCaptcha}
                                 aria-label="Refresh CAPTCHA"
                             />
                         </div>
