@@ -257,6 +257,7 @@ const DonorForm: React.FC = () => {
                 Add Donor Details
             </h1>
 
+
             {errorMessage && (
                 <p
                     className="error-message text-red-700 font-bold"
@@ -316,7 +317,7 @@ const DonorForm: React.FC = () => {
                         className="submit-button"
                         disabled={isLoading}
                     >
-                        Add Donor
+                        Submit
                     </button>
                     <button
                         type="button"
