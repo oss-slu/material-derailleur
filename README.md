@@ -131,3 +131,49 @@ We use Prettier to ensure consistent code formatting across the project. Before 
 
    Only push the code to the repository once all formatting issues have been resolved.
 
+## Code Contribution Guidelines
+
+We welcome contributions from the community! To ensure a smooth and collaborative development process, please follow these guidelines when contributing code:
+
+### 1. Fork and Branch
+
+- Fork the repository and create a new branch for your feature or bugfix.
+- Use descriptive branch names (e.g., `feature/add-donation-tracking`, `bugfix/fix-status-update`).
+
+### 2. Code Standards
+
+- Follow the existing coding style and conventions.
+- Use Prettier to format your code before submitting a pull request.
+- Write clear, concise, and well-documented code.
+
+### 3. Commit Messages
+
+- Write meaningful commit messages that describe your changes.
+- Use the present tense (e.g., "Add new status form" not "Added new status form").
+
+### 4. Testing
+
+- Ensure your changes do not break existing functionality.
+- Add unit or integration tests for new features or bug fixes.
+- Run all tests locally before submitting your pull request.
+
+### 5. Pull Requests
+
+- Submit a pull request to the `main` branch.
+- Provide a clear description of your changes and reference any related issues.
+- If your pull request is a work in progress, mark it as a draft.
+
+### 6. Code Review
+
+- Be responsive to feedback and requested changes from reviewers.
+- Address all comments and suggestions before merging.
+
+### 7. Documentation
+
+- Update relevant documentation (README, feature guides, etc.) if your changes affect usage or setup.
+
+### 8. Licensing
+
+- By contributing, you agree that your code will be released under the MIT [LICENSE](LICENSE).
+
+Thank you for helping improve Material Donor Mutual Assist!
