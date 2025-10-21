@@ -257,7 +257,6 @@ const DonorForm: React.FC = () => {
                 Add Donor Details
             </h1>
 
-
             {errorMessage && (
                 <p
                     className="error-message text-red-700 font-bold"
