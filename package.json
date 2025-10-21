@@ -1,7 +1,7 @@
 {
   "devDependencies": {
     "prettier": "^3.4.2",
-    "concurrently": "^8.2.2",
+    "concurrently": "^9.2.1",
     "serve": "^14.2.4"
   },
   "scripts": {
