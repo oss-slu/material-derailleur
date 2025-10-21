@@ -310,22 +310,7 @@ const DonorForm: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="form-field full-width button-container">
-                    <button
-                        type="submit"
-                        className="submit-button"
-                        disabled={isLoading}
-                    >
-                        Add Donor
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleRefresh}
-                        className="refresh-button"
-                        disabled={isLoading}
-                    >
-                        Refresh
-                    </button>
+                <div className="button-container">
                     <button
                         type="button"
                         onClick={handleBack}
@@ -334,6 +319,23 @@ const DonorForm: React.FC = () => {
                     >
                         Back
                     </button>
+                    <div className="button-group-right">
+                        <button
+                            type="button"
+                            onClick={handleRefresh}
+                            className="refresh-button"
+                            disabled={isLoading}
+                        >
+                            Refresh
+                        </button>
+                        <button
+                            type="submit"
+                            className="submit-button"
+                            disabled={isLoading}
+                        >
+                            Submit
+                        </button>
+                    </div>
                 </div>
 
                 {isLoading && <LoadingSpinner />}

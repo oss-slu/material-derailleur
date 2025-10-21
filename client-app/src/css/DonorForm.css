@@ -4,16 +4,16 @@
     margin: 50px auto;
     padding: 50px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    background-color: #1f2833;
+    background-color: #fff !important;
     border-radius: 12px;
     font-family: 'Poppins', sans-serif;
-    color: #fff;
+    color: #333 !important;
 }
 
 /* Center and style the heading */
 .heading-centered {
     text-align: center;
-    color: #66fcf1; /* Light teal color for heading */
+    color: #333 !important;
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 20px;
@@ -62,13 +62,27 @@
     align-items: center;
     font-size: 14px;
     font-weight: 600;
-    color: #fff;
+    color: #333;
+}
+
+/* Button container styling */
+.donor-form .button-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    width: 100%;
+}
+
+.donor-form .button-group-right {
+    display: flex;
+    gap: 15px;
 }
 
 /* Button styling */
 .donor-form .submit-button {
     padding: 10px 25px;
-    background-color: #45a29e;
+    background-color: #3e74b6 !important;
     color: white;
     border: none;
     border-radius: 6px;
@@ -77,33 +91,39 @@
     transition:
         background-color 0.3s ease,
         transform 0.2s ease;
-    margin-right: 20px; /* Space between Add Donor and Refresh buttons */
+}
+
+.donor-form .submit-button:hover {
+    background-color: #1761bb !important;
+    transform: translateY(0) !important;
 }
 
 .donor-form .back-button {
     padding: 10px 25px;
-    background-color: #eb2e1d;
-    color: white;
+    background-color: #d9d9d9 !important;
+    color: black !important;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
+    position: relative;
+    right: 320px;
+    top: 40px;
     transition:
         background-color 0.3s ease,
         transform 0.2s ease;
-    margin-right: 20px;
 }
 
 /* This should be fixed to a point where it is not hardcoded some point in the future*/
 .donor-form .back-button:hover {
-    background-color: #eb2e1d;
-    transform: translateY(-42px);
+    background-color: #cfcece !important;
+    transform: translateY(-40px) !important; /* The -40px value ensures the button remains stationary on hover, as any other value causes it to shift */
 }
 
 .donor-form .refresh-button {
     padding: 10px 25px;
-    background-color: #28a745;
-    color: white;
+    background-color: #eee !important;
+    color: black !important;
     border: none;
     border-radius: 6px;
     cursor: pointer;
@@ -114,9 +134,9 @@
 }
 
 /* Button hover effect */
-.donor-form .submit-button:hover,
 .donor-form .refresh-button:hover {
-    transform: translateY(-2px);
+    background-color: #ebebeb !important;
+    transform: translateY(0) !important;
 }
 
 /* Error and success message styling */
