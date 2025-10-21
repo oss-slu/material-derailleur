@@ -117,7 +117,9 @@
 /* This should be fixed to a point where it is not hardcoded some point in the future*/
 .donor-form .back-button:hover {
     background-color: #cfcece !important;
-    transform: translateY(-40px) !important; /* The -40px value ensures the button remains stationary on hover, as any other value causes it to shift */
+    transform: translateY(
+        -40px
+    ) !important; /* The -40px value ensures the button remains stationary on hover, as any other value causes it to shift */
 }
 
 .donor-form .refresh-button {
