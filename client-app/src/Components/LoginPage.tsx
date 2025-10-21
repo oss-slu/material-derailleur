@@ -44,7 +44,7 @@ const LoginPage: React.FC = () => {
     const resetCaptcha = (): void => {
         generateCaptcha();
         setCaptchaValue('');
-    }
+    };
 
     const drawCaptcha = (text: string): void => {
         if (captchaCanvasRef.current) {
