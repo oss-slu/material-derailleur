@@ -65,6 +65,20 @@
     color: #333;
 }
 
+/* Button container styling */
+.donor-form .button-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    width: 100%;
+}
+
+.donor-form .button-group-right {
+    display: flex;
+    gap: 15px;
+}
+
 /* Button styling */
 .donor-form .submit-button {
     padding: 10px 25px;
@@ -77,7 +91,6 @@
     transition:
         background-color 0.3s ease,
         transform 0.2s ease;
-    margin-right: 20px; /* Space between Add Donor and Refresh buttons */
 }
 
 .donor-form .submit-button:hover {
@@ -93,10 +106,12 @@
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
+    position: relative;
+    right: 320px;
+    top: 40px;
     transition:
         background-color 0.3s ease,
         transform 0.2s ease;
-    margin-right: 20px;
 }
 
 /* This should be fixed to a point where it is not hardcoded some point in the future*/
@@ -120,7 +135,7 @@
 
 /* Button hover effect */
 .donor-form .refresh-button:hover {
-    background-color: #eaeaea !important;
+    background-color: #ebebeb !important;
     transform: translateY(0) !important;
 }
 
