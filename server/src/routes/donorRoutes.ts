@@ -52,16 +52,19 @@ router.get('/', async (req: Request, res: Response) => {
     }
 });
 
-// Admin-only endpoint to fetch list of donor emails
 router.get('/emails', async (req: Request, res: Response) => {
     try {
         const permGranted = await authenticateUser(req, res, true);
-        if (permGranted) {
-            const emails = await prisma.donor.findMany({
-                select: { email: true },
-            });
-            res.json(emails.map((e) => e.email));
+        if (!permGranted) {
+            return;
         }
+
+        const donors = await prisma.donor.findMany({
+            select: { email: true },
+        });
+
+        const donorEmails = donors.map(({ email }) => email);
+        res.json(donorEmails);
     } catch (error) {
         console.error('Error fetching donor emails:', error);
         res.status(500).json({ message: 'Error fetching donor emails' });

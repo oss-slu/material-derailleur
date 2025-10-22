@@ -20,8 +20,10 @@ app.use('/donor', donorRouter);
 
 describe('Donor API', () => {
     let adminToken: string;
+    let donorToken: string;
     beforeAll(() => {
         adminToken = generateTestToken('ADMIN');
+        donorToken = generateTestToken('DONOR');
     });
     beforeEach(() => {
         jest.clearAllMocks(); // Clear mocks before each test to avoid interference
@@ -137,6 +139,15 @@ describe('Donor API', () => {
         expect(Array.isArray(response.body)).toBe(true);
         expect(response.body).toEqual(['john@example.com', 'jane@example.com']);
         expect(mockPrismaClient.donor.findMany).toHaveBeenCalled();
+    });
+
+    it('should return 403 if user is not admin', async () => {
+        const response = await request(app)
+            .get('/donor/emails')
+            .set('Authorization', donorToken)
+            .expect(403);
+
+        expect(response.body.message).toBe('Access denied: Admins only.');
     });
 
     it('should handle errors when fetching donor emails', async () => {
