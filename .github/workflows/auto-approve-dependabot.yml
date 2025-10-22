@@ -1,0 +1,22 @@
+name: Auto-approve Dependabot PRs
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  approve:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]' || contains(github.event.pull_request.user.login, 'dependabot')
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Auto-approve PR
+        uses: hmarr/auto-approve-action@v2.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
