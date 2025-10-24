@@ -333,7 +333,7 @@ const DonorForm: React.FC = () => {
                             className="submit-button"
                             disabled={isLoading}
                         >
-                            Submit
+                            Add Donor
                         </button>
                     </div>
                 </div>
