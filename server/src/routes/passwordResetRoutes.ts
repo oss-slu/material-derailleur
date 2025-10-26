@@ -5,6 +5,8 @@ import { sendPasswordReset } from '../services/emailService';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import z from 'zod';
+import { passwordRegex } from './programRoutes';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET; // Use secret from .env
@@ -48,6 +50,13 @@ router.post(
     },
 );
 
+const passwordSchema = z
+      .string()
+      .min(12, { message: "Password must be at least 12 characters" })
+      .regex(passwordRegex, {
+        message:
+          "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character",
+      })
 router.post('/reset-password', async (req: Request, res: Response) => {
     const { token, password } = req.body;
 
@@ -57,6 +66,13 @@ router.post('/reset-password', async (req: Request, res: Response) => {
             .json({ message: 'Token and password are required' });
     }
 
+    const parsedPassword = passwordSchema.safeParse(password)
+    if (!parsedPassword.success){
+        res.status(411).json({
+            message : parsedPassword.error.message 
+        })
+        return
+    }
     const isJwt = token.split('.').length === 3; // Check if it's a JWT
     if (isJwt) {
         // Handle Forgot Password (JWT Token)
@@ -64,7 +80,7 @@ router.post('/reset-password', async (req: Request, res: Response) => {
             let decoded: JwtPayload;
             decoded = jwt.verify(token, JWT_SECRET) as JwtPayload; // Decode and verify the token
             const userId = decoded.userId;
-            const hashedPassword = await bcrypt.hash(password, 10);
+            const hashedPassword = await bcrypt.hash(parsedPassword.data, 10);
 
             // Store new password in database
             // const updatedUser =

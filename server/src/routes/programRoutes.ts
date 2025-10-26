@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import { authenticateUser } from './routeProtection';
 import crypto from 'crypto';
 import { sendPasswordReset } from '../services/emailService';
+import z from "zod" ;
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET; // Use secret from .env
@@ -13,27 +14,81 @@ if (!JWT_SECRET) {
     throw new Error('JWT_SECRET is not set in .env file!');
 }
 
+export const passwordRegex =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/;
+
+export const signupSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(1, { message: "Name is required" })
+      .max(100, { message: "Name is too long" }),
+    email: z.email({ message: "Invalid email address" }),
+    password: z
+      .string()
+      .min(12, { message: "Password must be at least 12 characters" })
+      .regex(passwordRegex, {
+        message:
+          "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character",
+      }),
+  })
+  .superRefine((data, ctx) => {
+    const pwd = data.password ?? "";
+    const name = (data.name ?? "").toLowerCase();
+    const email = (data.email ?? "").toLowerCase();
+    const pwdLower = pwd.toLowerCase();
+
+    // if name is short (e.g. "Al"), checking substring may be noisy;
+    // still we check any non-empty name parts
+    if (name) {
+      // check each token in the name (split by spaces, punctuation)
+      const nameParts = name.split(/[\s\-\_\.]+/).filter(Boolean);
+      for (const part of nameParts) {
+        if (part.length >= 2 && pwdLower.includes(part)) {
+          ctx.addIssue({
+            path: ["password"],
+            code: "custom" ,
+            message: "Password must not contain parts of your name",
+          });
+          break;
+        }
+      }
+    }
+
+    if (email) {
+      // check whole email and the local-part (before @)
+      const localPart = email.split("@")[0] || "";
+      if (localPart && pwdLower.includes(localPart)) {
+        ctx.addIssue({
+          path: ["password"],
+          code: "custom" ,
+          message: "Password must not contain your email address or its local part",
+        });
+      } else if (pwdLower.includes(email)) {
+        ctx.addIssue({
+          path: ["password"],
+          code: "custom" ,
+          message: "Password must not contain your email address",
+        });
+      }
+    }
+  });
 // Route to register a new user
 router.post(
     '/register',
-    [
-        body('name').notEmpty().withMessage('Name is required'),
-        body('email')
-            .trim()
-            .isEmail()
-            .withMessage('Invalid email format')
-            .normalizeEmail(),
-        body('password')
-            .isLength({ min: 5 })
-            .withMessage('Password must be at least 5 characters'),
-    ],
+    
+    
     async (req: Request, res: Response) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+        const parsedBody = signupSchema.safeParse(req.body)
+        if (!parsedBody.success){
+            res.status(411).json({
+                message : parsedBody.error.message
+            })
+            return 
         }
 
-        const { name, email, password } = req.body;
+        const { name, email, password } = parsedBody.data ;
 
         try {
             // Check if user already exists
@@ -65,20 +120,29 @@ router.post(
     },
 );
 
+const loginSchema = z.object({
+    email: z.email({ message: "Invalid email address" }),
+    password: z
+      .string()
+      .min(12, { message: "Password must be at least 12 characters" })
+      .regex(passwordRegex, {
+        message:
+          "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character",
+      })
+})
 // Route to login user
 router.post(
     '/login',
-    [
-        body('email').isEmail().withMessage('Invalid email format'),
-        body('password').notEmpty().withMessage('Password is required'),
-    ],
+    
     async (req: Request, res: Response) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+        const parsedBody = loginSchema.safeParse(req.body)
+        if (!parsedBody.success){
+            res.status(411).json({
+                message : parsedBody.error.message
+            })
+            return 
         }
-
-        const { email, password } = req.body;
+        const { email, password } = parsedBody.data;
 
         try {
             // Find user in the database

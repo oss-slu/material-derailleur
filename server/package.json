@@ -32,7 +32,8 @@
     "nodemailer": "^6.10.0",
     "portfinder": "^1.0.32",
     "server": "file:",
-    "smcloudstore": "^0.2.1"
+    "smcloudstore": "^0.2.1",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
