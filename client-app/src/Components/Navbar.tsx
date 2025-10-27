@@ -412,7 +412,12 @@ const Navbar: React.FC = () => {
                 </div>
                 {isLoggedIn && (
                     <div>
-                        <button onClick={handleLogout}>Logout</button>
+                        <button
+                            className="logout-button"
+                            onClick={handleLogout}
+                        >
+                            Logout
+                        </button>
                     </div>
                 )}
             </div>
