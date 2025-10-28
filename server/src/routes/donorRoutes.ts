@@ -52,6 +52,25 @@ router.get('/', async (req: Request, res: Response) => {
     }
 });
 
+router.get('/emails', async (req: Request, res: Response) => {
+    try {
+        const permGranted = await authenticateUser(req, res, true);
+        if (!permGranted) {
+            return;
+        }
+
+        const donors = await prisma.donor.findMany({
+            select: { email: true },
+        });
+
+        const donorEmails = donors.map(({ email }) => email);
+        res.json(donorEmails);
+    } catch (error) {
+        console.error('Error fetching donor emails:', error);
+        res.status(500).json({ message: 'Error fetching donor emails' });
+    }
+});
+
 function getRandomPassword() {
     const charset =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890$&+,:;=?@#|'<>.^*()%!-";

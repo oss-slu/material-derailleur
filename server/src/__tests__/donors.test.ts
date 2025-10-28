@@ -20,8 +20,10 @@ app.use('/donor', donorRouter);
 
 describe('Donor API', () => {
     let adminToken: string;
+    let donorToken: string;
     beforeAll(() => {
         adminToken = generateTestToken('ADMIN');
+        donorToken = generateTestToken('DONOR');
     });
     beforeEach(() => {
         jest.clearAllMocks(); // Clear mocks before each test to avoid interference
@@ -120,5 +122,44 @@ describe('Donor API', () => {
             .expect(500);
 
         expect(response.body.message).toBe('Error fetching donors');
+    });
+
+    it('should return list of donor emails for admin', async () => {
+        mockPrismaClient.donor.findMany.mockResolvedValue([
+            { email: 'john@example.com' },
+            { email: 'jane@example.com' },
+        ]);
+
+        const response = await request(app)
+            .get('/donor/emails')
+            .set('Authorization', adminToken)
+            .expect(200)
+            .expect('Content-Type', /json/);
+
+        expect(Array.isArray(response.body)).toBe(true);
+        expect(response.body).toEqual(['john@example.com', 'jane@example.com']);
+        expect(mockPrismaClient.donor.findMany).toHaveBeenCalled();
+    });
+
+    it('should return 403 if user is not admin', async () => {
+        const response = await request(app)
+            .get('/donor/emails')
+            .set('Authorization', donorToken)
+            .expect(403);
+
+        expect(response.body.message).toBe('Access denied: Admins only.');
+    });
+
+    it('should handle errors when fetching donor emails', async () => {
+        mockPrismaClient.donor.findMany.mockRejectedValue(
+            new Error('Database error'),
+        );
+
+        const response = await request(app)
+            .get('/donor/emails')
+            .set('Authorization', adminToken)
+            .expect(500);
+
+        expect(response.body.message).toBe('Error fetching donor emails');
     });
 });
