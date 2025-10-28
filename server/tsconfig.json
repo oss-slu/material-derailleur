@@ -1,16 +1,16 @@
 {
-  "compilerOptions": {
-    "target": "es2016",
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "outDir": "./dist",
+    "compilerOptions": {
+        "target": "es2016",
+        "module": "commonjs",
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "outDir": "./dist",
 
-    // 👇 Add these two lines
-    "typeRoots": ["./src/types", "./node_modules/@types"]
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+        // 👇 Add these two lines
+        "typeRoots": ["./src/types", "./node_modules/@types"]
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules"]
 }
