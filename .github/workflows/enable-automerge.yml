@@ -1,16 +1,18 @@
 name: Enable auto-merge for Dependabot
 
+# Use pull_request_target to ensure Dependabot PRs have access to repo context
 on:
-  pull_request:
-    types: [opened, reopened, synchronize]
+  pull_request_target:
+    types: [opened, reopened, synchronize, labeled]
 
 permissions:
+  contents: write
   pull-requests: write
-  contents: read
 
 jobs:
   automerge:
     runs-on: ubuntu-latest
+    # Only run when Dependabot creates or updates a PR
     if: github.actor == 'dependabot[bot]'
     steps:
       - name: Enable auto-merge
