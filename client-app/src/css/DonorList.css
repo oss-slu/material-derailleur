@@ -1,33 +1,198 @@
-.header {
-    padding-top: 60px;
+/* Page background + global tokens to match the light Programs theme */
+:root {
+    --bg-soft: #eef6ff; /* light blue page background */
+    --primary: #1c7ed6; /* BWorks blue */
+    --primary-600: #176bbf;
+    --danger: #e53935;
+    --text: #2b2f33;
+    --muted: #6b7280;
+    --card: #ffffff;
+    --border: #e5eaf0;
+    --radius: 12px;
+    --shadow: 0 10px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.donor-list {
-    width: 90%;
-    border-collapse: collapse;
-    margin: 0 auto; /* center table */
+.page {
+    min-height: 100vh;
+    background: var(--bg-soft);
+    padding-bottom: 40px;
+    color: var(--text);
 }
 
-.donor-list th,
-.donor-list td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center; /* horiz center */
-    vertical-align: middle; /* vert center */
-}
-
-.div-topAddDonor {
-    display: flex;
-    justify-content: flex-end;
-}
-
-.div-topAddDonor button {
-    margin: 20px 6px;
-    padding: 10px 20px 12px;
-    width: 200px;
+.page-header {
+    position: relative;
+    padding: 40px 24px 20px;
     text-align: center;
 }
 
+.page-title {
+    margin: 0;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+.header-action {
+    position: fixed;
+    right: 24px;
+    top: 80px;
+    z-index: 9999; /* ensure above navbar */
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    transition:
+        transform 0.12s ease,
+        filter 0.12s ease;
+}
+
+.search-row {
+    display: flex;
+    justify-content: center;
+    margin: 12px 0 24px;
+}
+
+/* make search-bar centered and keep input/button together */
+.search-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-bar input {
+    width: min(790px, 80vw);
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-right: none;
+    border-radius: 10px 0 0 10px;
+    background: #fff;
+    outline: none;
+    font-size: 14px;
+    height: 44px;
+    box-sizing: border-box;
+}
+
+.search-button {
+    padding: 0 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    border-radius: 0 10px 10px 0;
+    box-sizing: border-box;
+    border: 1px solid var(--border);
+    border-left: none;
+    background: #fff;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.search-bar input:focus,
+.search-button:focus {
+    outline: none;
+    box-shadow: 0 6px 18px rgba(28, 126, 214, 0.08);
+}
+
+/* Card container for table (white on blue bg) */
+.card {
+    width: min(1100px, 94vw);
+    margin: 0 auto;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Clean table look */
+.donor-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.donor-table th,
+.donor-table td {
+    padding: 14px 12px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.donor-table thead th {
+    background: #f7faff;
+    font-weight: 700;
+}
+
+.donor-table tbody tr:hover {
+    background: #f9fbff;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        transform 0.04s ease,
+        box-shadow 0.15s ease,
+        background 0.2s ease;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(28, 126, 214, 0.26);
+}
+.btn-primary:hover {
+    background: var(--primary-600);
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: #fff;
+}
+
+.btn-link {
+    background: transparent;
+    color: var(--primary);
+    padding: 6px 8px;
+    border-radius: 6px;
+}
+.btn-link:hover {
+    background: #eaf2ff;
+}
+
+/* Empty state to mirror “No programs available.” look */
+.empty-state {
+    text-align: center;
+    color: var(--muted);
+    font-size: 16px;
+    margin-top: 40px;
+}
+
+/* Error */
+.error-message {
+    width: min(800px, 90vw);
+    margin: 0 auto 16px;
+    color: #b00020;
+    text-align: center;
+}
+
+/* Modal (kept your structure, matched palette) */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -41,38 +206,31 @@
 
 .modal-container {
     background: #fff;
-    border-radius: 8px;
+    border-radius: 12px;
     width: 100%;
     max-width: 640px;
     max-height: 85vh;
     overflow: auto;
-    box-shadow:
-        0 10px 24px rgba(0, 0, 0, 0.18),
-        0 2px 8px rgba(0, 0, 0, 0.12);
-    padding: 20px;
-    text-align: left;
+    box-shadow: var(--shadow);
+    padding: 22px;
+    border: 1px solid var(--border);
 }
 
 .modal-header {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 12px;
-    text-align: left;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 10px;
 }
 
-.modal-content {
-    font-size: 16px;
-    color: #333;
+.modal-content p {
+    margin: 8px 0;
 }
 
-.edit-button,
-.close-button {
-    margin-top: 15px;
-    padding: 8px 12px;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    justify-content: flex-end;
 }
 
 .ReactModal__Overlay {
@@ -90,18 +248,24 @@
     inset: auto !important;
 }
 
-.edit-button {
-    background-color: #e53935;
-    margin-right: 8px;
+/* Responsive */
+@media (max-width: 640px) {
+    .header-action {
+        top: 64px;
+        right: 16px;
+    }
+    .page-title {
+        font-size: 28px;
+    }
+    .btn {
+        border-radius: 8px;
+        padding: 9px 14px;
+    }
 }
 
-.close-button {
-    background-color: #1c7ed6;
-}
-
-@media (max-width: 600px) {
-    .modal-container {
-        max-width: 100%;
-        padding: 16px;
+/* restore small gap on very small screens so button doesn't overlap */
+@media (max-width: 360px) {
+    .search-bar {
+        gap: 6px;
     }
 }

@@ -1,9 +1,8 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaPlus } from 'react-icons/fa';
 import axios from 'axios';
 import Modal from 'react-modal';
-import '../css/AdminHeader.css';
 import '../css/DonorList.css';
 
 interface Donor {
@@ -25,24 +24,22 @@ const DonorList: React.FC = () => {
     const [filteredDonors, setFilteredDonors] = useState<Donor[]>([]);
     const [donorDetails, selectedDonorDetails] = useState<Donor | null>(null);
     const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
-    const [currentDonors, setCurrentDonors] = useState<Donor[]>([]); // initially empty array
+    const [currentDonors, setCurrentDonors] = useState<Donor[]>([]);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Fetch donor data from the backend API
         const fetchDonors = async () => {
             try {
                 const response = await axios.get<Donor[]>(
                     `${process.env.REACT_APP_BACKEND_API_BASE_URL}donor`,
                     {
                         headers: {
-                            Authorization: localStorage.getItem('token'),
+                            Authorization: localStorage.getItem('token') || '',
                         },
                     },
                 );
-                console.log('Fetched donor data:', response.data); // Log the response data
-                setCurrentDonors(response.data); // Set the fetched data
+                setCurrentDonors(response.data);
             } catch (err) {
                 console.error('Error fetching donors:', err);
                 setError('Error fetching donor data');
@@ -52,23 +49,18 @@ const DonorList: React.FC = () => {
     }, []);
 
     const handleSearch = () => {
+        const query = searchInput.trim().toLowerCase();
         const filtered = currentDonors.filter(
             item =>
-                item.id.toString().includes(searchInput) ||
-                item.firstName
-                    .toLowerCase()
-                    .includes(searchInput.toLowerCase()) ||
-                item.lastName
-                    .toLowerCase()
-                    .includes(searchInput.toLowerCase()) ||
-                item.email.includes(searchInput),
+                item.id.toString().includes(query) ||
+                item.firstName.toLowerCase().includes(query) ||
+                item.lastName.toLowerCase().includes(query) ||
+                item.email.toLowerCase().includes(query),
         );
         setFilteredDonors(filtered);
     };
 
-    const handleAddNewDonorClick = () => {
-        navigate('/donorform');
-    };
+    const handleAddNewDonorClick = () => navigate('/donorform');
 
     const handleViewDetailsClick = (donor: Donor) => {
         selectedDonorDetails(donor);
@@ -76,82 +68,94 @@ const DonorList: React.FC = () => {
     };
 
     const handleEditDonorClick = (donor: Donor | null) => {
-        if (donor === null) {
-            console.error("Donor doesn't exist");
-        } else {
-            localStorage.setItem('donor', JSON.stringify(donor));
-            navigate('/donoredit');
-        }
+        if (!donor) return;
+        localStorage.setItem('donor', JSON.stringify(donor));
+        navigate('/donoredit');
     };
 
+    const donorsToShow =
+        filteredDonors.length > 0 || searchInput
+            ? filteredDonors
+            : currentDonors;
+
     return (
-        <div>
-            <div className="header">
-                <div className="logo-container">
-                    <img
-                        src="https://www.bworks.org/wp-content/themes/bworks/library/images/logo-bworks.png"
-                        alt="BWorks Logo"
-                        className="logo"
+        <div className="page">
+            {/* Page header to match the Programs page */}
+            <header className="page-header">
+                <h1 className="page-title">Donors</h1>
+                <button
+                    className="btn btn-primary header-action"
+                    onClick={handleAddNewDonorClick}
+                >
+                    <FaPlus style={{ marginRight: 8 }} /> Add Donor
+                </button>
+            </header>
+
+            {/* Search row */}
+            <div className="search-row">
+                <div className="search-bar">
+                    <input
+                        type="text"
+                        placeholder="Search for donor"
+                        value={searchInput}
+                        onChange={e => setSearchInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleSearch()}
                     />
-                </div>
-                <div className="options">
-                    <div className="search-bar">
-                        <input
-                            type="text"
-                            placeholder="Search for donor"
-                            value={searchInput}
-                            onChange={e => setSearchInput(e.target.value)}
-                        />
-                        <button
-                            className="search-button"
-                            onClick={handleSearch}
-                        >
-                            <FaSearch />
-                        </button>
-                    </div>
+                    <button
+                        className="btn btn-primary search-button"
+                        onClick={handleSearch}
+                    >
+                        <FaSearch />
+                    </button>
                 </div>
             </div>
 
             {error && <p className="error-message">{error}</p>}
 
-            <div className="div-topAddDonor">
-                <button onClick={handleAddNewDonorClick}>Add New Donor</button>
-            </div>
+            {/* Content */}
+            {donorsToShow.length === 0 ? (
+                <div className="empty-state">No donors available.</div>
+            ) : (
+                <div className="card">
+                    <div className="table-wrapper">
+                        <table className="donor-table">
+                            <thead>
+                                <tr>
+                                    <th>Donor ID</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Email</th>
+                                    <th>More Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {donorsToShow.map(donor => (
+                                    <tr key={donor.id}>
+                                        <td>{donor.id}</td>
+                                        <td>{donor.firstName}</td>
+                                        <td>{donor.lastName}</td>
+                                        <td>{donor.email}</td>
+                                        <td>
+                                            <button
+                                                className="btn btn-link"
+                                                onClick={() =>
+                                                    handleViewDetailsClick(
+                                                        donor,
+                                                    )
+                                                }
+                                            >
+                                                View More Details
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
 
-            <table className="donor-list">
-                <thead>
-                    <tr>
-                        <th>Donor ID</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Email</th>
-                        <th>More Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {(filteredDonors.length > 0
-                        ? filteredDonors
-                        : currentDonors
-                    ).map((donor, index) => (
-                        <tr key={donor.id}>
-                            <td>{donor.id}</td>
-                            <td>{donor.firstName}</td>
-                            <td>{donor.lastName}</td>
-                            <td>{donor.email}</td>
-                            <td>
-                                <button
-                                    onClick={() =>
-                                        handleViewDetailsClick(donor)
-                                    }
-                                >
-                                    View More Details
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-
+            {/* Details Modal */}
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={() => setModalIsOpen(false)}
@@ -160,44 +164,62 @@ const DonorList: React.FC = () => {
             >
                 <h2 className="modal-header">Details</h2>
                 {donorDetails && (
-                    <div>
-                        <p>Donor ID: {donorDetails.id}</p>
-                        <p>First Name: {donorDetails.firstName}</p>
-                        <p>Last Name: {donorDetails.lastName}</p>
-                        <p>Email: {donorDetails.email}</p>
-                        <p>Contact Number: {donorDetails.contact}</p>
-                        <p>Address Line 1: {donorDetails.addressLine1}</p>
-                        <p>Address Line 2: {donorDetails.addressLine2}</p>
-                        <p>City: {donorDetails.city}</p>
-                        <p>State: {donorDetails.state}</p>
-                        <p>Zipcode: {donorDetails.zipcode}</p>
+                    <div className="modal-content">
                         <p>
-                            Opted in for Emails:{' '}
+                            <strong>Donor ID:</strong> {donorDetails.id}
+                        </p>
+                        <p>
+                            <strong>First Name:</strong>{' '}
+                            {donorDetails.firstName}
+                        </p>
+                        <p>
+                            <strong>Last Name:</strong> {donorDetails.lastName}
+                        </p>
+                        <p>
+                            <strong>Email:</strong> {donorDetails.email}
+                        </p>
+                        <p>
+                            <strong>Contact Number:</strong>{' '}
+                            {donorDetails.contact}
+                        </p>
+                        <p>
+                            <strong>Address Line 1:</strong>{' '}
+                            {donorDetails.addressLine1}
+                        </p>
+                        <p>
+                            <strong>Address Line 2:</strong>{' '}
+                            {donorDetails.addressLine2}
+                        </p>
+                        <p>
+                            <strong>City:</strong> {donorDetails.city}
+                        </p>
+                        <p>
+                            <strong>State:</strong> {donorDetails.state}
+                        </p>
+                        <p>
+                            <strong>Zipcode:</strong> {donorDetails.zipcode}
+                        </p>
+                        <p>
+                            <strong>Opted in for Emails:</strong>{' '}
                             {donorDetails.emailOptIn ? 'Yes' : 'No'}
                         </p>
                     </div>
                 )}
-                <div>
+                <div className="modal-actions">
                     <button
-                        className="edit-button"
+                        className="btn btn-danger"
                         onClick={() => handleEditDonorClick(donorDetails)}
                     >
                         Edit
                     </button>
                     <button
-                        className="close-button"
+                        className="btn btn-primary"
                         onClick={() => setModalIsOpen(false)}
                     >
                         Close
                     </button>
                 </div>
             </Modal>
-
-            <div style={{ position: 'fixed', bottom: '20px', right: '20px' }}>
-                <button onClick={() => handleAddNewDonorClick()}>
-                    <FaPlus size={24} />
-                </button>
-            </div>
         </div>
     );
 };
