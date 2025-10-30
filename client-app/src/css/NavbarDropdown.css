@@ -28,7 +28,6 @@
     min-width: 150px;
 }
 
-/* Displays dropdown when hovering */
 .nav-item.dropdown:hover .dropdown-menu {
     display: block;
 }
@@ -42,4 +41,25 @@
 
 .dropdown-item:hover {
     background-color: #e9ecef;
+}
+
+/* Logout button styling to match navbar look */
+.logout-button {
+    background: #ffffff;
+    color: #000000;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(16, 24, 40, 0.08);
+    transition: none;
+}
+
+/* Disable hover/active visual changes for logout button */
+.logout-button:hover,
+.logout-button:active {
+    background: #ffffff;
+    transform: none;
+    box-shadow: 0 4px 10px rgba(16, 24, 40, 0.08);
 }
