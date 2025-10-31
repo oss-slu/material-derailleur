@@ -35,7 +35,7 @@
         "smcloudstore": "^0.2.1"
     },
     "devDependencies": {
-        "@types/bcrypt": "^5.0.2",
+        "@types/bcrypt": "^6.0.0",
         "@types/bcryptjs": "^3.0.0",
         "@types/cookie-parser": "^1.4.7",
         "@types/cors": "^2.8.17",
