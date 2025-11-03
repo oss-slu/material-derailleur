@@ -1,4 +1,10 @@
-import React, { useState, useEffect, ChangeEvent, FormEvent, useCallback } from 'react';
+import React, {
+    useState,
+    useEffect,
+    ChangeEvent,
+    FormEvent,
+    useCallback,
+} from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import ItemStatus from '../constants/Enums';
@@ -24,11 +30,14 @@ const VALIDATION_RULES = {
     REQUIRED_FIELD: 'This field is required.',
     INVALID_DATE: 'Date cannot be in the future.',
     MAX_IMAGES: 5,
-    MAX_FILE_SIZE: 2 * 1024 * 1024, 
+    MAX_FILE_SIZE: 2 * 1024 * 1024,
     ALLOWED_FILE_TYPES: ['image/jpeg', 'image/png', 'image/jpg'] as const,
 } as const;
 
-export const validateRequiredField = (value: string, fieldName: string): string => {
+export const validateRequiredField = (
+    value: string,
+    fieldName: string,
+): string => {
     if (!value || value.trim() === '') {
         return `${fieldName} is required.`;
     }
@@ -37,7 +46,7 @@ export const validateRequiredField = (value: string, fieldName: string): string 
 
 export const validateDate = (dateString: string): string => {
     if (!dateString) return VALIDATION_RULES.REQUIRED_FIELD;
-     
+
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(dateString)) {
         return 'Invalid date format. Please use YYYY-MM-DD format.';
@@ -47,51 +56,60 @@ export const validateDate = (dateString: string): string => {
         return 'Invalid date. Please enter a valid date.';
     }
     const today = new Date(dateString);
-    today.setHours(23, 59, 59, 999); 
-    
+    today.setHours(23, 59, 59, 999);
+
     if (selectedDate > today) {
         return VALIDATION_RULES.INVALID_DATE;
     }
-    
+
     return '';
 };
 
 export const validateImages = (images: File[]): ImageValidationResult => {
     const errors: FormErrors = {};
-    
+
     if (images.length > VALIDATION_RULES.MAX_IMAGES) {
         errors.general = `You can upload up to ${VALIDATION_RULES.MAX_IMAGES} images only.`;
         return { isValid: false, errors };
     }
-    
+
     images.forEach((image, index) => {
         if (!VALIDATION_RULES.ALLOWED_FILE_TYPES.includes(image.type as any)) {
-            errors[`image_${index}`] = 
+            errors[`image_${index}`] =
                 `${image.name} is not a valid image type. Only JPG, JPEG and PNG are allowed.`;
         } else if (image.size > VALIDATION_RULES.MAX_FILE_SIZE) {
-            errors[`image_${index}`] = 
+            errors[`image_${index}`] =
                 `${image.name} exceeds the ${VALIDATION_RULES.MAX_FILE_SIZE / 1024 / 1024}MB size limit.`;
         }
     });
-    
+
     return {
         isValid: Object.keys(errors).length === 0,
-        errors
+        errors,
     };
 };
 
 // Main validation function
-export const validateStatusForm = (formData: FormData, images: File[]): FormErrors => {
+export const validateStatusForm = (
+    formData: FormData,
+    images: File[],
+): FormErrors => {
     const errors: FormErrors = {};
 
     // Validate required fields
-    const statusTypeError = validateRequiredField(formData.statusType, 'Status type');
+    const statusTypeError = validateRequiredField(
+        formData.statusType,
+        'Status type',
+    );
     if (statusTypeError) errors.statusType = statusTypeError;
 
     const dateModifiedError = validateDate(formData.dateModified);
     if (dateModifiedError) errors.dateModified = dateModifiedError;
 
-    const donatedItemIdError = validateRequiredField(formData.donatedItemId, 'Donated item ID');
+    const donatedItemIdError = validateRequiredField(
+        formData.donatedItemId,
+        'Donated item ID',
+    );
     if (donatedItemIdError) errors.donatedItemId = donatedItemIdError;
 
     // Validate images
@@ -116,7 +134,9 @@ const AddNewStatus: React.FC = () => {
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [currentPreviewImage, setCurrentPreviewImage] = useState<string | null>(null);
+    const [currentPreviewImage, setCurrentPreviewImage] = useState<
+        string | null
+    >(null);
 
     useEffect(() => {
         if (id) {
@@ -131,16 +151,18 @@ const AddNewStatus: React.FC = () => {
         };
     }, [previewUrls]);
 
-    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (
+        e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    ) => {
         const { name, value } = e.target;
-        
+
         // Clear specific field error when user starts typing
         setErrors(prev => {
             const newErrors = { ...prev };
             delete newErrors[name];
             return newErrors;
         });
-        
+
         setFormData(prev => ({ ...prev, [name]: value }));
         setErrorMessage(null);
         setSuccessMessage(null);
@@ -150,7 +172,7 @@ const AddNewStatus: React.FC = () => {
         if (!e.target.files) return;
 
         const selectedFiles = Array.from(e.target.files);
-        
+
         // Clear previous image errors
         setErrors(prev => {
             const newErrors = { ...prev };
@@ -165,7 +187,7 @@ const AddNewStatus: React.FC = () => {
         // Validate before adding images
         const newImages = [...images, ...selectedFiles];
         const imageValidation = validateImages(newImages);
-        
+
         if (!imageValidation.isValid) {
             setErrors(prev => ({ ...prev, ...imageValidation.errors }));
             e.target.value = '';
@@ -173,26 +195,28 @@ const AddNewStatus: React.FC = () => {
         }
 
         setImages(newImages);
-        
+
         // Create preview URLs
-        const newPreviewUrls = selectedFiles.map(file => URL.createObjectURL(file));
+        const newPreviewUrls = selectedFiles.map(file =>
+            URL.createObjectURL(file),
+        );
         setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
-        
+
         e.target.value = ''; // Reset file input
     };
 
     const handleImageRemove = (index: number) => {
         // Revoke the object URL to prevent memory leaks
         URL.revokeObjectURL(previewUrls[index]);
-        
+
         setImages(prev => prev.filter((_, i) => i !== index));
         setPreviewUrls(prev => prev.filter((_, i) => i !== index));
-        
+
         // Clear related errors
         setErrors(prev => {
             const newErrors = { ...prev };
             delete newErrors[`image_${index}`];
-            
+
             // Reindex remaining image errors
             Object.keys(newErrors).forEach(key => {
                 if (key.startsWith('image_')) {
@@ -204,7 +228,7 @@ const AddNewStatus: React.FC = () => {
                     }
                 }
             });
-            
+
             return newErrors;
         });
     };
@@ -232,7 +256,9 @@ const AddNewStatus: React.FC = () => {
         setSuccessMessage(null);
 
         if (!validateForm()) {
-            setErrorMessage('Please fix the validation errors before submitting.');
+            setErrorMessage(
+                'Please fix the validation errors before submitting.',
+            );
             setIsLoading(false);
             return;
         }
@@ -242,7 +268,9 @@ const AddNewStatus: React.FC = () => {
             formDataToSubmit.append('statusType', formData.statusType);
             formDataToSubmit.append('dateModified', formData.dateModified);
             formDataToSubmit.append('donatedItemId', formData.donatedItemId);
-            images.forEach(image => formDataToSubmit.append('imageFiles', image));
+            images.forEach(image =>
+                formDataToSubmit.append('imageFiles', image),
+            );
 
             const response = await axios.post(
                 `${process.env.REACT_APP_BACKEND_API_BASE_URL}donatedItem/status/${id}`,
@@ -252,7 +280,7 @@ const AddNewStatus: React.FC = () => {
                         'Content-Type': 'multipart/form-data',
                         Authorization: localStorage.getItem('token') || '',
                     },
-                }
+                },
             );
 
             if (response.status === 200) {
@@ -264,9 +292,10 @@ const AddNewStatus: React.FC = () => {
                 setErrorMessage('Failed to update status');
             }
         } catch (error: any) {
-            const errorMsg = error.response?.data?.message || 
-                            error.response?.data?.error || 
-                            'Error updating status';
+            const errorMsg =
+                error.response?.data?.message ||
+                error.response?.data?.error ||
+                'Error updating status';
             setErrorMessage(errorMsg);
         } finally {
             setIsLoading(false);
@@ -280,7 +309,7 @@ const AddNewStatus: React.FC = () => {
     const handleRefresh = () => {
         // Clean up existing preview URLs
         previewUrls.forEach(url => URL.revokeObjectURL(url));
-        
+
         setFormData({
             statusType: ItemStatus.DONATED,
             dateModified: '',
@@ -295,15 +324,17 @@ const AddNewStatus: React.FC = () => {
 
     return (
         <div className="donor-form outer-container mx-auto p-10">
-            <h1 className="text-2xl font-bold heading-centered">Add New Status</h1>
-            
+            <h1 className="text-2xl font-bold heading-centered">
+                Add New Status
+            </h1>
+
             {/* Global Error Message */}
             {errorMessage && (
                 <div className="error-message mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
                     {errorMessage}
                 </div>
             )}
-            
+
             {/* Global Success Message */}
             {successMessage && (
                 <div className="success-message mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
@@ -314,7 +345,10 @@ const AddNewStatus: React.FC = () => {
             <form onSubmit={handleSubmit} className="form-grid" noValidate>
                 {/* Status Field */}
                 <div className="form-field">
-                    <label htmlFor="statusType" className="block text-sm font-semibold mb-1">
+                    <label
+                        htmlFor="statusType"
+                        className="block text-sm font-semibold mb-1"
+                    >
                         Current Status<span className="text-red-500"> *</span>
                     </label>
                     <select
@@ -323,19 +357,31 @@ const AddNewStatus: React.FC = () => {
                         value={formData.statusType}
                         onChange={handleChange}
                         className={`w-full px-3 py-2 rounded border ${
-                            errors.statusType ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                            errors.statusType
+                                ? 'border-red-500 bg-red-50'
+                                : 'border-gray-300'
                         }`}
-                        aria-describedby={errors.statusType ? "statusType-error" : undefined}
+                        aria-describedby={
+                            errors.statusType ? 'statusType-error' : undefined
+                        }
                         aria-invalid={!!errors.statusType}
                     >
                         <option value={ItemStatus.RECEIVED}>Received</option>
                         <option value={ItemStatus.DONATED}>Donated</option>
-                        <option value={ItemStatus.IN_STORAGE}>In storage facility</option>
-                        <option value={ItemStatus.REFURBISHED}>Refurbished</option>
+                        <option value={ItemStatus.IN_STORAGE}>
+                            In storage facility
+                        </option>
+                        <option value={ItemStatus.REFURBISHED}>
+                            Refurbished
+                        </option>
                         <option value={ItemStatus.SOLD}>Item sold</option>
                     </select>
                     {errors.statusType && (
-                        <p id="statusType-error" className="text-red-500 text-sm mt-1" role="alert">
+                        <p
+                            id="statusType-error"
+                            className="text-red-500 text-sm mt-1"
+                            role="alert"
+                        >
                             {errors.statusType}
                         </p>
                     )}
@@ -343,7 +389,10 @@ const AddNewStatus: React.FC = () => {
 
                 {/* Date Updated Field */}
                 <div className="form-field">
-                    <label htmlFor="dateModified" className="block text-sm font-semibold mb-1">
+                    <label
+                        htmlFor="dateModified"
+                        className="block text-sm font-semibold mb-1"
+                    >
                         Date Updated<span className="text-red-500"> *</span>
                     </label>
                     <input
@@ -354,13 +403,23 @@ const AddNewStatus: React.FC = () => {
                         onChange={handleChange}
                         max={new Date().toISOString().split('T')[0]} // Prevent future dates
                         className={`w-full px-3 py-2 rounded border ${
-                            errors.dateModified ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                            errors.dateModified
+                                ? 'border-red-500 bg-red-50'
+                                : 'border-gray-300'
                         }`}
-                        aria-describedby={errors.dateModified ? "dateModified-error" : undefined}
+                        aria-describedby={
+                            errors.dateModified
+                                ? 'dateModified-error'
+                                : undefined
+                        }
                         aria-invalid={!!errors.dateModified}
                     />
                     {errors.dateModified && (
-                        <p id="dateModified-error" className="text-red-500 text-sm mt-1" role="alert">
+                        <p
+                            id="dateModified-error"
+                            className="text-red-500 text-sm mt-1"
+                            role="alert"
+                        >
                             {errors.dateModified}
                         </p>
                     )}
@@ -368,8 +427,13 @@ const AddNewStatus: React.FC = () => {
 
                 {/* Image Upload Field */}
                 <div className="form-field full-width">
-                    <label htmlFor="imageFiles" className="block text-sm font-semibold mb-1">
-                        Upload Images (Max: {VALIDATION_RULES.MAX_IMAGES}, JPG/PNG only, Max {VALIDATION_RULES.MAX_FILE_SIZE / 1024 / 1024}MB each)
+                    <label
+                        htmlFor="imageFiles"
+                        className="block text-sm font-semibold mb-1"
+                    >
+                        Upload Images (Max: {VALIDATION_RULES.MAX_IMAGES},
+                        JPG/PNG only, Max{' '}
+                        {VALIDATION_RULES.MAX_FILE_SIZE / 1024 / 1024}MB each)
                     </label>
                     <input
                         type="file"
@@ -383,15 +447,23 @@ const AddNewStatus: React.FC = () => {
                     />
                     {images.length >= VALIDATION_RULES.MAX_IMAGES && (
                         <p className="text-amber-600 text-sm mt-1">
-                            Maximum number of images ({VALIDATION_RULES.MAX_IMAGES}) reached.
+                            Maximum number of images (
+                            {VALIDATION_RULES.MAX_IMAGES}) reached.
                         </p>
                     )}
 
                     {/* Image Validation Errors */}
                     {Object.keys(errors)
-                        .filter(key => key.startsWith('image_') || key === 'general')
+                        .filter(
+                            key =>
+                                key.startsWith('image_') || key === 'general',
+                        )
                         .map(key => (
-                            <p key={key} className="text-red-500 text-sm mt-1" role="alert">
+                            <p
+                                key={key}
+                                className="text-red-500 text-sm mt-1"
+                                role="alert"
+                            >
                                 {errors[key]}
                             </p>
                         ))}
@@ -400,23 +472,25 @@ const AddNewStatus: React.FC = () => {
                         <div className="imagepcontainer mt-3">
                             {previewUrls.map((url, index) => (
                                 <div key={index} className="imagepreview">
-                                    <img 
-                                        src={url} 
-                                        alt={`Preview ${index + 1}`} 
-                                        className="thumbnail" 
+                                    <img
+                                        src={url}
+                                        alt={`Preview ${index + 1}`}
+                                        className="thumbnail"
                                     />
                                     <div className="image-actions">
-                                        <button 
-                                            type="button" 
-                                            className="preview-button" 
+                                        <button
+                                            type="button"
+                                            className="preview-button"
                                             onClick={() => handlePreview(url)}
                                         >
                                             Preview
                                         </button>
-                                        <button 
-                                            type="button" 
-                                            className="removeimage" 
-                                            onClick={() => handleImageRemove(index)}
+                                        <button
+                                            type="button"
+                                            className="removeimage"
+                                            onClick={() =>
+                                                handleImageRemove(index)
+                                            }
                                         >
                                             Remove
                                         </button>
@@ -434,32 +508,36 @@ const AddNewStatus: React.FC = () => {
                             <span className="pclosebutton" onClick={closeModal}>
                                 Close
                             </span>
-                            <img src={currentPreviewImage} alt="Full Preview" className="modal-image" />
+                            <img
+                                src={currentPreviewImage}
+                                alt="Full Preview"
+                                className="modal-image"
+                            />
                         </div>
                     </div>
                 )}
 
                 {/* Buttons */}
                 <div className="form-field full-width button-container">
-                    <button 
-                        type="submit" 
-                        className="submit-button" 
+                    <button
+                        type="submit"
+                        className="submit-button"
                         disabled={isLoading}
                     >
                         {isLoading ? 'Updating...' : 'Update'}
                     </button>
-                    <button 
-                        type="button" 
-                        onClick={handleRefresh} 
-                        className="refresh-button" 
+                    <button
+                        type="button"
+                        onClick={handleRefresh}
+                        className="refresh-button"
                         disabled={isLoading}
                     >
                         Refresh
                     </button>
-                    <button 
-                        type="button" 
-                        onClick={handleBack} 
-                        className="back-button" 
+                    <button
+                        type="button"
+                        onClick={handleBack}
+                        className="back-button"
                         disabled={isLoading}
                     >
                         Back
