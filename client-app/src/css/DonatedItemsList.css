@@ -1,57 +1,202 @@
-.item-list {
-    width: 90%;
-    border-collapse: collapse;
-    margin: 0 auto; /* This will center the table horizontally */
+:root {
+    --bg-soft: #eef6ff;
+    --primary: #1c7ed6;
+    --primary-600: #176bbf;
+    --danger: #e53935;
+    --text: #2b2f33;
+    --muted: #6b7280;
+    --card: #ffffff;
+    --border: #e5eaf0;
+    --radius: 12px;
+    --shadow: 0 10px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06);
+    --navbar-h: 56px;
+    --content-max: 1200px;
 }
 
+body {
+    background: var(--bg-soft);
+}
+.header {
+    padding-top: calc(var(--navbar-h) + 8px);
+}
+
+.page-header {
+    max-width: var(--content-max);
+    margin: 16px auto 8px;
+    padding: 0 8px;
+    text-align: center;
+}
+.page-title {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.toolbar {
+    max-width: var(--content-max);
+    margin: 8px auto 14px;
+    padding: 0 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+}
+.toolbar .search-wrap {
+    display: flex;
+    justify-content: center;
+}
+
+.search-bar {
+    display: inline-flex;
+    align-items: stretch;
+    gap: 0;
+}
+.search-bar input {
+    width: min(640px, 70vw);
+    height: 44px;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-right: none;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    background: #fff;
+    outline: none;
+    font-size: 14px;
+}
+.search-button {
+    height: 44px;
+    padding: 0 16px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        transform 0.04s ease,
+        box-shadow 0.15s ease,
+        background 0.2s ease;
+}
+.btn:active {
+    transform: translateY(1px);
+}
+.btn-primary {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(28, 126, 214, 0.26);
+}
+.btn-primary:hover {
+    background: var(--primary-600);
+}
+.add-btn {
+    height: 44px;
+    white-space: nowrap;
+}
+
+.dropdowns {
+    max-width: var(--content-max);
+    margin: 0 auto 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+}
+.sort-options,
+.filter-options {
+    height: 44px;
+    min-width: 210px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    outline: none;
+}
+
+.item-list {
+    width: min(var(--content-max), 94vw);
+    margin: 0 auto 24px;
+    border-collapse: collapse;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
 .item-list th,
 .item-list td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center; /* Center text horizontally */
-    vertical-align: middle; /* Center text vertically */
+    border-bottom: 1px solid var(--border);
+    padding: 14px 12px;
+    text-align: center;
+    vertical-align: middle;
+}
+.item-list thead th {
+    background: #f7faff;
+    font-weight: 700;
+    color: var(--text);
+}
+.item-list tbody tr:hover {
+    background: #f9fbff;
 }
 
-.div-addprogram {
-    width: 85%;
-    padding: 8px;
-    button {
-        margin-left: 5px !important;
-        margin: 9px !important;
-    }
-    select {
-        height: 45px;
-        width: 250px;
-    }
-}
-.div-addprogram button {
-    margin-left: 5px !important;
-    margin: 9px !important;
-}
-.div-updateprogram {
-    display: flex;
-    justify-content: flex-end;
-    button {
-        margin: 20px 6px;
-        padding: 10px 20px 12px;
-        width: 200px;
-        text-align: center;
-    }
-}
 .clickable-row {
-    cursor: pointer; /* Indicate interactivity */
+    cursor: pointer;
     transition:
-        background-color 0.3s ease,
-        color 0.3s ease; /* Smooth hover effect */
+        background-color 0.2s ease,
+        color 0.2s ease;
 }
-
 .clickable-row:hover {
-    background-color: #f1f1f1; /* Light gray background */
-    color: #007bff; /* Change text color to blue */
+    color: var(--primary);
 }
-
-/* Prevent buttons and inputs from taking the hover effect */
 .clickable-row button,
 .clickable-row input {
-    cursor: default; /* Default cursor for these elements */
+    cursor: default;
+    color: inherit;
+}
+
+.ReactModal__Overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+.ReactModal__Content {
+    border: none;
+    inset: auto !important;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    max-width: 640px;
+    width: 100%;
+    max-height: 85vh;
+    overflow: auto;
+    padding: 22px;
+}
+
+@media (max-width: 900px) {
+    .toolbar {
+        grid-template-columns: 1fr;
+        row-gap: 8px;
+    }
+    .add-btn {
+        justify-self: end;
+    }
+    .search-bar input {
+        width: 100%;
+    }
+    .dropdowns {
+        justify-content: center;
+    }
 }

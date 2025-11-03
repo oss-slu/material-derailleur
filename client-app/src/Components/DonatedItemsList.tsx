@@ -192,17 +192,21 @@ const DonatedItemsList: React.FC = () => {
     }
 
     return (
-        <div>
-            <div className="header">
-                <div className="logo-container">
-                    <img
-                        src="https://www.bworks.org/wp-content/themes/bworks/library/images/logo-bworks.png"
-                        alt="BWorks Logo"
-                        className="logo"
-                    />
-                </div>
-                <div className="options">
-                    <div className="search-bar">
+        <div className="donated-page">
+            {/* New page header: title left, tools right */}
+            <header className="page-header">
+                <h1 className="page-title">Donated Items</h1>
+            </header>
+
+            <div className="toolbar">
+                <div className="search-wrap">
+                    <form
+                        className="search-bar"
+                        onSubmit={e => {
+                            e.preventDefault();
+                            handleSearch();
+                        }}
+                    >
                         <input
                             type="text"
                             placeholder="Search using Item Id, Name, or Donor"
@@ -210,68 +214,79 @@ const DonatedItemsList: React.FC = () => {
                             onChange={e => setSearchInput(e.target.value)}
                         />
                         <button
-                            className="search-button"
-                            onClick={handleSearch}
+                            className="btn btn-primary search-button"
+                            type="submit"
                         >
                             <FaSearch />
                         </button>
-                    </div>
-                    <div className="dropdowns">
-                        <select className="sort-options" onChange={handleSort}>
-                            <option value="" disabled defaultValue="">
-                                Sort
-                            </option>
-                            <option value="dateAsc">Date Ascending</option>
-                            <option value="dateDesc">Date Descending</option>
-                        </select>
-
-                        <select
-                            className="filter-options"
-                            onChange={handleFilterByItemName}
-                        >
-                            <option value="" disabled>
-                                Filter by Item Type
-                            </option>
-                            {Array.from(itemTypes).map(type => (
-                                <option key={type} value={type}>
-                                    {type}
-                                </option>
-                            ))}
-                        </select>
-
-                        <select
-                            className="filter-options"
-                            onChange={handleFilterByProgram}
-                        >
-                            <option value="" disabled>
-                                Filter by Program
-                            </option>
-                            {programOptions.map(program => (
-                                <option key={program.id} value={program.id}>
-                                    {program.name}
-                                </option>
-                            ))}
-                        </select>
-
-                        <select
-                            className="filter-options"
-                            onChange={handleFilterByStatus}
-                        >
-                            <option value="" disabled>
-                                Filter by Status
-                            </option>
-                            <option value="RECEIVED">Received</option>
-                        </select>
-                    </div>
+                    </form>
                 </div>
-            </div>
 
-            <div className="div-updateprogram">
-                <button onClick={handleAddNewDonationClick}>
-                    Add New Donation
+                <button
+                    className="btn btn-primary add-btn"
+                    onClick={handleAddNewDonationClick}
+                >
+                    + Add Donation
                 </button>
             </div>
 
+            {/* Filters under the header */}
+            <div className="dropdowns">
+                <select
+                    className="sort-options"
+                    onChange={handleSort}
+                    defaultValue=""
+                >
+                    <option value="" disabled>
+                        Sort
+                    </option>
+                    <option value="dateAsc">Date Ascending</option>
+                    <option value="dateDesc">Date Descending</option>
+                </select>
+
+                <select
+                    className="filter-options"
+                    onChange={handleFilterByItemName}
+                    defaultValue=""
+                >
+                    <option value="" disabled>
+                        Filter by Item Type
+                    </option>
+                    {Array.from(itemTypes).map(type => (
+                        <option key={type} value={type}>
+                            {type}
+                        </option>
+                    ))}
+                </select>
+
+                <select
+                    className="filter-options"
+                    onChange={handleFilterByProgram}
+                    defaultValue=""
+                >
+                    <option value="" disabled>
+                        Filter by Program
+                    </option>
+                    {programOptions.map(p => (
+                        <option key={p.id} value={p.id}>
+                            {p.name}
+                        </option>
+                    ))}
+                </select>
+
+                <select
+                    className="filter-options"
+                    onChange={handleFilterByStatus}
+                    defaultValue=""
+                >
+                    <option value="" disabled>
+                        Filter by Status
+                    </option>
+                    <option value="RECEIVED">Received</option>
+                </select>
+            </div>
+
+            {/* Table (unchanged) */}
             <table className="item-list">
                 <thead>
                     <tr>
@@ -309,10 +324,12 @@ const DonatedItemsList: React.FC = () => {
                                         <Barcode value={item.id.toString()} />
                                     </div>
                                     <button
+                                        className="btn btn-link"
                                         onClick={e => {
-                                            e.stopPropagation(); // Prevent row click when downloading
+                                            e.stopPropagation();
                                             downloadBarcode(item.id);
                                         }}
+                                        type="button"
                                     >
                                         Download Barcode
                                     </button>
@@ -323,6 +340,7 @@ const DonatedItemsList: React.FC = () => {
                 </tbody>
             </table>
 
+            {/* Modal (unchanged) */}
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={() => setModalIsOpen(false)}
@@ -366,37 +384,30 @@ const DonatedItemsList: React.FC = () => {
                                 : 'Not Assigned'}
                         </p>
 
-                        {selectedItemDetails.statuses &&
-                            selectedItemDetails.statuses.length > 0 && (
-                                <>
-                                    <h3>Status History</h3>
-                                    <ul>
-                                        {selectedItemDetails.statuses.map(
-                                            (status, index) => (
-                                                <li key={index}>
-                                                    {status.statusType} -{' '}
-                                                    {new Date(
-                                                        status.dateModified,
-                                                    ).toLocaleDateString(
-                                                        undefined,
-                                                        { timeZone: 'UTC' },
-                                                    )}
-                                                </li>
-                                            ),
-                                        )}
-                                    </ul>
-                                </>
-                            )}
+                        {!!selectedItemDetails.statuses?.length && (
+                            <>
+                                <h3>Status History</h3>
+                                <ul>
+                                    {selectedItemDetails.statuses.map(
+                                        (s, i) => (
+                                            <li key={i}>
+                                                {s.statusType} —{' '}
+                                                {new Date(
+                                                    s.dateModified,
+                                                ).toLocaleDateString(
+                                                    undefined,
+                                                    { timeZone: 'UTC' },
+                                                )}
+                                            </li>
+                                        ),
+                                    )}
+                                </ul>
+                            </>
+                        )}
                     </div>
                 )}
                 <button onClick={() => setModalIsOpen(false)}>Close</button>
             </Modal>
-
-            <div style={{ position: 'fixed', bottom: '20px', right: '20px' }}>
-                <button onClick={handleAddNewDonationClick}>
-                    <FaPlus size={24} />
-                </button>
-            </div>
         </div>
     );
 };
