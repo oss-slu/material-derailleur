@@ -1,0 +1,60 @@
+{
+  "name": "MaterialDerailleur",
+  "@context": "https://w3id.org/codemeta/3.0",
+  "author": [
+    {
+      "affiliation": {
+        "name": "Saint Louis University",
+        "type": "Organization"
+      },
+      "email": "vinay.billa@slu.edu",
+      "familyName": "Billa",
+      "id": "_:author_1",
+      "givenName": "Vinay",
+      "type": "Person"
+    },
+    {
+      "roleName": "Tech Lead",
+      "schema:author": "_:author_1",
+      "type": "Role"
+    }
+  ],
+  "contributor": [
+    {
+      "affiliation": {
+        "name": "Saint Louis University",
+        "type": "Organization"
+      },
+      "email": "vinay.billa@slu.edu",
+      "familyName": "Billa",
+      "id": "_:contributor_1",
+      "givenName": "Vinay",
+      "type": "Person"
+    },
+    {
+      "endDate": "2025-12-31",
+      "roleName": "Tech Lead",
+      "startDate": "2025-08-01",
+      "contributor": "_:contributor_1",
+      "type": "Role"
+    }
+  ],
+  "dateCreated": "2024-02-06",
+  "datePublished": "2024-02-06",
+  "description": "MaterialDerailleur shifts donations into drive for BWorks. It streamlines the process of managing material donations, providing a transparent view into the journey of each donated item. This initiative allows donors to track their contributions from the moment they are donated to their ultimate use, offering them a detailed view of how their items are making a difference. By keeping donors informed about the status and use of their donations, the project fosters a sense of trust and community, encouraging continued support and involvement. The system simplifies the administrative tasks involved in updating and managing donations, making it easier to attract and retain donors who are motivated by seeing the tangible impact of their contributions.",
+  "keywords": [
+    "donation",
+    "inventory",
+    "nonprofit",
+    "web-application",
+    "logistics"
+  ],
+  "license": "https://spdx.org/licenses/MIT",
+  "programmingLanguage": [
+    "JavaScript",
+    "React",
+    "NodeJS"
+  ],
+  "schema:releaseNotes": ".",
+  "type": "SoftwareSourceCode"
+}
