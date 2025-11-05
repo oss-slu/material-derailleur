@@ -1,0 +1,27 @@
+title: MaterialDerailleur
+authors:
+  - given-names: Vinay
+    family-names: Billa
+    email: vinay.billa@slu.edu
+    affiliation: Saint Louis University
+cff-version: 1.2.0
+message: If you use this software, please cite it using the metadata from this file.
+type: software
+abstract: MaterialDerailleur shifts donations into drive for BWorks. It
+  streamlines the process of managing material donations, providing a
+  transparent view into the journey of each donated item. This initiative allows
+  donors to track their contributions from the moment they are donated to their
+  ultimate use, offering them a detailed view of how their items are making a
+  difference. By keeping donors informed about the status and use of their
+  donations, the project fosters a sense of trust and community, encouraging
+  continued support and involvement. The system simplifies the administrative
+  tasks involved in updating and managing donations, making it easier to attract
+  and retain donors who are motivated by seeing the tangible impact of their
+  contributions.
+keywords:
+  - donation
+  - inventory
+  - nonprofit
+  - web-application
+  - logistics
+license: MIT
