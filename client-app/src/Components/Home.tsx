@@ -29,7 +29,7 @@ const Home: React.FC = () => {
                     encourages engagement with donors.
                 </p>
             </div>
-            {/* Right side - Overlapping Circles */}
+            {/* Right side - Overlapping Circles wrapper  */}
             <div className="login-right">
                 <div className="circle-wrapper">
                     <div className="circle large">
