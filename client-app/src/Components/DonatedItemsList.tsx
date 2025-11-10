@@ -163,6 +163,27 @@ const DonatedItemsList: React.FC = () => {
     };
 
     const downloadBarcode = (id: number) => {
+        // find the svg element rendered by react-barcode
+        const svgEl = document.querySelector<SVGElement>(`#barcode-${id} svg`);
+        if (svgEl) {
+            const serializer = new XMLSerializer();
+            let svgString = serializer.serializeToString(svgEl);
+            // ensure xml prolog and namespaces for standalone SVG files
+            if (!svgString.startsWith('<?xml')) {
+                svgString = '<?xml version="1.0" encoding="UTF-8"?>\n' + svgString;
+            }
+            const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `barcode-${id}.svg`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            return;
+        }
+        // fallback to previous PNG behavior if SVG not found
         const barcodeElement = document.getElementById(`barcode-${id}`);
         if (barcodeElement) {
             html2canvas(barcodeElement)
@@ -180,6 +201,70 @@ const DonatedItemsList: React.FC = () => {
                 );
         } else {
             console.error('Barcode element not found');
+        }
+    };
+
+    const printBarcode = (id: number) => {
+        const svgEl = document.querySelector<SVGElement>(`#barcode-${id} svg`);
+        if (svgEl) {
+            const serializer = new XMLSerializer();
+            let svgString = serializer.serializeToString(svgEl);
+
+            // Ensure xmlns is present (some renderers omit it)
+            if (!/xmlns=/.test(svgString)) {
+                svgString = svgString.replace(
+                    /^<svg/,
+                    '<svg xmlns="http://www.w3.org/2000/svg"',
+                );
+            }
+
+            // Build full HTML for print with charset and basic styling
+            const printHtml = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Print Barcode</title>
+<style>
+  html,body{height:100%;margin:0;padding:0;}
+  body{display:flex;align-items:center;justify-content:center;background:#fff;}
+  svg{max-width:95%;height:auto;display:block;}
+</style>
+</head>
+<body>
+${svgString}
+<script>
+  // allow render to settle before printing
+  window.onload = function(){
+    setTimeout(function(){ window.print(); window.onafterprint = function(){ window.close(); }; }, 200);
+  };
+</script>
+</body>
+</html>`;
+
+            const w = window.open('', '_blank', 'noopener,noreferrer');
+            if (!w) return;
+            w.document.open();
+            w.document.write(printHtml);
+            w.document.close();
+            return;
+        }
+
+        // fallback: try printing as image via html2canvas
+        const el = document.getElementById(`barcode-${id}`);
+        if (el) {
+            html2canvas(el).then(canvas => {
+                const dataUrl = canvas.toDataURL();
+                const w = window.open('', '_blank', 'noopener,noreferrer');
+                if (!w) return;
+                w.document.write(`
+                    <!doctype html><html><head><title>Print Barcode</title></head>
+                    <body style="margin:0;display:flex;align-items:center;justify-content:center">
+                    <img src="${dataUrl}" onload="window.print();window.onafterprint=function(){window.close();}" />
+                    </body></html>`);
+                w.document.close();
+            });
+        } else {
+            console.error('Barcode element not found for print');
         }
     };
 
@@ -321,18 +406,31 @@ const DonatedItemsList: React.FC = () => {
                             <td>
                                 <div>
                                     <div id={`barcode-${item.id}`}>
-                                        <Barcode value={item.id.toString()} />
+                                        <Barcode value={item.id.toString()} format="CODE128" />
                                     </div>
-                                    <button
-                                        className="btn btn-link"
-                                        onClick={e => {
-                                            e.stopPropagation();
-                                            downloadBarcode(item.id);
-                                        }}
-                                        type="button"
-                                    >
-                                        Download Barcode
-                                    </button>
+                                    <div style={{ marginTop: 6 }}>
+                                        <button
+                                            className="btn btn-link"
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                downloadBarcode(item.id);
+                                            }}
+                                            type="button"
+                                        >
+                                            Download SVG
+                                        </button>
+                                        <button
+                                            className="btn btn-link"
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                printBarcode(item.id);
+                                            }}
+                                            type="button"
+                                            style={{ marginLeft: 8 }}
+                                        >
+                                            Print
+                                        </button>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
