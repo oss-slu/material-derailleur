@@ -453,11 +453,13 @@ const Register: React.FC = () => {
 
             {/* Right side - Overlapping Circles */}
             <div className="login-right">
-                <div className="circle large">
-                    <img src="/cycle.jpg" alt="BWorks bike" />
-                </div>
-                <div className="circle small">
-                    <img src="/image.jpg" alt="BWorks kids" />
+                <div className="circle-wrapper">
+                    <div className="circle large">
+                        <img src="/cycle.jpg" alt="BWorks bike" />
+                    </div>
+                    <div className="circle small">
+                        <img src="/image.jpg" alt="BWorks kids" />
+                    </div>
                 </div>
             </div>
         </div>
