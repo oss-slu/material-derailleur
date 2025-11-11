@@ -170,9 +170,12 @@ const DonatedItemsList: React.FC = () => {
             let svgString = serializer.serializeToString(svgEl);
             // ensure xml prolog and namespaces for standalone SVG files
             if (!svgString.startsWith('<?xml')) {
-                svgString = '<?xml version="1.0" encoding="UTF-8"?>\n' + svgString;
+                svgString =
+                    '<?xml version="1.0" encoding="UTF-8"?>\n' + svgString;
             }
-            const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const blob = new Blob([svgString], {
+                type: 'image/svg+xml;charset=utf-8',
+            });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -406,7 +409,10 @@ ${svgString}
                             <td>
                                 <div>
                                     <div id={`barcode-${item.id}`}>
-                                        <Barcode value={item.id.toString()} format="CODE128" />
+                                        <Barcode
+                                            value={item.id.toString()}
+                                            format="CODE128"
+                                        />
                                     </div>
                                     <div style={{ marginTop: 6 }}>
                                         <button

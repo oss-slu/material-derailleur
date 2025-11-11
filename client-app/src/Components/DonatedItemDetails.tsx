@@ -81,7 +81,9 @@ const DonatedItemDetails: React.FC = () => {
     // helper functions for download/print inside this component
     const downloadDetailSvg = () => {
         if (!barcodeId) return;
-        const svgEl = document.querySelector<SVGElement>(`#barcode-detail-${barcodeId} svg`);
+        const svgEl = document.querySelector<SVGElement>(
+            `#barcode-detail-${barcodeId} svg`,
+        );
         if (!svgEl) {
             console.error('SVG element not found in detail view');
             return;
@@ -91,7 +93,9 @@ const DonatedItemDetails: React.FC = () => {
         if (!svgString.startsWith('<?xml')) {
             svgString = '<?xml version="1.0" encoding="UTF-8"?>\n' + svgString;
         }
-        const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const blob = new Blob([svgString], {
+            type: 'image/svg+xml;charset=utf-8',
+        });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -104,7 +108,9 @@ const DonatedItemDetails: React.FC = () => {
 
     const printDetail = () => {
         if (!barcodeId) return;
-        const svgEl = document.querySelector<SVGElement>(`#barcode-detail-${barcodeId} svg`);
+        const svgEl = document.querySelector<SVGElement>(
+            `#barcode-detail-${barcodeId} svg`,
+        );
         if (!svgEl) {
             console.error('SVG element not found for printing');
             return;
@@ -116,7 +122,7 @@ const DonatedItemDetails: React.FC = () => {
         if (!/xmlns=/.test(svgString)) {
             svgString = svgString.replace(
                 /^<svg/,
-                '<svg xmlns="http://www.w3.org/2000/svg"'
+                '<svg xmlns="http://www.w3.org/2000/svg"',
             );
         }
 
@@ -230,11 +236,25 @@ ${svgString}
                             {barcodeId ? (
                                 <>
                                     <div id={`barcode-detail-${barcodeId}`}>
-                                        <Barcode value={String(barcodeId)} format="CODE128" />
+                                        <Barcode
+                                            value={String(barcodeId)}
+                                            format="CODE128"
+                                        />
                                     </div>
                                     <div style={{ marginTop: 8 }}>
-                                        <button type="button" onClick={downloadDetailSvg}>Download SVG</button>
-                                        <button type="button" style={{ marginLeft: 8 }} onClick={printDetail}>Print</button>
+                                        <button
+                                            type="button"
+                                            onClick={downloadDetailSvg}
+                                        >
+                                            Download SVG
+                                        </button>
+                                        <button
+                                            type="button"
+                                            style={{ marginLeft: 8 }}
+                                            onClick={printDetail}
+                                        >
+                                            Print
+                                        </button>
                                     </div>
                                 </>
                             ) : (

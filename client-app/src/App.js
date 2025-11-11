@@ -111,8 +111,14 @@ function App() {
                         <Route path="/contact" element={<Contact />} />
 
                         {/* New routes: view barcode for a donated item (both variants) */}
-                        <Route path="/donated/:id/barcode" element={<DonatedBarcodePage />} />
-                        <Route path="/donations/:id/barcode" element={<DonatedBarcodePage />} />
+                        <Route
+                            path="/donated/:id/barcode"
+                            element={<DonatedBarcodePage />}
+                        />
+                        <Route
+                            path="/donations/:id/barcode"
+                            element={<DonatedBarcodePage />}
+                        />
                     </Routes>
                 </main>
                 <Footer />
