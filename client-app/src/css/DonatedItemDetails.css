@@ -123,6 +123,49 @@ p {
     width: auto; /* Maintain aspect ratio */
     margin-right: 10px; /* Space between images */
 }
+/* Barcode / Label section */
+.barcode-section {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    background-color: #d5e5f3; /* same as .program-details-section */
+}
+
+/* Match header style with other blue headers */
+.barcode-section .section-header {
+    background-color: #7ca3c7;
+    color: #fff;
+}
+
+.barcode-section .section-header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+/* Layout for BarcodeDisplay + helper text */
+.barcode-section .barcode-content {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+/* If BarcodeDisplay renders an <img>, make sure it's not huge */
+.barcode-section img {
+    max-width: 220px;
+    height: auto;
+    display: block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+}
+
+/* Tiny helper text under the barcode */
+.barcode-section p {
+    font-size: 12px;
+    color: #666;
+    margin-top: 8px;
+}
 
 /* Responsive design for smaller screens */
 @media (max-width: 768px) {

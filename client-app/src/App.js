@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useParams } from 'react-router-dom';
 import Navbar from './Components/Navbar';
 import LoginPage from './Components/LoginPage';
 import Popup from './Components/LoginPopup.tsx';
@@ -22,6 +22,14 @@ import ProtectedRoute from './Components/ProtectedRoute';
 import DonorDonations from './Components/DonorDonations';
 import Contact from './Components/Contact.tsx';
 import Footer from './Components/Footer.tsx';
+import BarcodeDisplay from './Components/BarcodeDisplay'; // added import
+
+// Small wrapper page to read :id and render BarcodeDisplay
+function DonatedBarcodePage() {
+    const { id } = useParams();
+    if (!id) return <div>Missing donated item id</div>;
+    return <BarcodeDisplay donatedItemId={id} format="svg" />;
+}
 
 function App() {
     const handleAddProgram = formData => {
@@ -101,6 +109,10 @@ function App() {
                             }
                         />
                         <Route path="/contact" element={<Contact />} />
+
+                        {/* New routes: view barcode for a donated item (both variants) */}
+                        <Route path="/donated/:id/barcode" element={<DonatedBarcodePage />} />
+                        <Route path="/donations/:id/barcode" element={<DonatedBarcodePage />} />
                     </Routes>
                 </main>
                 <Footer />
