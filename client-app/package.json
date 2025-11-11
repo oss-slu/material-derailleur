@@ -30,7 +30,7 @@
         "jest-environment-jsdom": "^29.7.0",
         "jest-localstorage-mock": "^2.4.26",
         "jsonwebtoken": "^9.0.2",
-        "lucide-react": "^0.477.0",
+        "lucide-react": "^0.553.0",
         "mdbreact": "^5.2.0",
         "mongoose": "^8.3.2",
         "my-tailwind-app": "^0.1.12",
