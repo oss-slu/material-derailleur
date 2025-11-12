@@ -17,7 +17,7 @@
         "axios": "^1.12.0",
         "bcryptjs": "^2.4.3",
         "buffer": "^6.0.3",
-        "concurrently": "^8.2.2",
+        "concurrently": "^9.2.1",
         "cors": "^2.8.5",
         "create-react-app": "^5.0.1",
         "crypto": "^1.0.1",
