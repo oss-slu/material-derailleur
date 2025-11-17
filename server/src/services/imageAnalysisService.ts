@@ -1,25 +1,24 @@
 // src/services/imageAnalysisService.ts
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI, createUserContent, createPartFromBase64 } from '@google/genai';
 import { PrismaClient, Prisma } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
 
 const prisma = new PrismaClient();
 
-// Ensure the API key is present at process start
+// --- Env / client ---
 const API_KEY = process.env.GOOGLE_GEMINI_API_KEY || '';
 if (!API_KEY) {
-  // Don't throw—allow server to start, but error clearly on first use
   console.warn('[imageAnalysis] GOOGLE_GEMINI_API_KEY is not set');
 }
-const genAI = new GoogleGenerativeAI(API_KEY);
+const ai = new GoogleGenAI({ apiKey: API_KEY });
 
+// --- Types ---
 export interface ImageTag {
   description: string;
   confidence: number;
   category: 'item_type' | 'condition' | 'damage' | 'other';
 }
-
 export interface AnalysisResult {
   tags: ImageTag[];
   rawResponse: string;
@@ -27,18 +26,13 @@ export interface AnalysisResult {
   optedOut: boolean;
 }
 
-/** Make any value JSON-safe for Prisma JSON fields */
+// --- Helpers ---
 function toJson<T>(v: T): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(v)) as Prisma.InputJsonValue;
 }
-
-/** Read image as base64 from a filesystem path */
-function getBase64Image(imagePath: string): string {
-  const buf = fs.readFileSync(imagePath);
-  return buf.toString('base64');
+function getBase64(imagePath: string): string {
+  return fs.readFileSync(imagePath).toString('base64');
 }
-
-/** Guess mime from extension */
 function getMimeType(imagePath: string): string {
   const ext = path.extname(imagePath).toLowerCase();
   const map: Record<string, string> = {
@@ -50,23 +44,17 @@ function getMimeType(imagePath: string): string {
   };
   return map[ext] || 'image/jpeg';
 }
-
-/** Lightweight NLP bucketing of comma/line-separated terms from the model */
 function parseGeminiResponse(response: string): ImageTag[] {
   const tags: ImageTag[] = [];
-
   const itemTypeKeywords = [
-    'furniture','chair','table','desk','bed','cabinet','shelf','clothing',
-    'textiles','bedding','electronics','appliance','kitchenware','tool','book',
-    'lamp','sofa','bicycle','bike','computer','laptop'
+    'furniture','chair','table','desk','bed','cabinet','shelf','clothing','textiles',
+    'bedding','electronics','appliance','kitchenware','tool','book','lamp','sofa','bicycle','bike','computer','laptop'
   ];
   const damageKeywords = [
-    'damage','damaged','broken','crack','cracked','dent','stain','stained',
-    'tear','torn','rust','scratch','scratched','wear','worn','chipped','bent'
+    'damage','damaged','broken','crack','cracked','dent','stain','stained','tear','torn','rust','scratch','scratched','wear','worn','chipped','bent'
   ];
   const conditionKeywords = [
-    'new','excellent','good','fair','poor','used','vintage','refurbished',
-    'mint','like-new'
+    'new','excellent','good','fair','poor','used','vintage','refurbished','mint','like-new'
   ];
 
   const terms = response
@@ -80,32 +68,19 @@ function parseGeminiResponse(response: string): ImageTag[] {
     let category: ImageTag['category'] = 'other';
     let confidence = 0.75;
 
-    if (itemTypeKeywords.some(k => term.includes(k))) {
-      category = 'item_type'; confidence = 0.85;
-    } else if (damageKeywords.some(k => term.includes(k))) {
-      category = 'damage'; confidence = 0.8;
-    } else if (conditionKeywords.some(k => term.includes(k))) {
-      category = 'condition'; confidence = 0.8;
-    }
+    if (itemTypeKeywords.some(k => term.includes(k))) { category = 'item_type'; confidence = 0.85; }
+    else if (damageKeywords.some(k => term.includes(k))) { category = 'damage'; confidence = 0.8; }
+    else if (conditionKeywords.some(k => term.includes(k))) { category = 'condition'; confidence = 0.8; }
 
-    // Capitalize for display
     const description = term.charAt(0).toUpperCase() + term.slice(1);
-
-    if (confidence >= 0.5) {
-      tags.push({ description, confidence, category });
-    }
+    if (confidence >= 0.5) tags.push({ description, confidence, category });
   });
 
-  // dedupe by description
-  return Array.from(
-    new Map(tags.map(t => [t.description.toLowerCase(), t])).values()
-  ).slice(0, 15);
+  // dedupe and cap
+  return Array.from(new Map(tags.map(t => [t.description.toLowerCase(), t])).values()).slice(0, 15);
 }
 
-/**
- * Analyze an image file on disk, save tags into donatedItem.analysisMetadata,
- * and return the structured result.
- */
+// --- Main ---
 export async function analyzeImageTags(
   imagePath: string,
   donatedItemId: number,
@@ -118,28 +93,12 @@ export async function analyzeImageTags(
     optedOut: optOutAnalysis,
   };
 
-  if (optOutAnalysis) {
-    console.log(`[imageAnalysis] Opted out for donatedItem ${donatedItemId}`);
-    return result;
-  }
+  if (optOutAnalysis) return result;
+  if (!API_KEY) throw new Error('GOOGLE_GEMINI_API_KEY is missing');
+  if (!fs.existsSync(imagePath)) throw new Error(`Image file not found: ${imagePath}`);
 
-  if (!API_KEY) {
-    throw new Error('GOOGLE_GEMINI_API_KEY is missing');
-  }
-
-  if (!fs.existsSync(imagePath)) {
-    throw new Error(`Image file not found: ${imagePath}`);
-  }
-
-  const base64 = getBase64Image(imagePath);
+  const base64 = getBase64(imagePath);
   const mimeType = getMimeType(imagePath);
-
-  // Use a small cascade of known-good models (names valid for @google/generative-ai)
-  const modelCandidates = [
-    'gemini-1.5-flash',
-    'gemini-1.5-flash-8b',
-    'gemini-1.5-pro',
-  ];
 
   const prompt = `Analyze this donated item image and provide a concise, comma-separated list of terms covering:
 1) item type/category (e.g., bicycle, computer)
@@ -148,63 +107,55 @@ export async function analyzeImageTags(
 4) key characteristics (e.g., color, material, notable accessories)
 Keep it short and practical for donation triage.`;
 
+  // Models valid with @google/genai consumer API
+  const MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
   let lastErr: unknown = null;
 
-  for (const modelName of modelCandidates) {
+  for (const model of MODELS) {
     try {
-      const model = genAI.getGenerativeModel({ model: modelName });
-
-      const response = await model.generateContent([
-        // You can put the image first or the text first; both are fine.
-        { inlineData: { data: base64, mimeType } },
-        { text: prompt },
-      ]);
-
-      const text = response.response.text() || 'No description available';
+      const resp = await ai.models.generateContent({
+        model,
+        contents: [
+          createUserContent([
+            prompt,
+            createPartFromBase64(base64, mimeType),
+          ]),
+        ],
+      });
+      const text = resp.text ?? 'No description available';
       result.rawResponse = text;
       result.tags = parseGeminiResponse(text);
 
       await saveTags(donatedItemId, result.tags, imagePath);
-      console.log(`[imageAnalysis] Success using model "${modelName}" — ${result.tags.length} tags`);
+      console.log(`[imageAnalysis] Success with model "${model}" — ${result.tags.length} tags`);
       return result;
     } catch (err) {
-      console.warn(`[imageAnalysis] Model "${modelName}" failed; trying next…`, err);
+      console.warn(`[imageAnalysis] Model "${model}" failed; trying next…`, err);
       lastErr = err;
     }
   }
 
-  // If we get here, all candidates failed
-  throw new Error(
-    `Image analysis failed: ${lastErr instanceof Error ? lastErr.message : 'Unknown error'}`
-  );
+  throw new Error(`Image analysis failed: ${lastErr instanceof Error ? lastErr.message : 'Unknown error'}`);
 }
 
-/** Persist tags JSON to donatedItem.analysisMetadata */
-async function saveTags(
-  donatedItemId: number,
-  tags: ImageTag[],
-  imagePath: string,
-): Promise<void> {
+async function saveTags(donatedItemId: number, tags: ImageTag[], imagePath: string): Promise<void> {
   const payload = toJson({
     tags,
     imagePath,
     analyzedAt: new Date().toISOString(),
     version: 2,
   });
-
   await prisma.donatedItem.update({
     where: { id: donatedItemId },
     data: { analysisMetadata: payload },
   });
 }
 
-/** Read back tags from Prisma JSON */
 export async function getImageTags(donatedItemId: number): Promise<ImageTag[]> {
   const item = await prisma.donatedItem.findUnique({
     where: { id: donatedItemId },
     select: { analysisMetadata: true },
   });
-
   if (!item?.analysisMetadata) return [];
   const meta = item.analysisMetadata as Prisma.JsonObject;
   return (meta['tags'] ?? []) as unknown as ImageTag[];
