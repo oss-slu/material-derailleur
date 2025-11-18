@@ -12,6 +12,8 @@ import { Donor } from '../Modals/DonorModal';
 import { Program } from '../Modals/ProgramModal';
 import { DonatedItemStatus } from '../Modals/DonatedItemStatusModal';
 import { DonatedItem } from '../Modals/DonatedItemModal';
+import BarcodeDisplay from './BarcodeDisplay'; // added import
+import Barcode from 'react-barcode'; // add import near top
 
 const DonatedItemDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -67,6 +69,90 @@ const DonatedItemDetails: React.FC = () => {
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
     if (!donatedItem) return <div>No data available.</div>;
+
+    // compute a reliable id to use for barcode (common id fields)
+    const barcodeId =
+        (donatedItem as any).id ||
+        (donatedItem as any)._id ||
+        (donatedItem as any).donatedItemId ||
+        id ||
+        '';
+
+    // helper functions for download/print inside this component
+    const downloadDetailSvg = () => {
+        if (!barcodeId) return;
+        const svgEl = document.querySelector<SVGElement>(
+            `#barcode-detail-${barcodeId} svg`,
+        );
+        if (!svgEl) {
+            console.error('SVG element not found in detail view');
+            return;
+        }
+        const serializer = new XMLSerializer();
+        let svgString = serializer.serializeToString(svgEl);
+        if (!svgString.startsWith('<?xml')) {
+            svgString = '<?xml version="1.0" encoding="UTF-8"?>\n' + svgString;
+        }
+        const blob = new Blob([svgString], {
+            type: 'image/svg+xml;charset=utf-8',
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `barcode-${barcodeId}.svg`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    };
+
+    const printDetail = () => {
+        if (!barcodeId) return;
+        const svgEl = document.querySelector<SVGElement>(
+            `#barcode-detail-${barcodeId} svg`,
+        );
+        if (!svgEl) {
+            console.error('SVG element not found for printing');
+            return;
+        }
+        const serializer = new XMLSerializer();
+        let svgString = serializer.serializeToString(svgEl);
+
+        // Ensure xmlns present
+        if (!/xmlns=/.test(svgString)) {
+            svgString = svgString.replace(
+                /^<svg/,
+                '<svg xmlns="http://www.w3.org/2000/svg"',
+            );
+        }
+
+        const printHtml = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Print Barcode</title>
+<style>
+  html,body{height:100%;margin:0;padding:0;}
+  body{display:flex;align-items:center;justify-content:center;background:#fff;}
+  svg{max-width:95%;height:auto;display:block;}
+</style>
+</head>
+<body>
+${svgString}
+<script>
+  window.onload = function(){
+    setTimeout(function(){ window.print(); window.onafterprint = function(){ window.close(); }; }, 200);
+  };
+</script>
+</body>
+</html>`;
+
+        const w = window.open('', '_blank', 'noopener,noreferrer');
+        if (!w) return;
+        w.document.open();
+        w.document.write(printHtml);
+        w.document.close();
+    };
 
     return (
         <div className="donated-item-details-container">
@@ -135,6 +221,52 @@ const DonatedItemDetails: React.FC = () => {
                             <strong>Last Updated:</strong>{' '}
                             {formatDate(donatedItem.lastUpdated, true)}
                         </p>
+                    </section>
+
+                    <section
+                        className="barcode-section"
+                        style={{ marginTop: 16 }}
+                    >
+                        <div className="section-header">
+                            <CategoryIcon className="icon" />
+                            <h2>Barcode / Label</h2>
+                        </div>
+
+                        <div className="barcode-content">
+                            {barcodeId ? (
+                                <>
+                                    <div id={`barcode-detail-${barcodeId}`}>
+                                        <Barcode
+                                            value={String(barcodeId)}
+                                            format="CODE128"
+                                        />
+                                    </div>
+                                    <div style={{ marginTop: 8 }}>
+                                        <button
+                                            type="button"
+                                            onClick={downloadDetailSvg}
+                                        >
+                                            Download SVG
+                                        </button>
+                                        <button
+                                            type="button"
+                                            style={{ marginLeft: 8 }}
+                                            onClick={printDetail}
+                                        >
+                                            Print
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div style={{ color: '#666', fontSize: 13 }}>
+                                    No barcode id available for this item.
+                                </div>
+                            )}
+                            <p>
+                                Download or print this barcode for inventory
+                                labels.
+                            </p>
+                        </div>
                     </section>
 
                     <section className="donor-details-section">
