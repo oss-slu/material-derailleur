@@ -1,6 +1,9 @@
+// src/index.ts
+import 'dotenv/config';
 import createError from 'http-errors';
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
+import fs from 'fs';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import cors from 'cors';

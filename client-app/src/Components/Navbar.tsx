@@ -165,6 +165,9 @@ const Navbar: React.FC = () => {
                                                             : 'inherit',
                                                     cursor: 'pointer',
                                                 }}
+                                                role="button"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false"
                                             >
                                                 Donations
                                             </span>
@@ -186,6 +189,15 @@ const Navbar: React.FC = () => {
                                                         to="/adddonation"
                                                     >
                                                         Add New Donation
+                                                    </Link>
+                                                </li>
+                                                {/* NEW: Admin Image Review */}
+                                                <li>
+                                                    <Link
+                                                        className="dropdown-item"
+                                                        to="/admin/image-review"
+                                                    >
+                                                        Image Review
                                                     </Link>
                                                 </li>
                                             </ul>
@@ -215,6 +227,9 @@ const Navbar: React.FC = () => {
                                                         : 'inherit',
                                                     cursor: 'pointer',
                                                 }}
+                                                role="button"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false"
                                             >
                                                 Programs
                                             </span>
@@ -272,6 +287,9 @@ const Navbar: React.FC = () => {
                                                             : 'inherit',
                                                     cursor: 'pointer',
                                                 }}
+                                                role="button"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false"
                                             >
                                                 Donors
                                             </span>
@@ -307,7 +325,6 @@ const Navbar: React.FC = () => {
                                         paddingLeft: '10px',
                                     }}
                                 >
-                                    {/* Will need updating if the '/' path gets updated to not be the about page */}
                                     <Link
                                         className="nav-link"
                                         to="/about"

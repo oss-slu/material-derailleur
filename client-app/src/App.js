@@ -22,6 +22,7 @@ import ProtectedRoute from './Components/ProtectedRoute';
 import DonorDonations from './Components/DonorDonations';
 import Contact from './Components/Contact.tsx';
 import Footer from './Components/Footer.tsx';
+import AdminImageReview from './Components/AdminImageReview';
 import BarcodeDisplay from './Components/BarcodeDisplay'; // added import
 
 // Small wrapper page to read :id and render BarcodeDisplay
@@ -32,9 +33,9 @@ function DonatedBarcodePage() {
 }
 
 function App() {
-    const handleAddProgram = formData => {
-        console.log('Adding new program:', formData);
-    };
+  const handleAddProgram = formData => {
+    console.log('Adding new program:', formData);
+  };
 
     return (
         <div
@@ -111,8 +112,14 @@ function App() {
                         <Route path="/contact" element={<Contact />} />
 
                         {/* New routes: view barcode for a donated item (both variants) */}
-                        <Route path="/donated/:id/barcode" element={<DonatedBarcodePage />} />
-                        <Route path="/donations/:id/barcode" element={<DonatedBarcodePage />} />
+                        <Route
+                            path="/donated/:id/barcode"
+                            element={<DonatedBarcodePage />}
+                        />
+                        <Route
+                            path="/donations/:id/barcode"
+                            element={<DonatedBarcodePage />}
+                        />
                     </Routes>
                 </main>
                 <Footer />
