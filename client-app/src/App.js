@@ -33,9 +33,9 @@ function DonatedBarcodePage() {
 }
 
 function App() {
-  const handleAddProgram = formData => {
-    console.log('Adding new program:', formData);
-  };
+    const handleAddProgram = formData => {
+        console.log('Adding new program:', formData);
+    };
 
     return (
         <div
@@ -106,6 +106,19 @@ function App() {
                             element={
                                 <ProtectedRoute allowedRole="DONOR">
                                     <DonorDonations />
+                                </ProtectedRoute>
+                            }
+                        />
+                        {/* New admin review route */}
+                        <Route
+                            path="/admin/image-review"
+                            element={<AdminImageReview />}
+                        />
+                        <Route
+                            path="/admin/image-review/:id"
+                            element={
+                                <ProtectedRoute allowedRole="ADMIN">
+                                    <AdminImageReview />
                                 </ProtectedRoute>
                             }
                         />
