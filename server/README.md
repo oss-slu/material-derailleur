@@ -54,6 +54,12 @@ SMTP_SECURE="false"
 SMTP_USER="enter your gmail"
 SMTP_PASS="enter you App password"
 FRONTEND_URL="http://localhost:3000/"
+GOOGLE_GEMINI_API_KEY= Your gemini api key 
+GEMINI_MODEL_ID=gemini-1.5-flash
+STORAGE_BACKEND=local
+UPLOADS_DIR=uploads
+PUBLIC_BASE_URL=http://localhost:5050
+
 ```
 
 Replace `username`, `password`, and `dbname` with your PostgreSQL username, password, and the name of the database you created.
@@ -86,7 +92,18 @@ Steps to Generate an App Password for Gmail
 
     Copy the generated password (it will be a 16-character string, like abcd efgh ijkl mnop).
 
+### Auto Image tagging feature
+Auto-Image Tagging analyzes uploaded donation photos and attaches helpful tags to each item—things - 
+like item type, condition, visible damage, and notable attributes. 
+These tags make it faster to triage, search, and review donations in the admin UI.
 
+# What do I need to set up? 
+- just need to update your env
+
+# How to use (for admins)
+- Navigate to Admin → Image Review to see items that already have tags.
+- Click a card to view its photo + tags.
+- Use Reanalyze Image if you’ve updated the photo or want fresh tags.
 
 ### 4. Install Dependencies
 
