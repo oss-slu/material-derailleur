@@ -5,6 +5,8 @@ import axios from 'axios';
 import Modal from 'react-modal';
 import '../css/DonorList.css';
 
+Modal.setAppElement('#root');
+
 interface Donor {
     id: number;
     firstName: string;
@@ -22,7 +24,7 @@ interface Donor {
 const DonorList: React.FC = () => {
     const [searchInput, setSearchInput] = useState<string>('');
     const [filteredDonors, setFilteredDonors] = useState<Donor[]>([]);
-    const [donorDetails, selectedDonorDetails] = useState<Donor | null>(null);
+    const [donorDetails, setDonorDetails] = useState<Donor | null>(null);
     const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
     const [currentDonors, setCurrentDonors] = useState<Donor[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -63,8 +65,16 @@ const DonorList: React.FC = () => {
     const handleAddNewDonorClick = () => navigate('/donorform');
 
     const handleViewDetailsClick = (donor: Donor) => {
-        selectedDonorDetails(donor);
+        setDonorDetails(donor);
         setModalIsOpen(true);
+
+        // scroll to top of body when opening
+        setTimeout(() => {
+            const body = document.querySelector(
+                '.modal-body',
+            ) as HTMLElement | null;
+            if (body) body.scrollTop = 0;
+        }, 0);
     };
 
     const handleEditDonorClick = (donor: Donor | null) => {
@@ -161,50 +171,106 @@ const DonorList: React.FC = () => {
                 onRequestClose={() => setModalIsOpen(false)}
                 overlayClassName="modal-overlay"
                 className="modal-container"
+                contentLabel="Donor Details"
             >
-                <h2 className="modal-header">Details</h2>
+                {/* header fixed at top */}
+                <div className="modal-header">Details</div>
+
+                {/* scrollable body – scrollbar at right curve */}
                 {donorDetails && (
-                    <div className="modal-content">
-                        <p>
-                            <strong>Donor ID:</strong> {donorDetails.id}
-                        </p>
-                        <p>
-                            <strong>First Name:</strong>{' '}
-                            {donorDetails.firstName}
-                        </p>
-                        <p>
-                            <strong>Last Name:</strong> {donorDetails.lastName}
-                        </p>
-                        <p>
-                            <strong>Email:</strong> {donorDetails.email}
-                        </p>
-                        <p>
-                            <strong>Contact Number:</strong>{' '}
-                            {donorDetails.contact}
-                        </p>
-                        <p>
-                            <strong>Address Line 1:</strong>{' '}
-                            {donorDetails.addressLine1}
-                        </p>
-                        <p>
-                            <strong>Address Line 2:</strong>{' '}
-                            {donorDetails.addressLine2}
-                        </p>
-                        <p>
-                            <strong>City:</strong> {donorDetails.city}
-                        </p>
-                        <p>
-                            <strong>State:</strong> {donorDetails.state}
-                        </p>
-                        <p>
-                            <strong>Zipcode:</strong> {donorDetails.zipcode}
-                        </p>
-                        <p>
-                            <strong>Opted in for Emails:</strong>{' '}
-                            {donorDetails.emailOptIn ? 'Yes' : 'No'}
-                        </p>
+                    <div className="modal-body">
+                        <div className="details-list">
+                            <div className="detail-row">
+                                <span className="detail-label">Donor ID:</span>
+                                <span className="detail-value">
+                                    {donorDetails.id}
+                                </span>
+                            </div>
+
+                            <div className="detail-row">
+                                <span className="detail-label">
+                                    First Name:
+                                </span>
+                                <span className="detail-value">
+                                    {donorDetails.firstName}
+                                </span>
+                            </div>
+
+                            <div className="detail-row">
+                                <span className="detail-label">Last Name:</span>
+                                <span className="detail-value">
+                                    {donorDetails.lastName}
+                                </span>
+                            </div>
+
+                            <div className="detail-row">
+                                <span className="detail-label">Email:</span>
+                                <span className="detail-value">
+                                    {donorDetails.email}
+                                </span>
+                            </div>
+
+                            <div className="detail-row">
+                                <span className="detail-label">
+                                    Contact Number:
+                                </span>
+                                <span className="detail-value">
+                                    {donorDetails.contact}
+                                </span>
+                            </div>
+
+                            <div className="detail-row">
+                                <span className="detail-label">
+                                    Address Line 1:
+                                </span>
+                                <span className="detail-value">
+                                    {donorDetails.addressLine1}
+                                </span>
+                            </div>
+
+                            <div className="detail-row">
+                                <span className="detail-label">
+                                    Address Line 2:
+                                </span>
+                                <span className="detail-value">
+                                    {donorDetails.addressLine2}
+                                </span>
+                            </div>
+
+                            <div className="detail-row">
+                                <span className="detail-label">City:</span>
+                                <span className="detail-value">
+                                    {donorDetails.city}
+                                </span>
+                            </div>
+
+                            <div className="detail-row">
+                                <span className="detail-label">State:</span>
+                                <span className="detail-value">
+                                    {donorDetails.state}
+                                </span>
+                            </div>
+
+                            <div className="detail-row">
+                                <span className="detail-label">Zipcode:</span>
+                                <span className="detail-value">
+                                    {donorDetails.zipcode}
+                                </span>
+                            </div>
+
+                            <div className="detail-row">
+                                <span className="detail-label">
+                                    Opted in for Emails:
+                                </span>
+                                <span className="detail-value">
+                                    {donorDetails.emailOptIn ? 'Yes' : 'No'}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 )}
+
+                {/* actions fixed at bottom */}
                 <div className="modal-actions">
                     <button
                         className="btn btn-danger"
