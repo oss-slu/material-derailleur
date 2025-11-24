@@ -1,22 +1,24 @@
 .donated-item-details-container {
     max-width: 1200px;
     margin: auto;
-    padding: 20px;
-    background-color: #f3f6f9;
+    padding: 30px; /* Increase padding for better spacing */
+    background-color: #ffffff; /* Change background to white for cleaner look */
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 80px; /* Add margin to prevent overlap with navbar */
+    margin-bottom: 50px; /* Add margin to prevent overlap with footer or bottom content */
 }
 
 /* Two-column layout for the main details */
 .details-grid {
     display: grid;
     grid-template-columns: 3fr 2fr; /* 70% for left column, 30% for right column */
-    gap: 20px;
+    gap: 30px; /* Increase gap for better separation */
 }
 
 .left-column {
     max-width: 50vw;
-    white-space: wrap;
+    white-space: normal; /* Fix wrapping issue */
 }
 /* Section styling */
 .section-header {
@@ -26,6 +28,7 @@
     border-radius: 5px;
     background-color: #f3f6f9;
     color: black;
+    font-weight: bold; /* Make headers more prominent */
 }
 
 .section-header h2 {
@@ -34,13 +37,18 @@
 }
 
 .section-header button {
-    margin-left: auto; /* Pushes the button to the right */
+    margin: 0 10px; /* Add horizontal margin for better spacing */
     padding: 5px 10px;
     background-color: #007bff;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.3s ease; /* Add hover effect */
+}
+
+.section-header button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
 }
 
 .section-header .icon {
@@ -51,7 +59,7 @@
 /* Left Column Styling (70% width) */
 
 .left-column .donated-item-status-section {
-    padding: 15px;
+    padding: 20px; /* Increase padding for better readability */
     border-radius: 8px;
     margin-bottom: 20px;
     background-color: #deeaf4; /* Consistent background for sections */
@@ -67,6 +75,7 @@
 
 .right-column .item-details-section {
     background-color: #deeaf4;
+    padding: 20px; /* Increase padding for consistency */
 }
 
 .right-column .item-details-section .section-header {
@@ -125,7 +134,7 @@ p {
 }
 /* Barcode / Label section */
 .barcode-section {
-    padding: 15px;
+    padding: 20px; /* Increase padding for better layout */
     border-radius: 8px;
     margin-bottom: 20px;
     background-color: #d5e5f3; /* same as .program-details-section */
@@ -134,7 +143,7 @@ p {
 /* Match header style with other blue headers */
 .barcode-section .section-header {
     background-color: #7ca3c7;
-    color: #fff;
+    color: #000000;
 }
 
 .barcode-section .section-header h2 {
@@ -142,7 +151,6 @@ p {
     font-size: 18px;
 }
 
-/* Layout for BarcodeDisplay + helper text */
 .barcode-section .barcode-content {
     margin-top: 8px;
     display: flex;
@@ -150,7 +158,6 @@ p {
     align-items: flex-start;
 }
 
-/* If BarcodeDisplay renders an <img>, make sure it's not huge */
 .barcode-section img {
     max-width: 220px;
     height: auto;
@@ -158,6 +165,7 @@ p {
     border: 1px solid #ccc;
     border-radius: 4px;
     background-color: #fff;
+    margin-top: 10px; /* Add spacing above barcode */
 }
 
 /* Tiny helper text under the barcode */
@@ -167,9 +175,39 @@ p {
     margin-top: 8px;
 }
 
+.barcode-section .barcode-content button {
+    padding: 8px 12px; /* Add padding for better click area */
+    margin: 8px 5px 0 0; /* Add spacing between buttons */
+    background-color: #007bff; /* Primary blue color */
+    color: white; /* White text */
+    border: none; /* Remove default border */
+    border-radius: 4px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    font-size: 14px; /* Adjust font size */
+    transition: background-color 0.3s ease; /* Smooth hover effect */
+}
+
+.barcode-section .barcode-content button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
 /* Responsive design for smaller screens */
 @media (max-width: 768px) {
     .details-grid {
         grid-template-columns: 1fr; /* Stacks sections vertically on small screens */
+        gap: 15px; /* Adjust gap for smaller screens */
     }
+
+    .section-header h2 {
+        font-size: 18px; /* Reduce font size for smaller screens */
+    }
+}
+
+h1 {
+    margin-top: 0; /* Remove any extra margin */
+    padding-top: 0; /* Remove padding to bring it closer to the top */
+    margin-bottom: 20px; /* Add a small margin below the heading */
+    font-size: 28px; /* Adjust font size for better visibility */
+    text-align: center; /* Center the heading */
+    font-weight: bold; /* Make the heading bold */
 }
