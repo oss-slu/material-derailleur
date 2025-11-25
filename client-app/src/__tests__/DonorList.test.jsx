@@ -47,9 +47,7 @@ describe('DonorList Component', () => {
         render(<DonorList />);
 
         // Wait for the donor list to be rendered
-        await waitFor(() =>
-            expect(screen.getByText('Donor ID')).toBeInTheDocument(),
-        );
+        expect(await screen.findByText('Donor ID')).toBeInTheDocument();
 
         // Check if donor details are displayed
         expect(screen.getByText('Jason')).toBeInTheDocument();
@@ -71,10 +69,7 @@ describe('DonorList Component', () => {
         render(<DonorList />);
 
         // Wait for the error message to be displayed
-        await waitFor(() =>
-            expect(
-                screen.getByText('Error fetching donor data'),
-            ).toBeInTheDocument(),
-        );
+        const errorMessage = await screen.findByText('Error fetching donor data');
+        expect(errorMessage).toBeInTheDocument();
     });
 });

@@ -1,6 +1,7 @@
 // mock BEFORE imports
 jest.mock('bcryptjs');
 jest.mock('jsonwebtoken');
+jest.mock('../services/emailService'); // Add this mock
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'xalngJIazn';
 
 import request from 'supertest';
@@ -9,6 +10,7 @@ import programRoutes from '../routes/programRoutes';
 import prisma from '../prismaClient';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import * as emailService from '../services/emailService'; // Import email service
 
 // Mock prisma AFTER importing real
 jest.mock('../prismaClient', () => require('../__mocks__/mockPrismaClient'));
@@ -35,6 +37,8 @@ const mockedBcrypt = bcrypt as unknown as {
 const mockedJwt = jwt as unknown as {
     sign: jest.Mock<string, [any, string, jwt.SignOptions?]>;
 };
+
+const mockedEmailService = emailService as jest.Mocked<typeof emailService>;
 
 beforeEach(() => {
     jest.clearAllMocks();
@@ -176,7 +180,23 @@ describe('Auth Routes', () => {
             });
 
             mockedBcrypt.compare.mockResolvedValue(true);
-            mockedPrisma.user.update.mockResolvedValue({});
+            
+            // Mock the update to return the user with reset token
+            mockedPrisma.user.update.mockResolvedValue({
+                id: 'user123',
+                email: 'donor@example.com',
+                password: 'hashedPassword',
+                name: 'Donor User',
+                role: 'DONOR',
+                firstLogin: true,
+                resetToken: 'mocked-reset-token',
+                resetTokenExpiry: new Date(Date.now() + 3600000),
+            });
+
+            // Mock email service to avoid timeout
+            if (mockedEmailService.sendPasswordReset) {
+                mockedEmailService.sendPasswordReset.mockResolvedValue(undefined);
+            }
 
             const res = await request(app)
                 .post('/api/auth/login')
@@ -184,6 +204,7 @@ describe('Auth Routes', () => {
 
             expect(res.status).toBe(403);
             expect(res.body.requireReset).toBe(true);
-        });
+            expect(mockedPrisma.user.update).toHaveBeenCalled();
+        }, 10000); // Increase timeout to 10 seconds for this test
     });
 });
