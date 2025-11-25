@@ -55,7 +55,9 @@ jest.mock('../services/donatedItemService', () => ({
     fetchImagesFromCloud: jest.fn().mockResolvedValue([]),
     validateDonatedItem: jest.fn().mockResolvedValue(true),
     validateIndividualFileSize: jest.fn(),
-    uploadToStorage: jest.fn().mockResolvedValue('http://fake-url.com/image.jpg'),
+    uploadToStorage: jest
+        .fn()
+        .mockResolvedValue('http://fake-url.com/image.jpg'),
     getFileExtension: jest.fn().mockReturnValue('.jpg'),
 }));
 
@@ -67,13 +69,23 @@ jest.mock('../services/emailService', () => ({
 // Mock image analysis service
 jest.mock('../services/imageAnalysisService', () => ({
     analyzeImageTags: jest.fn().mockResolvedValue({
-        tags: [{ description: 'Furniture', confidence: 0.95, category: 'item_type' }],
+        tags: [
+            {
+                description: 'Furniture',
+                confidence: 0.95,
+                category: 'item_type',
+            },
+        ],
         rawResponse: 'Test analysis',
         analysisTimestamp: new Date(),
         optedOut: false,
     }),
     getImageTags: jest.fn().mockResolvedValue([
-        { description: 'Furniture', confidence: 0.95, category: 'item_type' },
+        {
+            description: 'Furniture',
+            confidence: 0.95,
+            category: 'item_type',
+        },
     ]),
 }));
 
@@ -112,7 +124,12 @@ describe('DonatedItem API Tests', () => {
     });
 
     it('creates a donated item successfully', async () => {
-        const mockDonor = { id: 1, email: 'donor@test.com', firstName: 'John', lastName: 'Doe' };
+        const mockDonor = {
+            id: 1,
+            email: 'donor@test.com',
+            firstName: 'John',
+            lastName: 'Doe',
+        };
         const mockItem = {
             id: 1,
             itemType: 'Chair',
@@ -134,20 +151,20 @@ describe('DonatedItem API Tests', () => {
         };
 
         (prisma.donatedItem.create as jest.Mock).mockResolvedValue(mockItem);
-        (prisma.donatedItemStatus.create as jest.Mock).mockResolvedValue(mockStatus);
+        (prisma.donatedItemStatus.create as jest.Mock).mockResolvedValue(
+            mockStatus,
+        );
 
-        const response = await request(app)
-            .post('/api/donated-items')
-            .send({
-                itemType: 'Chair',
-                category: 'Furniture',
-                quantity: 1,
-                currentStatus: 'Received',
-                donorId: 1,
-                programId: 1,
-                dateDonated: new Date().toISOString(),
-                optOutAnalysis: 'true',
-            });
+        const response = await request(app).post('/api/donated-items').send({
+            itemType: 'Chair',
+            category: 'Furniture',
+            quantity: 1,
+            currentStatus: 'Received',
+            donorId: 1,
+            programId: 1,
+            dateDonated: new Date().toISOString(),
+            optOutAnalysis: 'true',
+        });
 
         expect(response.status).toBe(201);
         expect(response.body.donatedItem).toBeDefined();
@@ -155,14 +172,12 @@ describe('DonatedItem API Tests', () => {
     });
 
     it('returns 400 when itemType is missing', async () => {
-        const response = await request(app)
-            .post('/api/donated-items')
-            .send({
-                category: 'Furniture',
-                quantity: 1,
-                donorId: 1,
-                programId: 1,
-            });
+        const response = await request(app).post('/api/donated-items').send({
+            category: 'Furniture',
+            quantity: 1,
+            donorId: 1,
+            programId: 1,
+        });
 
         expect(response.status).toBe(400);
         expect(response.body.error).toContain('itemType is required');
@@ -170,8 +185,22 @@ describe('DonatedItem API Tests', () => {
 
     it('retrieves all donated items', async () => {
         const mockItems = [
-            { id: 1, itemType: 'Chair', category: 'Furniture', statuses: [], donor: {}, program: {} },
-            { id: 2, itemType: 'Table', category: 'Furniture', statuses: [], donor: {}, program: {} },
+            {
+                id: 1,
+                itemType: 'Chair',
+                category: 'Furniture',
+                statuses: [],
+                donor: {},
+                program: {},
+            },
+            {
+                id: 2,
+                itemType: 'Table',
+                category: 'Furniture',
+                statuses: [],
+                donor: {},
+                program: {},
+            },
         ];
 
         (prisma.donatedItem.findMany as jest.Mock).mockResolvedValue(mockItems);
@@ -193,7 +222,9 @@ describe('DonatedItem API Tests', () => {
             program: {},
         };
 
-        (prisma.donatedItem.findUnique as jest.Mock).mockResolvedValue(mockItem);
+        (prisma.donatedItem.findUnique as jest.Mock).mockResolvedValue(
+            mockItem,
+        );
 
         const response = await request(app).get('/api/donated-items/1');
 
@@ -219,7 +250,9 @@ describe('DonatedItem API Tests', () => {
     });
 
     it('returns 400 for invalid ID in tags endpoint', async () => {
-        const response = await request(app).get('/api/donated-items/invalid/tags');
+        const response = await request(app).get(
+            '/api/donated-items/invalid/tags',
+        );
 
         expect(response.status).toBe(400);
         expect(response.body.message).toBe('Invalid donated item ID');

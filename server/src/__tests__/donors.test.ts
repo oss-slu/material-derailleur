@@ -3,33 +3,37 @@ jest.mock('../prismaClient', () => require('../__mocks__/mockPrismaClient'));
 
 // Mock authenticateUser to check role from JWT token
 jest.mock('../routes/routeProtection', () => ({
-    authenticateUser: jest.fn(async (req: any, res: any, adminOnly: boolean = false) => {
-        const authHeader = req.headers.authorization;
-        if (!authHeader) {
-            res.status(401).json({ message: 'No token provided' });
-            return false;
-        }
-
-        const token = authHeader.replace('Bearer ', '');
-        const jwt = require('jsonwebtoken');
-        const JWT_SECRET = process.env.JWT_SECRET || 'xalngJIazn';
-        
-        try {
-            const decoded = jwt.verify(token, JWT_SECRET) as any;
-            req.user = decoded;
-            
-            // If adminOnly is true, check if user is ADMIN
-            if (adminOnly && decoded.role !== 'ADMIN') {
-                res.status(403).json({ message: 'Access denied: Admins only.' });
+    authenticateUser: jest.fn(
+        async (req: any, res: any, adminOnly: boolean = false) => {
+            const authHeader = req.headers.authorization;
+            if (!authHeader) {
+                res.status(401).json({ message: 'No token provided' });
                 return false;
             }
-            
-            return true;
-        } catch (error) {
-            res.status(401).json({ message: 'Invalid token' });
-            return false;
-        }
-    }),
+
+            const token = authHeader.replace('Bearer ', '');
+            const jwt = require('jsonwebtoken');
+            const JWT_SECRET = process.env.JWT_SECRET || 'xalngJIazn';
+
+            try {
+                const decoded = jwt.verify(token, JWT_SECRET) as any;
+                req.user = decoded;
+
+                // If adminOnly is true, check if user is ADMIN
+                if (adminOnly && decoded.role !== 'ADMIN') {
+                    res.status(403).json({
+                        message: 'Access denied: Admins only.',
+                    });
+                    return false;
+                }
+
+                return true;
+            } catch (error) {
+                res.status(401).json({ message: 'Invalid token' });
+                return false;
+            }
+        },
+    ),
 }));
 
 // Mock email service to prevent timeouts
@@ -74,7 +78,7 @@ describe('Donor API', () => {
     });
 
     afterAll(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 500));
     });
 
     it('should create a new donor', async () => {
@@ -176,7 +180,7 @@ describe('Donor API', () => {
 
     it('should return list of donor emails for admin', async () => {
         (mockPrismaClient.donor.findMany as jest.Mock).mockResolvedValue([
-            { 
+            {
                 id: 1,
                 email: 'john@example.com',
                 firstName: 'John',
@@ -188,7 +192,7 @@ describe('Donor API', () => {
                 zipcode: '63108',
                 emailOptIn: false,
             },
-            { 
+            {
                 id: 2,
                 email: 'jane@example.com',
                 firstName: 'Jane',

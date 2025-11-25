@@ -180,7 +180,7 @@ describe('Auth Routes', () => {
             });
 
             mockedBcrypt.compare.mockResolvedValue(true);
-            
+
             // Mock the update to return the user with reset token
             mockedPrisma.user.update.mockResolvedValue({
                 id: 'user123',
@@ -195,7 +195,9 @@ describe('Auth Routes', () => {
 
             // Mock email service to avoid timeout
             if (mockedEmailService.sendPasswordReset) {
-                mockedEmailService.sendPasswordReset.mockResolvedValue(undefined);
+                mockedEmailService.sendPasswordReset.mockResolvedValue(
+                    undefined,
+                );
             }
 
             const res = await request(app)

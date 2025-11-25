@@ -69,7 +69,9 @@ describe('DonorList Component', () => {
         render(<DonorList />);
 
         // Wait for the error message to be displayed
-        const errorMessage = await screen.findByText('Error fetching donor data');
+        const errorMessage = await screen.findByText(
+            'Error fetching donor data',
+        );
         expect(errorMessage).toBeInTheDocument();
     });
 });
