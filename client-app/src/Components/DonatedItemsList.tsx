@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaSearch, FaPlus } from 'react-icons/fa';
 import Modal from 'react-modal';
 import '../css/AdminHeader.css';
 import '../css/DonatedItemsList.css';
@@ -305,7 +304,7 @@ ${svgString}
                             className="btn btn-primary search-button"
                             type="submit"
                         >
-                            <FaSearch />
+                            🔍
                         </button>
                     </form>
                 </div>
