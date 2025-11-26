@@ -68,7 +68,9 @@ const DonorList: React.FC = () => {
         setModalIsOpen(true);
 
         setTimeout(() => {
-            const body = document.querySelector('.modal-body') as HTMLElement | null;
+            const body = document.querySelector(
+                '.modal-body',
+            ) as HTMLElement | null;
             if (body) body.scrollTop = 0;
         }, 0);
     };
@@ -79,13 +81,19 @@ const DonorList: React.FC = () => {
         navigate('/donoredit');
     };
 
-    const donorsToShow = filteredDonors.length > 0 || searchInput ? filteredDonors : currentDonors;
+    const donorsToShow =
+        filteredDonors.length > 0 || searchInput
+            ? filteredDonors
+            : currentDonors;
 
     return (
         <div className="page">
             <header className="page-header">
                 <h1 className="page-title">Donors</h1>
-                <button className="btn btn-primary header-action" onClick={handleAddNewDonorClick}>
+                <button
+                    className="btn btn-primary header-action"
+                    onClick={handleAddNewDonorClick}
+                >
                     + Add Donor
                 </button>
             </header>
@@ -99,7 +107,10 @@ const DonorList: React.FC = () => {
                         onChange={e => setSearchInput(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleSearch()}
                     />
-                    <button className="btn btn-primary search-button" onClick={handleSearch}>
+                    <button
+                        className="btn btn-primary search-button"
+                        onClick={handleSearch}
+                    >
                         🔍
                     </button>
                 </div>
@@ -130,7 +141,14 @@ const DonorList: React.FC = () => {
                                         <td>{donor.lastName}</td>
                                         <td>{donor.email}</td>
                                         <td>
-                                            <button className="btn btn-link" onClick={() => handleViewDetailsClick(donor)}>
+                                            <button
+                                                className="btn btn-link"
+                                                onClick={() =>
+                                                    handleViewDetailsClick(
+                                                        donor,
+                                                    )
+                                                }
+                                            >
                                                 View More Details
                                             </button>
                                         </td>
@@ -158,10 +176,16 @@ const DonorList: React.FC = () => {
                     </div>
                 )}
                 <div className="modal-actions">
-                    <button className="btn btn-danger" onClick={() => handleEditDonorClick(donorDetails)}>
+                    <button
+                        className="btn btn-danger"
+                        onClick={() => handleEditDonorClick(donorDetails)}
+                    >
                         Edit
                     </button>
-                    <button className="btn btn-primary" onClick={() => setModalIsOpen(false)}>
+                    <button
+                        className="btn btn-primary"
+                        onClick={() => setModalIsOpen(false)}
+                    >
                         Close
                     </button>
                 </div>
