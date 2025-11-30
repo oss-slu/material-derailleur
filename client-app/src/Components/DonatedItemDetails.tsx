@@ -7,13 +7,16 @@ import PersonIcon from '@mui/icons-material/Person';
 import CategoryIcon from '@mui/icons-material/Category';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
-import '../css/DonatedItemDetails.css'; // Import the new CSS file
+import '../css/DonatedItemDetails.css';
 import { Donor } from '../Modals/DonorModal';
 import { Program } from '../Modals/ProgramModal';
 import { DonatedItemStatus } from '../Modals/DonatedItemStatusModal';
 import { DonatedItem } from '../Modals/DonatedItemModal';
-import BarcodeDisplay from './BarcodeDisplay'; // added import
-import Barcode from 'react-barcode'; // add import near top
+import BarcodeDisplay from './BarcodeDisplay';
+import Barcode from 'react-barcode';
+
+const PRINT_STYLE_ID = 'donated-item-print-style';
+const PRINT_CONTAINER_ID = 'donated-item-print-container';
 
 const DonatedItemDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -39,16 +42,18 @@ const DonatedItemDetails: React.FC = () => {
                         },
                     },
                 );
-
                 setDonatedItem(response.data);
             } catch (err) {
                 if (axios.isAxiosError(err)) {
                     setError(
-                        `Failed to fetch donated item details: ${err.response?.statusText || 'Server error'}`,
+                        `Failed to fetch donated item details: ${
+                            err.response?.statusText || 'Server error'
+                        }`,
                     );
                 } else {
                     setError('An unexpected error occurred');
                 }
+                // eslint-disable-next-line no-console
                 console.error('Error fetching donated item:', err);
             } finally {
                 setLoading(false);
@@ -70,7 +75,6 @@ const DonatedItemDetails: React.FC = () => {
     if (error) return <div>Error: {error}</div>;
     if (!donatedItem) return <div>No data available.</div>;
 
-    // compute a reliable id to use for barcode (common id fields)
     const barcodeId =
         (donatedItem as any).id ||
         (donatedItem as any)._id ||
@@ -78,8 +82,10 @@ const DonatedItemDetails: React.FC = () => {
         id ||
         '';
 
-    // helper functions for download/print inside this component
-    const downloadDetailSvg = () => {
+    const downloadDetailSvg = (e?: React.MouseEvent) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+
         if (!barcodeId) return;
         const svgEl = document.querySelector<SVGElement>(
             `#barcode-detail-${barcodeId} svg`,
@@ -106,15 +112,76 @@ const DonatedItemDetails: React.FC = () => {
         URL.revokeObjectURL(url);
     };
 
-    const printDetail = () => {
+    // ✅ IMPORTANT FIX:
+    // - Do NOT hide the container with inline left:-99999px/width:1px, because that overrides print CSS.
+    // - Hide it on screen via CSS, and force it visible in @media print.
+    const ensurePrintStyleAndContainer = (): HTMLDivElement => {
+        if (!document.getElementById(PRINT_STYLE_ID)) {
+            const style = document.createElement('style');
+            style.id = PRINT_STYLE_ID;
+            style.textContent = `
+/* Hidden on screen */
+#${PRINT_CONTAINER_ID} { display: none; }
+
+@media print {
+  body * { visibility: hidden !important; }
+
+  #${PRINT_CONTAINER_ID},
+  #${PRINT_CONTAINER_ID} * { visibility: visible !important; }
+
+  #${PRINT_CONTAINER_ID} {
+    display: flex !important;
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 12mm !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: white !important;
+  }
+
+  #${PRINT_CONTAINER_ID} svg {
+    max-width: 95% !important;
+    height: auto !important;
+    display: block !important;
+  }
+}
+            `;
+            document.head.appendChild(style);
+        }
+
+        let container = document.getElementById(
+            PRINT_CONTAINER_ID,
+        ) as HTMLDivElement | null;
+        if (!container) {
+            container = document.createElement('div');
+            container.id = PRINT_CONTAINER_ID;
+            document.body.appendChild(container);
+        }
+        return container;
+    };
+
+    const printDetail = (e?: React.MouseEvent) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+
         if (!barcodeId) return;
+
+        // We expect react-barcode to render an <svg> (see renderer="svg" below)
         const svgEl = document.querySelector<SVGElement>(
             `#barcode-detail-${barcodeId} svg`,
         );
         if (!svgEl) {
-            console.error('SVG element not found for printing');
+            console.error(
+                'SVG element not found for printing. Ensure <Barcode renderer="svg" /> is set.',
+            );
             return;
         }
+
         const serializer = new XMLSerializer();
         let svgString = serializer.serializeToString(svgEl);
 
@@ -126,32 +193,18 @@ const DonatedItemDetails: React.FC = () => {
             );
         }
 
-        const printHtml = `<!doctype html>
-<html>
-<head>
-<meta charset="utf-8" />
-<title>Print Barcode</title>
-<style>
-  html,body{height:100%;margin:0;padding:0;}
-  body{display:flex;align-items:center;justify-content:center;background:#fff;}
-  svg{max-width:95%;height:auto;display:block;}
-</style>
-</head>
-<body>
-${svgString}
-<script>
-  window.onload = function(){
-    setTimeout(function(){ window.print(); window.onafterprint = function(){ window.close(); }; }, 200);
-  };
-</script>
-</body>
-</html>`;
+        const container = ensurePrintStyleAndContainer();
 
-        const w = window.open('', '_blank', 'noopener,noreferrer');
-        if (!w) return;
-        w.document.open();
-        w.document.write(printHtml);
-        w.document.close();
+        const cleanup = () => {
+            container.innerHTML = '';
+            window.removeEventListener('afterprint', cleanup);
+        };
+        window.addEventListener('afterprint', cleanup);
+
+        container.innerHTML = svgString;
+
+        // Synchronous print
+        window.print();
     };
 
     return (
@@ -160,7 +213,6 @@ ${svgString}
             <div className="details-grid">
                 {/* Left Column */}
                 <div className="left-column">
-                    {/* Vertical stepper implementation for donated item status */}
                     <section className="donated-item-status-section">
                         <div className="section-header">
                             <AssignmentTurnedInIcon className="icon" />
@@ -180,7 +232,10 @@ ${svgString}
                                     active={true}
                                     completed={false}
                                 >
-                                    <StepLabel>{`${status.statusType} (${formatDate(status.dateModified, false)})`}</StepLabel>
+                                    <StepLabel>{`${status.statusType} (${formatDate(
+                                        status.dateModified,
+                                        false,
+                                    )})`}</StepLabel>
 
                                     <StepContent>
                                         <div className="image-scroll-container">
@@ -236,9 +291,11 @@ ${svgString}
                             {barcodeId ? (
                                 <>
                                     <div id={`barcode-detail-${barcodeId}`}>
+                                        {/* ✅ Force SVG output so printing/downloading finds an <svg> */}
                                         <Barcode
                                             value={String(barcodeId)}
                                             format="CODE128"
+                                            renderer="svg"
                                         />
                                     </div>
                                     <div style={{ marginTop: 8 }}>
