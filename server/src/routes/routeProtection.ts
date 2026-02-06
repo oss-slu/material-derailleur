@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import prisma from '../prismaClient';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'xalngJIazn';
 //const JWT_SECRET = 'xalngJIazn'; // I don't know why calling the process above was always creating errors during the checks. It works when checked manually
@@ -11,6 +12,7 @@ interface DecodedToken {
     userId: string;
     email: string;
     role: 'DONOR' | 'ADMIN';
+    status?: string;
 }
 
 export const authenticateUser = async (
@@ -36,6 +38,17 @@ export const authenticateUser = async (
         // If adminPerm is true, only allow ADMIN
         if (adminPerm && decoded.role !== 'ADMIN') {
             res.status(403).json({ message: 'Access denied: Admins only.' });
+            return false;
+        }
+
+        // Fetch user from DB to check account status (approval)
+        const userRecord = await prisma.user.findUnique({
+            where: { id: decoded.userId },
+            select: { status: true },
+        });
+
+        if (userRecord && (userRecord as any).status !== 'ACTIVE') {
+            res.status(403).json({ message: 'Account pending approval or suspended.' });
             return false;
         }
 

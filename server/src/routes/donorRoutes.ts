@@ -103,13 +103,14 @@ router.post('/register', async (req: Request, res: Response) => {
         const donorPassword = getRandomPassword();
         const hashedPassword = await bcrypt.hash(donorPassword, 10);
 
-        // Store user in database
+        // Store user in database (donors start as PENDING until approved)
         const user = await prisma.user.create({
             data: {
                 name,
                 email,
                 password: hashedPassword,
                 role: 'DONOR',
+                status: 'PENDING',
                 firstLogin: true,
             },
         });
@@ -139,6 +140,88 @@ router.post('/register', async (req: Request, res: Response) => {
         });
     } catch (error) {
         res.status(500).json({ message: 'Error registering donor' });
+    }
+});
+
+// Admin: list PENDING user accounts
+router.get('/pending', async (req: Request, res: Response) => {
+    try {
+        const permGranted = await authenticateUser(req, res, true);
+        if (!permGranted) return;
+
+        const pendingUsers = await prisma.user.findMany({
+            where: { status: 'PENDING' },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true,
+            },
+        });
+
+        res.json(pendingUsers);
+    } catch (error) {
+        console.error('Error fetching pending users:', error);
+        res.status(500).json({ message: 'Error fetching pending users' });
+    }
+});
+
+// Admin: list ALL user accounts (including status)
+router.get('/users', async (req: Request, res: Response) => {
+    try {
+        const permGranted = await authenticateUser(req, res, true);
+        if (!permGranted) return;
+
+        const users = await prisma.user.findMany({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                status: true,
+                createdAt: true,
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        res.json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ message: 'Error fetching users' });
+    }
+});
+
+// Admin: update user's status and/or role
+router.put('/users/:userId', async (req: Request, res: Response) => {
+    try {
+        const permGranted = await authenticateUser(req, res, true);
+        if (!permGranted) return;
+
+        const { userId } = req.params;
+        const { role, status } = req.body as { role?: string; status?: string };
+
+        // Make sure to update only valid roles/statuses
+        const allowedRoles = ['ADMIN', 'DONOR'];
+        const allowedStatuses = ['PENDING', 'ACTIVE', 'SUSPENDED'];
+
+        const dataToUpdate: any = {};
+        if (role && allowedRoles.includes(role)) dataToUpdate.role = role;
+        if (status && allowedStatuses.includes(status)) dataToUpdate.status = status;
+
+        if (Object.keys(dataToUpdate).length === 0) {
+            return res.status(400).json({ message: 'No valid fields to update' });
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: String(userId) },
+            data: dataToUpdate,
+        });
+
+        res.status(200).json({ message: 'User updated', user: updatedUser });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ message: 'Error updating user' });
     }
 });
 

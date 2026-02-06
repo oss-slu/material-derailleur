@@ -24,6 +24,7 @@ import Contact from './Components/Contact.tsx';
 import Footer from './Components/Footer.tsx';
 import AdminImageReview from './Components/AdminImageReview';
 import BarcodeDisplay from './Components/BarcodeDisplay'; // added import
+import AdminUserManagement from './Components/AdminUserManagement';
 
 // Small wrapper page to read :id and render BarcodeDisplay
 function DonatedBarcodePage() {
@@ -113,6 +114,14 @@ function App() {
                         <Route
                             path="/admin/image-review"
                             element={<AdminImageReview />}
+                        />
+                        <Route
+                            path="/admin/user-management"
+                            element={
+                                <ProtectedRoute allowedRole="ADMIN">
+                                    <AdminUserManagement />
+                                </ProtectedRoute>
+                            }
                         />
                         <Route
                             path="/admin/image-review/:id"

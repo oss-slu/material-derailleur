@@ -49,9 +49,9 @@ router.post(
             // Hash the password
             const hashedPassword = await bcrypt.hash(password, 10);
 
-            // Store user in database
+            // Store user in database (starting as ADMIN for this route)
             const user = await prisma.user.create({
-                data: { name, email, password: hashedPassword, role: 'ADMIN' },
+                data: { name, email, password: hashedPassword, role: 'ADMIN', status: 'PENDING' },
             });
 
             return res.status(201).json({
@@ -127,7 +127,7 @@ router.post(
 
             // Generate JWT token and it expires in 1hr.
             const token = jwt.sign(
-                { userId: user.id, email: user.email, role: user.role },
+                { userId: user.id, email: user.email, role: user.role, status: user.status },
                 JWT_SECRET,
                 { expiresIn: '1h' },
             );

@@ -98,6 +98,10 @@ const LoginPage: React.FC = () => {
             if (response.ok) {
                 //  Note: Using localStorage is less secure than HttpOnly cookies
                 localStorage.setItem('token', data.token);
+                
+                // Persist user's display name and role for UI
+                if (data.name) localStorage.setItem('name', data.name);
+                if (data.role) localStorage.setItem('role', data.role);
                 triggerPopup('Welcome ' + data.name + '!');
 
                 if (data.role === 'ADMIN') {
