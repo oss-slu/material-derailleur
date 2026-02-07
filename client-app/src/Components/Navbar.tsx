@@ -7,6 +7,7 @@ const Navbar: React.FC = () => {
     const location = useLocation();
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [userRole, setUserRole] = useState<string | null>(null);
+    const [userStatus, setUserStatus] = useState<string | null>(null);
 
     useEffect(() => {
         const checkLoginStatus = () => {
@@ -17,6 +18,7 @@ const Navbar: React.FC = () => {
                 try {
                     const decoded = JSON.parse(atob(token.split('.')[1]));
                     setUserRole(decoded.role); // Save role from JWT
+                    setUserStatus(decoded.status); // Save status from JWT
                 } catch (err) {
                     console.error('Token decode failed:', err);
                 }
@@ -27,6 +29,7 @@ const Navbar: React.FC = () => {
                 setIsLoggedIn(false);
                 setUser('');
                 setUserRole(null);
+                setUserStatus(null);
             }
         };
 
@@ -45,6 +48,7 @@ const Navbar: React.FC = () => {
         localStorage.removeItem('name');
         setIsLoggedIn(false);
         setUser('');
+        setUserStatus(null);
 
         // Ensure UI updates by reloading the page or using event dispatch
         window.dispatchEvent(new Event('storage'));
@@ -446,6 +450,7 @@ const Navbar: React.FC = () => {
                         <div style={{ fontSize: 16 }}>
                             {user}
                             {userRole ? ` (${userRole})` : ''}
+                            {userStatus ? ` - ${userStatus}` : ''}
                         </div>
                         <button
                             className="logout-button"

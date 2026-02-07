@@ -2,6 +2,12 @@
 jest.mock('bcryptjs');
 jest.mock('jsonwebtoken');
 jest.mock('../services/emailService'); // Add this mock
+jest.mock('../configs/SMCloudStoreConfig', () => ({
+    storage: {
+        putObject: jest.fn(),
+        getObject: jest.fn(),
+    },
+}));
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'xalngJIazn';
 
 import request from 'supertest';
