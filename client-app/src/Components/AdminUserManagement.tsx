@@ -13,7 +13,9 @@ const AdminUserManagement: React.FC = () => {
     const [users, setUsers] = useState<PendingUser[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [selectedRoles, setSelectedRoles] = useState<Record<string, string>>({});
+    const [selectedRoles, setSelectedRoles] = useState<Record<string, string>>(
+        {},
+    );
 
     const token = localStorage.getItem('token');
     const base = process.env.REACT_APP_BACKEND_API_BASE_URL || '/';
@@ -22,6 +24,7 @@ const AdminUserManagement: React.FC = () => {
         const fetchUsers = async () => {
             setLoading(true);
             try {
+                // Database request to fetch users
                 const res = await fetch(`${base}donor/users`, {
                     headers: {
                         Authorization: token ? `Bearer ${token}` : '',
@@ -31,8 +34,8 @@ const AdminUserManagement: React.FC = () => {
                     const txt = await res.text();
                     throw new Error(txt || res.statusText);
                 }
-                const data = await res.json();
-                setUsers(data || []);
+                const data = await res.json(); // Parse response into JSON
+                setUsers(data || []); // Store users in state
                 // set default selected roles/status to existing values
                 const defaults: Record<string, string> = {};
                 (data || []).forEach((u: any) => {
@@ -52,18 +55,24 @@ const AdminUserManagement: React.FC = () => {
     const updateUser = async (id: string) => {
         try {
             const role = selectedRoles[id] || 'DONOR';
-            const status = selectedStatus[id] || selectedStatus[id] === '' ? selectedStatus[id] : undefined;
+            const status =
+                selectedStatus[id] || selectedStatus[id] === ''
+                    ? selectedStatus[id]
+                    : undefined;
             const body: any = { role };
             if (status) body.status = status;
 
-            const res = await fetch(`${base}donor/users/${encodeURIComponent(id)}`, {
-                method: 'PUT',
-                headers: {
-                    Authorization: token ? `Bearer ${token}` : '',
-                    'Content-Type': 'application/json',
+            const res = await fetch(
+                `${base}donor/users/${encodeURIComponent(id)}`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        Authorization: token ? `Bearer ${token}` : '',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body),
                 },
-                body: JSON.stringify(body),
-            });
+            );
             if (!res.ok) {
                 const txt = await res.text();
                 throw new Error(txt || res.statusText);
@@ -75,7 +84,9 @@ const AdminUserManagement: React.FC = () => {
         }
     };
 
-    const [selectedStatus, setSelectedStatus] = useState<Record<string, string>>({});
+    const [selectedStatus, setSelectedStatus] = useState<
+        Record<string, string>
+    >({});
 
     const onStatusChange = (id: string, value: string) => {
         setSelectedStatus(prev => ({ ...prev, [id]: value }));
@@ -97,14 +108,14 @@ const AdminUserManagement: React.FC = () => {
             ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th>Created</th>
-                                    <th>Action</th>
-                                </tr>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Action</th>
+                        </tr>
                     </thead>
                     <tbody>
                         {users.map(u => (
@@ -113,8 +124,14 @@ const AdminUserManagement: React.FC = () => {
                                 <td>{u.email}</td>
                                 <td>
                                     <select
-                                        value={selectedRoles[u.id] || (u.role || 'DONOR')}
-                                        onChange={e => onRoleChange(u.id, e.target.value)}
+                                        value={
+                                            selectedRoles[u.id] ||
+                                            u.role ||
+                                            'DONOR'
+                                        }
+                                        onChange={e =>
+                                            onRoleChange(u.id, e.target.value)
+                                        }
                                     >
                                         <option value="DONOR">DONOR</option>
                                         <option value="ADMIN">ADMIN</option>
@@ -122,15 +139,24 @@ const AdminUserManagement: React.FC = () => {
                                 </td>
                                 <td>
                                     <select
-                                        value={selectedStatus[u.id] ?? (u.status || 'PENDING')}
-                                        onChange={e => onStatusChange(u.id, e.target.value)}
+                                        value={
+                                            selectedStatus[u.id] ??
+                                            (u.status || 'PENDING')
+                                        }
+                                        onChange={e =>
+                                            onStatusChange(u.id, e.target.value)
+                                        }
                                     >
                                         <option value="PENDING">PENDING</option>
                                         <option value="ACTIVE">ACTIVE</option>
-                                        <option value="SUSPENDED">SUSPENDED</option>
+                                        <option value="SUSPENDED">
+                                            SUSPENDED
+                                        </option>
                                     </select>
                                 </td>
-                                <td>{new Date(u.createdAt).toLocaleString()}</td>
+                                <td>
+                                    {new Date(u.createdAt).toLocaleString()}
+                                </td>
                                 <td>
                                     <button onClick={() => updateUser(u.id)}>
                                         Update

@@ -207,10 +207,13 @@ router.put('/users/:userId', async (req: Request, res: Response) => {
 
         const dataToUpdate: any = {};
         if (role && allowedRoles.includes(role)) dataToUpdate.role = role;
-        if (status && allowedStatuses.includes(status)) dataToUpdate.status = status;
+        if (status && allowedStatuses.includes(status))
+            dataToUpdate.status = status;
 
         if (Object.keys(dataToUpdate).length === 0) {
-            return res.status(400).json({ message: 'No valid fields to update' });
+            return res
+                .status(400)
+                .json({ message: 'No valid fields to update' });
         }
 
         const updatedUser = await prisma.user.update({

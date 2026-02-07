@@ -48,7 +48,9 @@ export const authenticateUser = async (
         });
 
         if (userRecord && (userRecord as any).status !== 'ACTIVE') {
-            res.status(403).json({ message: 'Account pending approval or suspended.' });
+            res.status(403).json({
+                message: 'Account pending approval or suspended.',
+            });
             return false;
         }
 

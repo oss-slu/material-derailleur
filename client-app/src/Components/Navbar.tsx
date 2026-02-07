@@ -313,14 +313,14 @@ const Navbar: React.FC = () => {
                                                         Add New Donor
                                                     </Link>
                                                 </li>
-                                                    <li>
-                                                        <Link
-                                                            className="dropdown-item"
-                                                            to="/admin/user-management"
-                                                        >
-                                                            User Management
-                                                        </Link>
-                                                    </li>
+                                                <li>
+                                                    <Link
+                                                        className="dropdown-item"
+                                                        to="/admin/user-management"
+                                                    >
+                                                        User Management
+                                                    </Link>
+                                                </li>
                                             </ul>
                                         </li>
                                     </>
@@ -436,7 +436,13 @@ const Navbar: React.FC = () => {
                     </ul>
                 </div>
                 {isLoggedIn && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 12,
+                        }}
+                    >
                         <div style={{ fontSize: 16 }}>
                             {user}
                             {userRole ? ` (${userRole})` : ''}
