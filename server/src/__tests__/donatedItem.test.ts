@@ -5,16 +5,13 @@ process.env.NODE_ENV = 'test';
 process.env.AZURE_STORAGE_ACCOUNT_NAME = 'test-account';
 process.env.AZURE_STORAGE_ACCESS_KEY = 'test-key';
 
-// Mock authenticateUser to always return true (permission granted)
+// Mock// Mock authenticateUser to always return true (permission granted)
 jest.mock('../routes/routeProtection', () => ({
     authenticateUser: jest.fn().mockResolvedValue(true),
 }));
 
 jest.mock('../validators/donatedItemValidator', () => ({
     donatedItemValidator: (req: any, res: any, next: any) => next(),
-}));
-
-jest.mock('../routes/routeProtection', () => ({
     authenticateUser: jest.fn().mockResolvedValue(true),
 }));
 

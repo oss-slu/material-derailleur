@@ -1,7 +1,7 @@
 // Mock Prisma BEFORE any other imports
 jest.mock('../prismaClient', () => require('../__mocks__/mockPrismaClient'));
 
-// Mock authenticateUser to check role from JWT token
+// Mock authenticateUser to check role from JWT token and user status
 jest.mock('../routes/routeProtection', () => ({
     authenticateUser: jest.fn(
         async (req: any, res: any, adminOnly: boolean = false) => {
@@ -23,6 +23,20 @@ jest.mock('../routes/routeProtection', () => ({
                 if (adminOnly && decoded.role !== 'ADMIN') {
                     res.status(403).json({
                         message: 'Access denied: Admins only.',
+                    });
+                    return false;
+                }
+
+                // Fetch user status from DB (mocked)
+                const prisma = require('../prismaClient').default;
+                const userRecord = await prisma.user.findUnique({
+                    where: { id: decoded.userId },
+                    select: { status: true },
+                });
+
+                if (userRecord && userRecord.status !== 'ACTIVE') {
+                    res.status(403).json({
+                        message: 'Account pending approval or suspended.',
                     });
                     return false;
                 }
