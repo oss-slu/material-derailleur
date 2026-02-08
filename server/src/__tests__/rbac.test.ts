@@ -1,3 +1,5 @@
+jest.mock('../prismaClient', () => require('../__mocks__/mockPrismaClient'));
+
 import request from 'supertest';
 import express, { Express } from 'express';
 import { authenticateUser } from '../routes/routeProtection';
@@ -57,6 +59,9 @@ describe('General Role Based Access Tests', () => {
         };
 
         jest.clearAllMocks();
+        mockPrismaClient.user.findUnique.mockResolvedValue({
+            status: 'ACTIVE',
+        });
     });
 
     it('blocks users who are not signed in', async () => {
@@ -137,5 +142,35 @@ describe('General Role Based Access Tests', () => {
         expect(result).toBe(true);
         expect(res.status).not.toHaveBeenCalledWith();
         expect(res.json).not.toHaveBeenCalled();
+    });
+
+    it('blocks users with pending status', async () => {
+        mockPrismaClient.user.findUnique.mockResolvedValue({
+            status: 'PENDING',
+        });
+        req.headers.authorization = adminToken;
+
+        const result = await authenticateUser(req, res, false);
+
+        expect(res.status).toHaveBeenCalledWith(403);
+        expect(res.json).toHaveBeenCalledWith({
+            message: 'Account pending approval or suspended.',
+        });
+        expect(result).toBe(false);
+    });
+
+    it('blocks users with suspended status', async () => {
+        (mockPrismaClient.user.findUnique as jest.Mock).mockResolvedValue({
+            status: 'SUSPENDED',
+        });
+        req.headers.authorization = donorToken;
+
+        const result = await authenticateUser(req, res, false);
+
+        expect(res.status).toHaveBeenCalledWith(403);
+        expect(res.json).toHaveBeenCalledWith({
+            message: 'Account pending approval or suspended.',
+        });
+        expect(result).toBe(false);
     });
 });

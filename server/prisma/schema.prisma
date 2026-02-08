@@ -20,6 +20,13 @@ enum Role {
   DONOR
 }
 
+// User account status for approval/workflow
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
 // ---------------------
 // Models
 // ---------------------
@@ -98,6 +105,7 @@ model User {
   email            String   @unique
   password         String
   role             Role?
+  status           UserStatus @default(PENDING)
   createdAt        DateTime @default(now())
   firstLogin       Boolean  @default(true)
   resetToken       String?

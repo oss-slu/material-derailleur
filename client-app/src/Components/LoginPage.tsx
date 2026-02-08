@@ -97,7 +97,27 @@ const LoginPage: React.FC = () => {
             const data = await response.json();
             if (response.ok) {
                 //  Note: Using localStorage is less secure than HttpOnly cookies
+
+                // Handle account status
+                if (data.status === 'PENDING') {
+                    setErrorMessage(
+                        'Your account is pending approval. Please wait for an administrator to activate your account.',
+                    );
+                    resetCaptcha();
+                    return;
+                } else if (data.status === 'SUSPENDED') {
+                    setErrorMessage(
+                        'Your account has been suspended. Please contact support for more information.',
+                    );
+                    resetCaptcha();
+                    return;
+                }
+
                 localStorage.setItem('token', data.token);
+
+                // Persist user's display name and role for UI
+                if (data.name) localStorage.setItem('name', data.name);
+                if (data.role) localStorage.setItem('role', data.role);
                 triggerPopup('Welcome ' + data.name + '!');
 
                 if (data.role === 'ADMIN') {

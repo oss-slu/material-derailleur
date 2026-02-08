@@ -263,7 +263,7 @@ router.get('/:id', async (req: Request, res: Response) => {
         const permGranted = await authenticateUser(req, res, true);
         if (!permGranted) return;
 
-        const donatedItemId = parseInt(req.params.id);
+        const donatedItemId = parseInt(String(req.params.id));
         await validateDonatedItem(donatedItemId);
 
         const donatedItem = await prisma.donatedItem.findUnique({
@@ -364,7 +364,7 @@ router.get('/:id/tags', async (req: Request, res: Response) => {
         const permGranted = await authenticateUser(req, res, true);
         if (!permGranted) return;
 
-        const donatedItemId = parseInt(req.params.id);
+        const donatedItemId = parseInt(String(req.params.id));
         if (isNaN(donatedItemId)) {
             return res.status(400).json({ message: 'Invalid donated item ID' });
         }
@@ -387,7 +387,7 @@ router.post('/:id/reanalyze', async (req: Request, res: Response) => {
         const permGranted = await authenticateUser(req, res, true);
         if (!permGranted) return;
 
-        const donatedItemId = parseInt(req.params.id);
+        const donatedItemId = parseInt(String(req.params.id));
         if (isNaN(donatedItemId)) {
             return res.status(400).json({ message: 'Invalid donated item ID' });
         }
