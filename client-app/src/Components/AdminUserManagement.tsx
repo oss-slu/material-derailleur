@@ -135,10 +135,15 @@ const AdminUserManagement: React.FC = () => {
                                     >
                                         <option value="DONOR">DONOR</option>
                                         <option value="ADMIN">ADMIN</option>
-                                        <option value="TIER_ONE">TIER_ONE</option>
-                                        <option value="TIER_TWO">TIER_TWO</option>
-                                        <option value="TIER_THREE">TIER_THREE</option>
-
+                                        <option value="TIER_ONE">
+                                            TIER_ONE
+                                        </option>
+                                        <option value="TIER_TWO">
+                                            TIER_TWO
+                                        </option>
+                                        <option value="TIER_THREE">
+                                            TIER_THREE
+                                        </option>
                                     </select>
                                 </td>
                                 <td>
