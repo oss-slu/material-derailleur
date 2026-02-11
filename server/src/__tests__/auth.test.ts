@@ -65,7 +65,9 @@ describe('Auth Routes', () => {
             });
 
             expect(res.status).toBe(201);
-            expect(res.body.message).toBe('User registered successfully');
+            expect(res.body.message).toBe(
+                'User registered. Please wait for approval from an admin.',
+            );
             expect(res.body.userId).toBe('123');
             expect(mockedBcrypt.hash).toHaveBeenCalled();
         });
