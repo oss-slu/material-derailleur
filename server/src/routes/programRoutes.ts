@@ -72,7 +72,8 @@ router.post(
                 },
             });
 
-            if (admins && admins.length > 0) { // If admins exist
+            if (admins && admins.length > 0) {
+                // If admins exist
                 // Inform all admins of new account
                 for (const admin of admins) {
                     await sendApprovalRequestEmail(
