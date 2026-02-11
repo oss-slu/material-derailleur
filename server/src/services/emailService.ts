@@ -51,6 +51,65 @@ export const sendWelcomeEmail = async (
     }
 };
 
+// Function to send an email to admins to notify them a new account needs approval
+export const sendApprovalRequestEmail = async (
+    recipientEmail: string,
+    userName: string,
+    newAccountName: string,
+    newAccountEmail: string,
+) => {
+    const managementPageURL = `${process.env.FRONTEND_URL}admin/user-management`;
+    const mailOptions = {
+        from: `Donation Team <${process.env.SMTP_USER}>`,
+        to: recipientEmail,
+        subject: 'A New Account Needs Approval',
+        html: `
+            <h2>Dear ${userName},</h2>
+            <p>A new account has signed up and is currently pending approval. </p>
+            <p>Please visit the user management page at ${managementPageURL} and review the account details for: </p>
+            <p>Username: ${newAccountName}</p>
+            <p>Email: (${newAccountEmail})</p>
+            <p>Best regards,</p>
+            <p><strong>Donation Team</strong></p>
+        `,
+    };
+
+    try {
+        const result = await transporter.sendMail(mailOptions);
+        transporter.close();
+    } catch (error) {
+        console.log('❌ Error sending email:', error);
+    }
+};
+
+// Function to inform a user of an update to their account
+export const sendAccountUpdateEmail = async (
+    recipientEmail: string,
+    userName: string,
+    userRole: string,
+    userStatus: string,
+) => {
+    const mailOptions = {
+        from: `Donation Team <${process.env.SMTP_USER}>`,
+        to: recipientEmail,
+        subject: 'Material Donor Mutual Assist Account Update',
+        html: `
+            <h2>Dear ${userName},</h2>
+            <p>Your account status has changed.</p>
+            <p>Your user role is now ${userRole}, with the status of ${userStatus}.</p>
+            <p>Best regards,</p>
+            <p><strong>Donation Team</strong></p>
+        `,
+    };
+
+    try {
+        const result = await transporter.sendMail(mailOptions);
+        transporter.close();
+    } catch (error) {
+        console.log('❌ Error sending email:', error);
+    }
+};
+
 // Function to send a password reset
 
 export const sendPasswordReset = async (
