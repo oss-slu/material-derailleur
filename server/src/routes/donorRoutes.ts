@@ -1,7 +1,12 @@
 import { Router, Request, Response } from 'express';
 import prisma from '../prismaClient'; // Import Prisma client
 import { donorValidator } from '../validators/donorValidator';
-import { sendWelcomeEmail, sendPasswordReset } from '../services/emailService';
+import {
+    sendWelcomeEmail,
+    sendPasswordReset,
+    sendAccountUpdateEmail,
+    sendApprovalRequestEmail,
+} from '../services/emailService';
 import express from 'express';
 import { authenticateUser } from './routeProtection';
 import bcrypt from 'bcryptjs';
@@ -133,8 +138,36 @@ router.post('/register', async (req: Request, res: Response) => {
         await sendPasswordReset(user.email, rawToken);
         console.log(`Password reset email sent to ${user.email}`);
 
+        // Find all active admins
+        const admins = await prisma.user.findMany({
+            where: { role: 'ADMIN', status: 'ACTIVE' },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+            },
+        });
+
+        if (admins && admins.length > 0) {
+            // If admins exist
+            // Inform all admins of new account
+            for (const admin of admins) {
+                await sendApprovalRequestEmail(
+                    admin.email,
+                    admin.name,
+                    user.name,
+                    user.email,
+                );
+                console.log(`Approval request email sent to ${admin.email}`);
+            }
+        } else {
+            console.warn(
+                'There are no active admins. It will not be possible to approve anyone until an active admin is created.',
+            );
+        }
+
         return res.status(201).json({
-            message: 'User registered successfully',
+            message: 'User registered. Please wait for approval from an admin.',
             userId: user.id,
             password: donorPassword,
         });
@@ -201,27 +234,53 @@ router.put('/users/:userId', async (req: Request, res: Response) => {
         const { userId } = req.params;
         const { role, status } = req.body as { role?: string; status?: string };
 
+        // Get current user information
+        const currentUser = await prisma.user.findUnique({
+            where: { id: String(userId) },
+        });
+
+        if (!currentUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
         // Make sure to update only valid roles/statuses
         const allowedRoles = ['ADMIN', 'DONOR'];
         const allowedStatuses = ['PENDING', 'ACTIVE', 'SUSPENDED'];
 
         const dataToUpdate: any = {};
-        if (role && allowedRoles.includes(role)) dataToUpdate.role = role;
-        if (status && allowedStatuses.includes(status))
+        // Check if any updates happened
+        if (role && allowedRoles.includes(role) && role !== currentUser.role)
+            dataToUpdate.role = role;
+        if (
+            status &&
+            allowedStatuses.includes(status) &&
+            status !== currentUser.status
+        )
             dataToUpdate.status = status;
 
+        // If no updates happened, don't send a request
         if (Object.keys(dataToUpdate).length === 0) {
             return res
-                .status(400)
+                .status(200)
                 .json({ message: 'No valid fields to update' });
         }
 
+        // Updates happened, send a request
         const updatedUser = await prisma.user.update({
             where: { id: String(userId) },
             data: dataToUpdate,
         });
 
         res.status(200).json({ message: 'User updated', user: updatedUser });
+
+        // Inform the person updated that they were updated, along with their new role and status
+        await sendAccountUpdateEmail(
+            updatedUser.email,
+            updatedUser.name,
+            updatedUser.role || 'User',
+            updatedUser.status,
+        );
+        console.log(`Account status update email sent to ${updatedUser.email}`);
     } catch (error) {
         console.error('Error updating user:', error);
         res.status(500).json({ message: 'Error updating user' });

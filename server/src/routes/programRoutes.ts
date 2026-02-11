@@ -5,7 +5,10 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { authenticateUser } from './routeProtection';
 import crypto from 'crypto';
-import { sendPasswordReset } from '../services/emailService';
+import {
+    sendPasswordReset,
+    sendApprovalRequestEmail,
+} from '../services/emailService';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET; // Use secret from .env
@@ -60,8 +63,38 @@ router.post(
                 },
             });
 
+            // Find all active admins
+            const admins = await prisma.user.findMany({
+                where: { role: 'ADMIN', status: 'ACTIVE' },
+                select: {
+                    name: true,
+                    email: true,
+                },
+            });
+
+            if (admins && admins.length > 0) {
+                // If admins exist
+                // Inform all admins of new account
+                for (const admin of admins) {
+                    await sendApprovalRequestEmail(
+                        admin.email,
+                        admin.name,
+                        user.name,
+                        user.email,
+                    );
+                    console.log(
+                        `Approval request email sent to ${admin.email}`,
+                    );
+                }
+            } else {
+                console.warn(
+                    'There are no active admins. It will not be possible to approve anyone until an active admin is created.',
+                );
+            }
+
             return res.status(201).json({
-                message: 'User registered successfully',
+                message:
+                    'User registered. Please wait for approval from an admin.',
                 userId: user.id,
             });
         } catch (error) {
