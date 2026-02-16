@@ -140,7 +140,7 @@ const Navbar: React.FC = () => {
                                     </>
                                 )}
 
-                                {userRole === 'ADMIN' && (
+                                {(userRole === 'ADMIN'|| userRole === 'TIER_ONE') && (
                                     <>
                                         <li
                                             className="nav-item dropdown"
