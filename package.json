@@ -5,7 +5,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^30.0.0",
     "concurrently": "^9.2.1",
-    "prettier": "^3.4.2",
+    "prettier": "^3.8.1",
     "serve": "^14.2.4"
   },
   "scripts": {
