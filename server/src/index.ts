@@ -22,8 +22,23 @@ dotenv.config(); // Load environment variables
 const prisma = new PrismaClient(); // Initialize Prisma Client
 const app = express();
 
-// CORS – allow frontend dev server
-app.use(cors({ origin: 'http://localhost:3000' }));
+// CORS – allow frontend dev server for remote access
+const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean);
+
+app.use(
+    cors({
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+                return;
+            }
+            callback(new Error(`CORS blocked for origin: ${origin}`));
+        },
+    }),
+);
 
 // View engine (if you actually use Jade views)
 app.set('views', path.join(__dirname, 'views'));

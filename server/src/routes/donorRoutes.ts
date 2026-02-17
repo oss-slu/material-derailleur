@@ -72,8 +72,8 @@ router.get('/emails', async (req: Request, res: Response) => {
         const donors = await prisma.donor.findMany({
             select: { email: true },
         });
-
-      const donorEmails = donors.map(({ email}) => email);
+const donorEmails = donors.map(({ email }: { email: string }) => email);
+     // const donorEmails = donors.map(({ email}) => email);
   
         res.json(donorEmails);
     } catch (error) {
