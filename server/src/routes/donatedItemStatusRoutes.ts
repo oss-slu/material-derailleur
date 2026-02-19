@@ -8,6 +8,7 @@ import {
     uploadToStorage,
     getFileExtension,
 } from '../services/donatedItemService';
+import { sendDonationUpdateEmail } from '../services/emailService';
 
 const router = Router();
 
@@ -24,7 +25,7 @@ router.post(
             if (permGranted) {
                 const donatedItemId = Number(req.params.id);
 
-                const { statusType, dateModified } = req.body;
+                const { statusType, dateModified, informDonor } = req.body;
                 const imageFiles = req.files as Express.Multer.File[];
 
                 if (!statusType) {
@@ -50,6 +51,10 @@ router.post(
                         currentStatus: statusType,
                         lastUpdated: new Date(),
                     },
+                    // Return donor information and item type for email content
+                    include: {
+                        donor: true,
+                    },
                 });
 
                 // Create a new entry in DonatedItemStatus to track the status change
@@ -68,6 +73,19 @@ router.post(
                     'Donated item status updated succesfully:',
                     updatedStatus,
                 );
+
+                // Send email notification to the donor about the status update if checkbox is checked
+                if (informDonor === 'true' && updatedStatus.donor?.email) {
+                    await sendDonationUpdateEmail(
+                        updatedStatus.donor.email,
+                        `${updatedStatus.donor.firstName} ${updatedStatus.donor.lastName}`,
+                        donatedItemId.toString(),
+                        newStatus.statusType,
+                        newStatus.dateModified,
+                        newStatus.imageUrls,
+                    );
+                }
+
                 res.status(200).json({
                     message: 'Donated item status updated successfully',
                     updatedStatus,
