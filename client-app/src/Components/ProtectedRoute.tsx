@@ -6,11 +6,11 @@ import { Navigate } from 'react-router-dom';
  * Props type for the ProtectedRoute component.
  * @interface Props
  * @property {JSX.Element} children - The component or content that should be rendered if the user has the correct role.
- * @property {'ADMIN' | 'DONOR'} allowedRole - The role that is allowed to access the protected route.
+ * @property {'ADMIN' | 'DONOR' | 'TIER_ONE | 'TIER_TWO' | 'TIER_THREE'} allowedRole - The role that is allowed to access the protected route.
  */
 interface Props {
     children: JSX.Element;
-    allowedRole: 'ADMIN' | 'DONOR';
+    allowedRole:  'ADMIN' | 'DONOR' | 'TIER_ONE' | 'TIER_TWO' | 'TIER_THREE';
 }
 
 /**
