@@ -317,15 +317,37 @@ const Navbar: React.FC = () => {
                                                         Add New Donor
                                                     </Link>
                                                 </li>
-                                                <li>
-                                                    <Link
-                                                        className="dropdown-item"
-                                                        to="/admin/user-management"
-                                                    >
-                                                        User Management
-                                                    </Link>
-                                                </li>
                                             </ul>
+                                        </li>
+                                        <li
+                                            className="nav-item"
+                                            style={{
+                                                fontSize: '20px',
+                                                paddingLeft: '10px',
+                                            }}
+                                        >
+                                            <Link
+                                                className="nav-link"
+                                                to="/admin/user-management"
+                                                style={{
+                                                    fontWeight:
+                                                        location.pathname ===
+                                                            '/about' ||
+                                                        location.pathname ===
+                                                            '/'
+                                                            ? 'normal'
+                                                            : 'bold',
+                                                    color:
+                                                        location.pathname ===
+                                                            '/about' ||
+                                                        location.pathname ===
+                                                            '/'
+                                                            ? 'black'
+                                                            : 'inherit',
+                                                }}
+                                            >
+                                                Users
+                                            </Link>
                                         </li>
                                     </>
                                 )}
