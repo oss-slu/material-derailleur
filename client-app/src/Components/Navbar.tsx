@@ -320,34 +320,34 @@ const Navbar: React.FC = () => {
                                             </ul>
                                         </li>
                                         <li
-                                            className="nav-item dropdown"
+                                            className="nav-item"
                                             style={{
                                                 fontSize: '20px',
                                                 paddingLeft: '10px',
                                             }}
                                         >
-                                            <span
-                                                className="nav-link dropdown-toggle"
-                                                id="navbarDropdown"
-                                                role="button"
-                                                data-bs-toggle="dropdown"
-                                                aria-expanded="false"
+                                            <Link
+                                                className="nav-link"
+                                                to="/admin/user-management"
+                                                style={{
+                                                    fontWeight:
+                                                        location.pathname ===
+                                                            '/about' ||
+                                                        location.pathname ===
+                                                            '/'
+                                                            ? 'normal'
+                                                            : 'bold',
+                                                    color:
+                                                        location.pathname ===
+                                                            '/about' ||
+                                                        location.pathname ===
+                                                            '/'
+                                                            ? 'black'
+                                                            : 'inherit',
+                                                }}
                                             >
                                                 Users
-                                            </span>
-                                            <ul
-                                                className="dropdown-menu"
-                                                aria-labelledby="navbarDropdown"
-                                            >
-                                                <li>
-                                                    <Link
-                                                        className="dropdown-item"
-                                                        to="/admin/user-management"
-                                                    >
-                                                        User Management
-                                                    </Link>
-                                                </li>
-                                            </ul>
+                                            </Link>
                                         </li>
                                     </>
                                 )}
