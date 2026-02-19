@@ -317,6 +317,28 @@ const Navbar: React.FC = () => {
                                                         Add New Donor
                                                     </Link>
                                                 </li>
+                                            </ul>
+                                        </li>
+                                        <li
+                                            className="nav-item dropdown"
+                                            style={{
+                                                fontSize: '20px',
+                                                paddingLeft: '10px',
+                                            }}
+                                        >
+                                            <span
+                                                className="nav-link dropdown-toggle"
+                                                id="navbarDropdown"
+                                                role="button"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false"
+                                            >
+                                                Users
+                                            </span>
+                                            <ul
+                                                className="dropdown-menu"
+                                                aria-labelledby="navbarDropdown"
+                                            >
                                                 <li>
                                                     <Link
                                                         className="dropdown-item"
