@@ -196,3 +196,58 @@ export const sendDonationEmail = async (
         console.log('❌ Error sending donation email:', error);
     }
 };
+
+export const sendDonationUpdateEmail = async (
+    recipientEmail: string,
+    donorName: string,
+    itemId: string,
+    statusType: string,
+    dateUpdated: Date,
+    imageUrls: string[],
+) => {
+    const SASUrls = await fetchSASUrls(imageUrls);
+
+    // Extract image URLs (flatten in case of multiple statuses)
+    // const base64Images = await Promise.all(
+
+    //         item.imageUrls.map(async (url) => await convertImageToBase64(url))
+    //     )
+    // );
+    const formattedDate = dateUpdated.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'UTC',
+    });
+    const imageSection =
+        SASUrls.length > 0
+            ? `<p>Here is the update image of your donation:</p>
+           <div>${SASUrls.map(
+               (url: string) => `<img src="${url}"  
+            alt="Donation Image" width="200" style="margin:5px; border-radius:8px; max-width:100%;">`,
+           ).join('')}</div>`
+            : `<p>No images were provided for this donation update.</p>`;
+
+    const mailOptions = {
+        from: `Donation Team <${process.env.SMTP_USER}>`,
+        to: recipientEmail,
+        subject: 'Donation Update',
+        html: `
+            <h2>Dear ${donorName},</h2>
+            <p>Your donation has had an update!</p>
+            <p>On <strong>${formattedDate}</strong>, your item, <strong>#${itemId}</strong>, was marked as <strong>${statusType.toLowerCase()}</strong>.</p> 
+            ${imageSection}
+            
+            <p>We truly appreciate your support.</p>
+            <p>Best regards,</p>
+            <p><strong>Donation Team, BWorks</strong></p>
+        `,
+    };
+
+    try {
+        const result = await transporter.sendMail(mailOptions);
+        console.log('✅ Donation status update email sent:', result);
+    } catch (error) {
+        console.log('❌ Error sending donation status update email:', error);
+    }
+};

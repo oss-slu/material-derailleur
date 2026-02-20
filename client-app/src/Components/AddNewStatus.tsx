@@ -15,6 +15,7 @@ interface FormData {
     statusType: string;
     dateModified: string;
     donatedItemId: string;
+    informDonor: boolean | string; // Accept both boolean and string for checkbox value
 }
 
 interface FormErrors {
@@ -126,6 +127,7 @@ const AddNewStatus: React.FC = () => {
         statusType: ItemStatus.DONATED,
         dateModified: '',
         donatedItemId: id || '',
+        informDonor: false,
     });
     const [errors, setErrors] = useState<FormErrors>({});
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -154,7 +156,13 @@ const AddNewStatus: React.FC = () => {
     const handleChange = (
         e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     ) => {
-        const { name, value } = e.target;
+        const { name, value, type } = e.target;
+
+        // Handle checkbox inputs
+        const isCheckbox = type === 'checkbox';
+        const fieldValue = isCheckbox
+            ? (e.target as HTMLInputElement).checked
+            : value;
 
         // Clear specific field error when user starts typing
         setErrors(prev => {
@@ -163,7 +171,7 @@ const AddNewStatus: React.FC = () => {
             return newErrors;
         });
 
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => ({ ...prev, [name]: fieldValue }));
         setErrorMessage(null);
         setSuccessMessage(null);
     };
@@ -267,6 +275,10 @@ const AddNewStatus: React.FC = () => {
             const formDataToSubmit = new FormData();
             formDataToSubmit.append('statusType', formData.statusType);
             formDataToSubmit.append('dateModified', formData.dateModified);
+            formDataToSubmit.append(
+                'informDonor',
+                formData.informDonor.toString(),
+            );
             formDataToSubmit.append('donatedItemId', formData.donatedItemId);
             images.forEach(image =>
                 formDataToSubmit.append('imageFiles', image),
@@ -314,6 +326,7 @@ const AddNewStatus: React.FC = () => {
             statusType: ItemStatus.DONATED,
             dateModified: '',
             donatedItemId: id || '',
+            informDonor: false,
         });
         setImages([]);
         setPreviewUrls([]);
@@ -423,6 +436,22 @@ const AddNewStatus: React.FC = () => {
                             {errors.dateModified}
                         </p>
                     )}
+                </div>
+
+                {/* Inform Donor Checkbox */}
+                <div className="form-field full-width">
+                    <label className="inline-flex items-center">
+                        <input
+                            type="checkbox"
+                            name="informDonor"
+                            checked={!!formData.informDonor}
+                            onChange={handleChange}
+                            className="form-checkbox h-5 w-5 text-blue-600"
+                        />
+                        <span className="ml-2 text-sm">
+                            Inform donor about this status update
+                        </span>
+                    </label>
                 </div>
 
                 {/* Image Upload Field */}

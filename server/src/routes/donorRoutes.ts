@@ -15,10 +15,10 @@ import crypto from 'crypto'; // Make sure this is imported
 import jwt from 'jsonwebtoken';
 
 const router = Router();
-// Interface for email and name to string to avoid implicit type error 
+// Interface for email and name to string to avoid implicit type error
 interface Donor {
-  email: string;
-  name?: string; 
+    email: string;
+    name?: string;
 }
 
 router.post('/', donorValidator, async (req: Request, res: Response) => {
@@ -72,9 +72,9 @@ router.get('/emails', async (req: Request, res: Response) => {
         const donors = await prisma.donor.findMany({
             select: { email: true },
         });
+        const donorEmails = donors.map(({ email }: { email: string }) => email);
+        // const donorEmails = donors.map(({ email}) => email);
 
-      const donorEmails = donors.map(({ email}) => email);
-  
         res.json(donorEmails);
     } catch (error) {
         console.error('Error fetching donor emails:', error);

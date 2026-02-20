@@ -66,4 +66,5 @@ export const donatedItemStatusSchema = Joi.object({
     dateModified: Joi.alternatives()
         .try(Joi.date().iso(), Joi.string().isoDate())
         .optional(),
+    informDonor: Joi.boolean().truthy('true').falsy('false').default(false),
 });
