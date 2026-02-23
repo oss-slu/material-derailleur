@@ -250,7 +250,13 @@ router.put('/users/:userId', async (req: Request, res: Response) => {
         }
 
         // Make sure to update only valid roles/statuses
-        const allowedRoles = ['ADMIN', 'DONOR'];
+        const allowedRoles = [
+            'ADMIN',
+            'DONOR',
+            'TIER_ONE',
+            'TIER_TWO',
+            'TIER_THREE',
+        ];
         const allowedStatuses = ['PENDING', 'ACTIVE', 'SUSPENDED'];
 
         const dataToUpdate: any = {};

@@ -11,7 +11,7 @@ if (!JWT_SECRET) {
 interface DecodedToken {
     userId: string;
     email: string;
-    role: 'DONOR' | 'ADMIN';
+    role: 'DONOR' | 'ADMIN' | 'TIER_ONE' | 'TIER_TWO' | 'TIER_THREE';
     status?: string;
 }
 
