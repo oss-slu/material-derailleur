@@ -36,10 +36,10 @@ export const authenticateUser = async (
         const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
 
         // If adminPerm is true, only allow ADMIN
-        // if (adminPerm && decoded.role !== 'ADMIN') {
-        //     res.status(403).json({ message: 'Access denied: Admins only.' });
-        //     return false;
-        // }
+         if (adminPerm && decoded.role !== 'ADMIN') {
+             res.status(403).json({ message: 'Access denied: Admins only.' });
+             return false;
+         }
 
         // Fetch user from DB to check account status (approval)
         const userRecord = await prisma.user.findUnique({
