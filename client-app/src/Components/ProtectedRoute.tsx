@@ -10,7 +10,7 @@ import { Navigate } from 'react-router-dom';
  */
 interface Props {
     children: JSX.Element;
-    allowedRole:  'ADMIN' | 'DONOR' | 'TIER_ONE' | 'TIER_TWO' | 'TIER_THREE';
+    allowedRole: 'ADMIN' | 'DONOR' | 'TIER_ONE' | 'TIER_TWO' | 'TIER_THREE';
 }
 
 /**

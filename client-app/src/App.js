@@ -126,7 +126,7 @@ function App() {
                         <Route
                             path="/admin/image-review/:id"
                             element={
-                                <ProtectedRoute allowedRoles={"ADMIN" || "TIER_ONE"}>
+                                <ProtectedRoute allowedRole="ADMIN">
                                     <AdminImageReview />
                                 </ProtectedRoute>
                             }

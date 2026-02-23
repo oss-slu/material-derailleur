@@ -140,7 +140,8 @@ const Navbar: React.FC = () => {
                                     </>
                                 )}
 
-                                {(userRole === 'ADMIN'|| userRole === 'TIER_ONE') && (
+                                {(userRole === 'ADMIN' ||
+                                    userRole === 'TIER_ONE') && (
                                     <>
                                         <li
                                             className="nav-item dropdown"
@@ -348,6 +349,203 @@ const Navbar: React.FC = () => {
                                             >
                                                 Users
                                             </Link>
+                                        </li>
+                                    </>
+                                )}
+
+                                {userRole === 'TIER_TWO' && (
+                                    <>
+                                        <li
+                                            className="nav-item dropdown"
+                                            style={{
+                                                fontSize: '20px',
+                                                paddingLeft: '10px',
+                                            }}
+                                        >
+                                            <span
+                                                className="nav-link dropdown-toggle"
+                                                id="navbarDropdown"
+                                                style={{
+                                                    fontWeight:
+                                                        location.pathname ===
+                                                            '/donations' ||
+                                                        location.pathname ===
+                                                            '/adddonation'
+                                                            ? 'bold'
+                                                            : 'normal',
+                                                    color:
+                                                        location.pathname ===
+                                                            '/donations' ||
+                                                        location.pathname ===
+                                                            '/adddonation'
+                                                            ? 'black'
+                                                            : 'inherit',
+                                                    cursor: 'pointer',
+                                                }}
+                                                role="button"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false"
+                                            >
+                                                Donations
+                                            </span>
+                                            <ul
+                                                className="dropdown-menu"
+                                                aria-labelledby="navbarDropdown"
+                                            >
+                                                <li>
+                                                    <Link
+                                                        className="dropdown-item"
+                                                        to="/donations"
+                                                    >
+                                                        All Donations
+                                                    </Link>
+                                                </li>
+                                                <li>
+                                                    <Link
+                                                        className="dropdown-item"
+                                                        to="/adddonation"
+                                                    >
+                                                        Add New Donation
+                                                    </Link>
+                                                </li>
+                                                {/* NEW: Admin Image Review */}
+                                                <li>
+                                                    <Link
+                                                        className="dropdown-item"
+                                                        to="/admin/image-review"
+                                                    >
+                                                        Image Review
+                                                    </Link>
+                                                </li>
+                                            </ul>
+                                        </li>
+
+                                        <li
+                                            className="nav-item dropdown"
+                                            style={{
+                                                fontSize: '20px',
+                                                paddingLeft: '10px',
+                                            }}
+                                        >
+                                            <span
+                                                className="nav-link dropdown-toggle"
+                                                id="navbarDropdown"
+                                                style={{
+                                                    fontWeight:
+                                                        location.pathname.includes(
+                                                            'donorform',
+                                                        ) ||
+                                                        location.pathname.includes(
+                                                            'donorlist',
+                                                        )
+                                                            ? 'bold'
+                                                            : 'normal',
+                                                    color:
+                                                        location.pathname.includes(
+                                                            'donorform',
+                                                        ) ||
+                                                        location.pathname.includes(
+                                                            'donorlist',
+                                                        )
+                                                            ? 'black'
+                                                            : 'inherit',
+                                                    cursor: 'pointer',
+                                                }}
+                                                role="button"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false"
+                                            >
+                                                Donors
+                                            </span>
+                                            <ul
+                                                className="dropdown-menu"
+                                                aria-labelledby="navbarDropdown"
+                                            >
+                                                <li>
+                                                    <Link
+                                                        className="dropdown-item"
+                                                        to="/donorlist"
+                                                    >
+                                                        All Donors
+                                                    </Link>
+                                                </li>
+                                                <li>
+                                                    <Link
+                                                        className="dropdown-item"
+                                                        to="/donorform"
+                                                    >
+                                                        Add New Donor
+                                                    </Link>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </>
+                                )}
+                                {userRole === 'TIER_THREE' && (
+                                    <>
+                                        <li
+                                            className="nav-item dropdown"
+                                            style={{
+                                                fontSize: '20px',
+                                                paddingLeft: '10px',
+                                            }}
+                                        >
+                                            <span
+                                                className="nav-link dropdown-toggle"
+                                                id="navbarDropdown"
+                                                style={{
+                                                    fontWeight:
+                                                        location.pathname ===
+                                                            '/donations' ||
+                                                        location.pathname ===
+                                                            '/adddonation'
+                                                            ? 'bold'
+                                                            : 'normal',
+                                                    color:
+                                                        location.pathname ===
+                                                            '/donations' ||
+                                                        location.pathname ===
+                                                            '/adddonation'
+                                                            ? 'black'
+                                                            : 'inherit',
+                                                    cursor: 'pointer',
+                                                }}
+                                                role="button"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false"
+                                            >
+                                                Donations
+                                            </span>
+                                            <ul
+                                                className="dropdown-menu"
+                                                aria-labelledby="navbarDropdown"
+                                            >
+                                                <li>
+                                                    <Link
+                                                        className="dropdown-item"
+                                                        to="/donations"
+                                                    >
+                                                        All Donations
+                                                    </Link>
+                                                </li>
+                                                <li>
+                                                    <Link
+                                                        className="dropdown-item"
+                                                        to="/adddonation"
+                                                    >
+                                                        Add New Donation
+                                                    </Link>
+                                                </li>
+                                                {/* NEW: Admin Image Review */}
+                                                <li>
+                                                    <Link
+                                                        className="dropdown-item"
+                                                        to="/admin/image-review"
+                                                    >
+                                                        Image Review
+                                                    </Link>
+                                                </li>
+                                            </ul>
                                         </li>
                                     </>
                                 )}

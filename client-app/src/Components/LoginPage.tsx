@@ -120,7 +120,12 @@ const LoginPage: React.FC = () => {
                 if (data.role) localStorage.setItem('role', data.role);
                 triggerPopup('Welcome ' + data.name + '!');
 
-                if (data.role === 'ADMIN'|| data.role === 'TIER_ONE' || data.role === 'TIER_TWO' || data.role === 'TIER_THREE') {
+                if (
+                    data.role === 'ADMIN' ||
+                    data.role === 'TIER_ONE' ||
+                    data.role === 'TIER_TWO' ||
+                    data.role === 'TIER_THREE'
+                ) {
                     window.location.href = '/';
                 } else if (data.role === 'DONOR') {
                     window.location.href = '/donor-profile';
