@@ -221,9 +221,9 @@ const LoginPage: React.FC = () => {
                             required
                             // For mobile devices, prevent autofill and capitalization (captchas are random)
                             autoCapitalize="off"
-                            autoComplete = "off"
-                            autoCorrect = "off"
-                            spellCheck = "false"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck="false"
                         />
                     </div>
 
