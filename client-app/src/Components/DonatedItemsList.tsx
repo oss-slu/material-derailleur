@@ -9,6 +9,7 @@ import { Program } from '../Modals/ProgramModal';
 import { DonatedItem } from '../Modals/DonatedItemModal';
 import { DonatedItemStatus as Status } from '../Modals/DonatedItemStatusModal';
 import axios from 'axios';
+import { useZxing } from 'react-zxing';
 
 interface SelectedItemDetails extends DonatedItem {
     statuses: Status[];
@@ -16,6 +17,7 @@ interface SelectedItemDetails extends DonatedItem {
 
 const DonatedItemsList: React.FC = () => {
     const [searchInput, setSearchInput] = useState<string>('');
+    const [scanning, setScanning] = useState(false);
     const [filteredItems, setFilteredItems] = useState<DonatedItem[]>([]);
     const [selectedItemDetails, setSelectedItemDetails] =
         useState<SelectedItemDetails | null>(null);
@@ -28,6 +30,20 @@ const DonatedItemsList: React.FC = () => {
     const [itemTypes, setItemTypes] = useState<Set<string>>(new Set());
 
     const navigate = useNavigate();
+
+    const { ref } = useZxing({
+        constraints: { video: { facingMode: 'environment' } },
+        onResult(result) {
+            setSearchInput(result.getText());
+            setScanning(false);
+            setError(null);
+            handleSearch(result.getText());
+        },
+        onError(err) {
+            setError(err.message);
+        },
+        paused: !scanning,
+    });
 
     const fetchDonatedItems = async (): Promise<void> => {
         try {
@@ -76,8 +92,8 @@ const DonatedItemsList: React.FC = () => {
         setItemTypes(types);
     }, [donatedItems]);
 
-    const handleSearch = (): void => {
-        const searchTerm = searchInput.toLowerCase();
+    const handleSearch = (term?: string): void => {
+        const searchTerm = (term ?? searchInput).toLowerCase();
         const filtered = donatedItems.filter(
             item =>
                 item.id.toString().includes(searchTerm) ||
@@ -274,13 +290,35 @@ ${svgString}
         return <div>Loading...</div>;
     }
 
-    if (error) {
+    if (error && !scanning) {
         return <div>Error: {error}</div>;
     }
 
     return (
         <div className="donated-page">
-            {/* New page header: title left, tools right */}
+            {/* Barcode Scanning overlay */}
+            <div
+                className="scanner-overlay"
+                style={{
+                    visibility: scanning ? 'visible' : 'hidden',
+                    pointerEvents: scanning ? 'auto' : 'none',
+                }}
+            >
+                <video ref={ref} autoPlay playsInline />
+                <button
+                    onClick={() => {
+                        setError(null);
+                        setScanning(false);
+                        const stream = ref.current
+                            ?.srcObject as MediaStream | null;
+                        stream?.getTracks().forEach(t => t.stop());
+                    }}
+                >
+                    Cancel
+                </button>
+            </div>
+
+            {}
             <header className="page-header">
                 <h1 className="page-title">Donated Items</h1>
             </header>
@@ -301,10 +339,17 @@ ${svgString}
                             onChange={e => setSearchInput(e.target.value)}
                         />
                         <button
+                            className="btn btn-primary scan-button"
+                            onClick={() => setScanning(true)}
+                            type="button"
+                        >
+                            Scan ▣
+                        </button>
+                        <button
                             className="btn btn-primary search-button"
                             type="submit"
                         >
-                            🔍
+                            Search 🔍
                         </button>
                     </form>
                 </div>
@@ -324,9 +369,7 @@ ${svgString}
                     onChange={handleSort}
                     defaultValue=""
                 >
-                    <option value="" disabled>
-                        Sort
-                    </option>
+                    <option value="">Sort</option>
                     <option value="dateAsc">Date Ascending</option>
                     <option value="dateDesc">Date Descending</option>
                 </select>
@@ -336,9 +379,7 @@ ${svgString}
                     onChange={handleFilterByItemName}
                     defaultValue=""
                 >
-                    <option value="" disabled>
-                        Filter by Item Type
-                    </option>
+                    <option value="">Filter by Item Type</option>
                     {Array.from(itemTypes).map(type => (
                         <option key={type} value={type}>
                             {type}
@@ -351,9 +392,7 @@ ${svgString}
                     onChange={handleFilterByProgram}
                     defaultValue=""
                 >
-                    <option value="" disabled>
-                        Filter by Program
-                    </option>
+                    <option value="">Filter by Program</option>
                     {programOptions.map(p => (
                         <option key={p.id} value={p.id}>
                             {p.name}
@@ -366,9 +405,7 @@ ${svgString}
                     onChange={handleFilterByStatus}
                     defaultValue=""
                 >
-                    <option value="" disabled>
-                        Filter by Status
-                    </option>
+                    <option value="">Filter by Status</option>
                     <option value="RECEIVED">Received</option>
                 </select>
             </div>

@@ -219,6 +219,11 @@ const LoginPage: React.FC = () => {
                             id="captcha"
                             name="captcha"
                             required
+                            // For mobile devices, prevent autofill and capitalization (captchas are random)
+                            autoCapitalize="off"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck="false"
                         />
                     </div>
 
