@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import '../css/DonorProfile.css';
 
 interface Profile {
     id: number;
@@ -78,8 +79,25 @@ const DonorProfile = () => {
                 },
             );
             if (!res.ok) throw new Error('Update failed');
-            const updatedProfile = await res.json();
-            setProfile(updatedProfile); // Update main state
+            const data = await res.json();
+            const updatedProfile = data.profile ?? data;
+            setProfile(prev =>
+                prev
+                    ? {
+                          ...updatedProfile,
+                          id: prev.id,
+                      }
+                    : updatedProfile,
+            );
+            setEditForm(prev =>
+                prev
+                    ? {
+                          ...updatedProfile,
+                          id: prev.id,
+                          old: updatedProfile.email,
+                      }
+                    : updatedProfile,
+            );
             setIsEditing(false);
             alert('Profile updated successfully!');
         } catch (err) {
@@ -110,19 +128,40 @@ const DonorProfile = () => {
             >
                 {!isEditing && editForm && (
                     <>
-                        <h2>{profile.firstName} Details</h2>
-                        <p>Donor ID: {profile.id}</p>
-                        <p>First Name: {profile.firstName}</p>
-                        <p>Last Name: {profile.lastName}</p>
-                        <p>Email: {profile.email}</p>
-                        <p>Contact Number: {profile.contact}</p>
-                        <p>Address Line 1: {profile.addressLine1}</p>
-                        <p>Address Line 2: {profile.addressLine2 || '-'}</p>
-                        <p>City: {profile.city}</p>
-                        <p>State: {profile.state}</p>
-                        <p>Zipcode: {profile.zipcode}</p>
+                        <h2>Profile Details</h2>
                         <p>
-                            Opted in for Emails:{' '}
+                            <b>Donor ID</b>: {profile.id}
+                        </p>
+                        <p>
+                            <b>First Name</b>: {profile.firstName}
+                        </p>
+                        <p>
+                            <b>Last Name</b>: {profile.lastName}
+                        </p>
+                        <p>
+                            <b>Email</b>: {profile.email}
+                        </p>
+                        <p>
+                            <b>Contact Number</b>: {profile.contact}
+                        </p>
+                        <p>
+                            <b>Address Line 1</b>: {profile.addressLine1}
+                        </p>
+                        <p>
+                            <b>Address Line 2</b>:{' '}
+                            {profile.addressLine2 || 'N/A'}
+                        </p>
+                        <p>
+                            <b>City</b>: {profile.city}
+                        </p>
+                        <p>
+                            <b>State</b>: {profile.state}
+                        </p>
+                        <p>
+                            <b>Zipcode</b>: {profile.zipcode}
+                        </p>
+                        <p>
+                            <b>Opted in for Emails: </b>
                             {profile.emailOptIn ? 'Yes' : 'No'}
                         </p>
 
@@ -145,129 +184,166 @@ const DonorProfile = () => {
                 {isEditing && editForm && (
                     <>
                         <h2>Edit Profile</h2>
-                        <form onSubmit={handleSave}>
-                            <input
-                                type="text"
-                                value={editForm.firstName}
-                                onChange={e =>
-                                    setEditForm(prev =>
-                                        prev
-                                            ? {
-                                                  ...prev,
-                                                  firstName: e.target.value,
-                                              }
-                                            : prev,
-                                    )
-                                }
-                                placeholder="First Name"
-                            />
-                            <input
-                                type="text"
-                                value={editForm.lastName}
-                                onChange={e =>
-                                    setEditForm(prev =>
-                                        prev
-                                            ? {
-                                                  ...prev,
-                                                  lastName: e.target.value,
-                                              }
-                                            : prev,
-                                    )
-                                }
-                                placeholder="Last Name"
-                            />
-                            <input
-                                type="text"
-                                value={editForm.contact}
-                                onChange={e =>
-                                    setEditForm(prev =>
-                                        prev
-                                            ? {
-                                                  ...prev,
-                                                  contact: e.target.value,
-                                              }
-                                            : prev,
-                                    )
-                                }
-                                placeholder="Contact Number"
-                            />
-                            <input
-                                type="text"
-                                value={editForm.addressLine1}
-                                onChange={e =>
-                                    setEditForm(prev =>
-                                        prev
-                                            ? {
-                                                  ...prev,
-                                                  addressLine1: e.target.value,
-                                              }
-                                            : prev,
-                                    )
-                                }
-                                placeholder="Address Line 1"
-                            />
-                            <input
-                                type="text"
-                                value={editForm.addressLine2}
-                                onChange={e =>
-                                    setEditForm(prev =>
-                                        prev
-                                            ? {
-                                                  ...prev,
-                                                  addressLine2: e.target.value,
-                                              }
-                                            : prev,
-                                    )
-                                }
-                                placeholder="Address Line 2"
-                            />
-                            <input
-                                type="text"
-                                value={editForm.city}
-                                onChange={e =>
-                                    setEditForm(prev =>
-                                        prev
-                                            ? { ...prev, city: e.target.value }
-                                            : prev,
-                                    )
-                                }
-                                placeholder="City"
-                            />
-                            <input
-                                type="text"
-                                value={editForm.state}
-                                onChange={e =>
-                                    setEditForm(prev =>
-                                        prev
-                                            ? { ...prev, state: e.target.value }
-                                            : prev,
-                                    )
-                                }
-                                placeholder="State"
-                            />
-                            <input
-                                type="text"
-                                value={editForm.zipcode}
-                                onChange={e =>
-                                    setEditForm(prev =>
-                                        prev
-                                            ? {
-                                                  ...prev,
-                                                  zipcode: e.target.value,
-                                              }
-                                            : prev,
-                                    )
-                                }
-                                placeholder="Zipcode"
-                            />
-                            <button type="submit">Save</button>
-                            <button
-                                type="button"
-                                onClick={() => setIsEditing(false)}
-                                style={{ marginLeft: '1rem' }}
-                            >
-                                Cancel
-                            </button>
+                        <form
+                            onSubmit={handleSave}
+                            className="form-grid-profile"
+                        >
+                            <div className="form-field">
+                                <label>First Name</label>
+                                <input
+                                    type="text"
+                                    value={editForm.firstName}
+                                    onChange={e =>
+                                        setEditForm(prev =>
+                                            prev
+                                                ? {
+                                                      ...prev,
+                                                      firstName: e.target.value,
+                                                  }
+                                                : prev,
+                                        )
+                                    }
+                                    placeholder="First Name"
+                                />
+                            </div>
+                            <div className="form-field">
+                                <label>Last Name</label>
+                                <input
+                                    type="text"
+                                    value={editForm.lastName}
+                                    onChange={e =>
+                                        setEditForm(prev =>
+                                            prev
+                                                ? {
+                                                      ...prev,
+                                                      lastName: e.target.value,
+                                                  }
+                                                : prev,
+                                        )
+                                    }
+                                    placeholder="Last Name"
+                                />
+                            </div>
+                            <div className="form-field">
+                                <label>Contact Number</label>
+                                <input
+                                    type="text"
+                                    value={editForm.contact}
+                                    onChange={e =>
+                                        setEditForm(prev =>
+                                            prev
+                                                ? {
+                                                      ...prev,
+                                                      contact: e.target.value,
+                                                  }
+                                                : prev,
+                                        )
+                                    }
+                                    placeholder="Contact Number"
+                                />
+                            </div>
+                            <div className="form-field">
+                                <label>Address Line 1</label>
+                                <input
+                                    type="text"
+                                    value={editForm.addressLine1}
+                                    onChange={e =>
+                                        setEditForm(prev =>
+                                            prev
+                                                ? {
+                                                      ...prev,
+                                                      addressLine1:
+                                                          e.target.value,
+                                                  }
+                                                : prev,
+                                        )
+                                    }
+                                    placeholder="Address Line 1"
+                                />
+                            </div>
+                            <div className="form-field">
+                                <label>Address Line 2</label>
+                                <input
+                                    type="text"
+                                    value={editForm.addressLine2}
+                                    onChange={e =>
+                                        setEditForm(prev =>
+                                            prev
+                                                ? {
+                                                      ...prev,
+                                                      addressLine2:
+                                                          e.target.value,
+                                                  }
+                                                : prev,
+                                        )
+                                    }
+                                    placeholder="Address Line 2"
+                                />
+                            </div>
+                            <div className="form-field">
+                                <label>City</label>
+                                <input
+                                    type="text"
+                                    value={editForm.city}
+                                    onChange={e =>
+                                        setEditForm(prev =>
+                                            prev
+                                                ? {
+                                                      ...prev,
+                                                      city: e.target.value,
+                                                  }
+                                                : prev,
+                                        )
+                                    }
+                                    placeholder="City"
+                                />
+                            </div>
+                            <div className="form-field">
+                                <label>State</label>
+                                <input
+                                    type="text"
+                                    value={editForm.state}
+                                    onChange={e =>
+                                        setEditForm(prev =>
+                                            prev
+                                                ? {
+                                                      ...prev,
+                                                      state: e.target.value,
+                                                  }
+                                                : prev,
+                                        )
+                                    }
+                                    placeholder="State"
+                                />
+                            </div>
+                            <div className="form-field">
+                                <label>Zipcode</label>
+                                <input
+                                    type="text"
+                                    value={editForm.zipcode}
+                                    onChange={e =>
+                                        setEditForm(prev =>
+                                            prev
+                                                ? {
+                                                      ...prev,
+                                                      zipcode: e.target.value,
+                                                  }
+                                                : prev,
+                                        )
+                                    }
+                                    placeholder="Zipcode"
+                                />
+                            </div>
+                            <div>
+                                <button type="submit">Save</button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditing(false)}
+                                    style={{ marginLeft: '1rem' }}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
                         </form>
                     </>
                 )}
