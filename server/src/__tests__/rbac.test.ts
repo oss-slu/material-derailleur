@@ -128,7 +128,7 @@ describe('General Role Based Access Tests', () => {
     it('allows for admins to access admin pages', async () => {
         req.headers.authorization = adminToken;
 
-        const result = await authenticateUser(req, res, { requiredRank: 0 });
+        const result = await authenticateUser(req, res, { requiredRank: 4 });
 
         expect(result).toBe(true);
         expect(res.status).not.toHaveBeenCalledWith();

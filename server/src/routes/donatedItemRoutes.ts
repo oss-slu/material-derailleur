@@ -57,7 +57,7 @@ router.post(
     async (req: Request, res: Response) => {
         try {
             const permGranted = await authenticateUser(req, res, {
-                requiredRank: 0,
+                requiredRank: 1,
             });
             if (!permGranted) return;
 
@@ -237,7 +237,7 @@ router.post(
 router.get('/', async (req: Request, res: Response) => {
     try {
         const permGranted = await authenticateUser(req, res, {
-            requiredRank: 0,
+            requiredRank: 1,
         });
         if (!permGranted) return;
 
@@ -265,7 +265,7 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
     try {
         const permGranted = await authenticateUser(req, res, {
-            requiredRank: 4,
+            requiredRank: 1,
         });
         if (!permGranted) return;
 
@@ -368,7 +368,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
 router.get('/:id/tags', async (req: Request, res: Response) => {
     try {
         const permGranted = await authenticateUser(req, res, {
-            requiredRank: 0,
+            requiredRank: 1,
         });
         if (!permGranted) return;
 
@@ -393,7 +393,7 @@ router.get('/:id/tags', async (req: Request, res: Response) => {
 router.post('/:id/reanalyze', async (req: Request, res: Response) => {
     try {
         const permGranted = await authenticateUser(req, res, {
-            requiredRank: 0,
+            requiredRank: 1,
         });
         if (!permGranted) return;
 

@@ -24,7 +24,7 @@ interface Donor {
 router.post('/', donorValidator, async (req: Request, res: Response) => {
     try {
         const permGranted = await authenticateUser(req, res, {
-            requiredRank: 4,
+            requiredRank: 2,
         });
         if (permGranted) {
             const newDonor = await prisma.donor.create({
@@ -54,7 +54,7 @@ router.post('/', donorValidator, async (req: Request, res: Response) => {
 router.get('/', async (req: Request, res: Response) => {
     try {
         const permGranted = await authenticateUser(req, res, {
-            requiredRank: 4,
+            requiredRank: 2,
         });
         if (permGranted) {
             const donors = await prisma.donor.findMany();
@@ -69,7 +69,7 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/emails', async (req: Request, res: Response) => {
     try {
         const permGranted = await authenticateUser(req, res, {
-            requiredRank: 4,
+            requiredRank: 2,
         });
         if (!permGranted) {
             return;
@@ -192,7 +192,7 @@ router.post('/register', async (req: Request, res: Response) => {
 router.get('/pending', async (req: Request, res: Response) => {
     try {
         const permGranted = await authenticateUser(req, res, {
-            requiredRank: 0,
+            requiredRank: 4,
         });
         if (!permGranted) return;
 
@@ -218,7 +218,7 @@ router.get('/pending', async (req: Request, res: Response) => {
 router.get('/users', async (req: Request, res: Response) => {
     try {
         const permGranted = await authenticateUser(req, res, {
-            requiredRank: 0,
+            requiredRank: 4,
         });
         if (!permGranted) return;
 

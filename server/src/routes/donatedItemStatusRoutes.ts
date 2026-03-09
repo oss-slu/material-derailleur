@@ -22,7 +22,7 @@ router.post(
     async (req: Request, res: Response) => {
         try {
             const permGranted = await authenticateUser(req, res, {
-                requiredRank: 4,
+                requiredRank: 1,
             });
             if (permGranted) {
                 const donatedItemId = Number(req.params.id);
