@@ -18,7 +18,7 @@ interface DecodedToken {
 export const authenticateUser = async (
     req: Request,
     res: Response,
-    adminPerm: boolean = false,
+    { requiredRank }: { requiredRank: number },
 ): Promise<boolean> => {
     try {
         let token = req.headers.authorization;
@@ -35,9 +35,16 @@ export const authenticateUser = async (
 
         const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
 
-        // If adminPerm is true, only allow ADMIN
-        if (adminPerm && decoded.role !== 'ADMIN') {
-            res.status(403).json({ message: 'Access denied: Admins only.' });
+        const roleRank = {
+            ADMIN: 4,
+            TIER_ONE: 3,
+            TIER_TWO: 2,
+            TIER_THREE: 1,
+            DONOR: 0,
+        };
+
+        if (roleRank[decoded.role] < requiredRank) {
+            res.status(403).json({ message: 'Access denied.' });
             return false;
         }
 

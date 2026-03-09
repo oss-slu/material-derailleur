@@ -67,7 +67,7 @@ describe('General Role Based Access Tests', () => {
     it('blocks users who are not signed in', async () => {
         req.headers.authorization = undefined;
 
-        const result = await authenticateUser(req, res, true);
+        const result = await authenticateUser(req, res, { requiredRank: 4 });
 
         expect(res.status).toHaveBeenCalledWith(401);
         expect(res.json).toHaveBeenCalledWith({
@@ -79,11 +79,11 @@ describe('General Role Based Access Tests', () => {
     it('blocks donors from accessing admin pages', async () => {
         req.headers.authorization = donorToken;
 
-        const result = await authenticateUser(req, res, true);
+        const result = await authenticateUser(req, res, { requiredRank: 4 });
 
         expect(res.status).toHaveBeenCalledWith(403);
         expect(res.json).toHaveBeenCalledWith({
-            message: 'Access denied: Admins only.',
+            message: 'Access denied.',
         });
         expect(result).toBe(false);
     });
@@ -92,7 +92,8 @@ describe('General Role Based Access Tests', () => {
         compromisedToken = adminToken + 'k';
         req.headers.authorization = compromisedToken;
 
-        const result = await authenticateUser(req, res, false);
+        //Permission is irrelevant
+        const result = await authenticateUser(req, res, { requiredRank: 0 });
 
         expect(res.status).toHaveBeenCalledWith(401);
         expect(res.json).toHaveBeenCalledWith({
@@ -105,7 +106,7 @@ describe('General Role Based Access Tests', () => {
         expiredToken = generateTestToken('ADMIN', true);
         req.headers.authorization = expiredToken;
 
-        const result = await authenticateUser(req, res, true);
+        const result = await authenticateUser(req, res, { requiredRank: 4 });
 
         expect(res.status).toHaveBeenCalledWith(401);
         expect(res.json).toHaveBeenCalledWith({
@@ -117,7 +118,7 @@ describe('General Role Based Access Tests', () => {
     it('allows for donors to access donor pages', async () => {
         req.headers.authorization = donorToken;
 
-        const result = await authenticateUser(req, res, false);
+        const result = await authenticateUser(req, res, { requiredRank: 0 });
 
         expect(result).toBe(true);
         expect(res.status).not.toHaveBeenCalledWith();
@@ -127,7 +128,7 @@ describe('General Role Based Access Tests', () => {
     it('allows for admins to access admin pages', async () => {
         req.headers.authorization = adminToken;
 
-        const result = await authenticateUser(req, res, true);
+        const result = await authenticateUser(req, res, { requiredRank: 4 });
 
         expect(result).toBe(true);
         expect(res.status).not.toHaveBeenCalledWith();
@@ -137,7 +138,7 @@ describe('General Role Based Access Tests', () => {
     it('allows for admins to access donor pages', async () => {
         req.headers.authorization = adminToken;
 
-        const result = await authenticateUser(req, res, false);
+        const result = await authenticateUser(req, res, { requiredRank: 0 });
 
         expect(result).toBe(true);
         expect(res.status).not.toHaveBeenCalledWith();
@@ -150,7 +151,7 @@ describe('General Role Based Access Tests', () => {
         });
         req.headers.authorization = adminToken;
 
-        const result = await authenticateUser(req, res, false);
+        const result = await authenticateUser(req, res, { requiredRank: 0 });
 
         expect(res.status).toHaveBeenCalledWith(403);
         expect(res.json).toHaveBeenCalledWith({
@@ -165,7 +166,7 @@ describe('General Role Based Access Tests', () => {
         });
         req.headers.authorization = donorToken;
 
-        const result = await authenticateUser(req, res, false);
+        const result = await authenticateUser(req, res, { requiredRank: 0 });
 
         expect(res.status).toHaveBeenCalledWith(403);
         expect(res.json).toHaveBeenCalledWith({

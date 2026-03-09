@@ -21,7 +21,9 @@ router.post(
     donatedItemStatusValidator,
     async (req: Request, res: Response) => {
         try {
-            const permGranted = await authenticateUser(req, res, true);
+            const permGranted = await authenticateUser(req, res, {
+                requiredRank: 1,
+            });
             if (permGranted) {
                 const donatedItemId = Number(req.params.id);
 
