@@ -83,7 +83,7 @@ describe('General Role Based Access Tests', () => {
 
         expect(res.status).toHaveBeenCalledWith(403);
         expect(res.json).toHaveBeenCalledWith({
-            message: 'Access denied: Admins only.',
+            message: 'Access denied.',
         });
         expect(result).toBe(false);
     });
