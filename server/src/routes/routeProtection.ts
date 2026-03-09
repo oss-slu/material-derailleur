@@ -44,7 +44,7 @@ export const authenticateUser = async (
         };
 
         if (roleRank[decoded.role] < requiredRank) {
-            res.status(403).json({ message: 'Acess denied.' });
+            res.status(403).json({ message: 'Access denied.' });
             return false;
         }
 
