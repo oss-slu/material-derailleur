@@ -23,7 +23,9 @@ interface Donor {
 
 router.post('/', donorValidator, async (req: Request, res: Response) => {
     try {
-        const permGranted = await authenticateUser(req, res, true);
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 4,
+        });
         if (permGranted) {
             const newDonor = await prisma.donor.create({
                 data: req.body,
@@ -51,7 +53,9 @@ router.post('/', donorValidator, async (req: Request, res: Response) => {
 
 router.get('/', async (req: Request, res: Response) => {
     try {
-        const permGranted = await authenticateUser(req, res, true);
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 4,
+        });
         if (permGranted) {
             const donors = await prisma.donor.findMany();
             res.json(donors);
@@ -64,7 +68,9 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.get('/emails', async (req: Request, res: Response) => {
     try {
-        const permGranted = await authenticateUser(req, res, true);
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 4,
+        });
         if (!permGranted) {
             return;
         }
@@ -185,7 +191,9 @@ router.post('/register', async (req: Request, res: Response) => {
 // Admin: list PENDING user accounts
 router.get('/pending', async (req: Request, res: Response) => {
     try {
-        const permGranted = await authenticateUser(req, res, true);
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 0,
+        });
         if (!permGranted) return;
 
         const pendingUsers = await prisma.user.findMany({
@@ -209,7 +217,9 @@ router.get('/pending', async (req: Request, res: Response) => {
 // Admin: list ALL user accounts (including status)
 router.get('/users', async (req: Request, res: Response) => {
     try {
-        const permGranted = await authenticateUser(req, res, true);
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 0,
+        });
         if (!permGranted) return;
 
         const users = await prisma.user.findMany({
@@ -234,7 +244,9 @@ router.get('/users', async (req: Request, res: Response) => {
 // Admin: update user's status and/or role
 router.put('/users/:userId', async (req: Request, res: Response) => {
     try {
-        const permGranted = await authenticateUser(req, res, true);
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 4,
+        });
         if (!permGranted) return;
 
         const { userId } = req.params;
@@ -339,7 +351,7 @@ router.post('/edit', async (req: Request, res: Response) => {
 });
 
 router.get('/me', async (req: Request, res: Response) => {
-    const permitted = await authenticateUser(req, res, false); // Donor or Admin
+    const permitted = await authenticateUser(req, res, { requiredRank: 0 }); // Donor or Admin
     if (!permitted) return;
 
     const user = (req as any).user;

@@ -18,7 +18,7 @@ interface DecodedToken {
 export const authenticateUser = async (
     req: Request,
     res: Response,
-    adminPerm: boolean = false,
+    { requiredRank }: { requiredRank: number },
 ): Promise<boolean> => {
     try {
         let token = req.headers.authorization;
@@ -36,36 +36,17 @@ export const authenticateUser = async (
         const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
 
         const roleRank = {
-            ADMIN : 4,
+            ADMIN: 4,
             TIER_ONE: 3,
             TIER_TWO: 2,
             TIER_THREE: 1,
-            DONOR: 0
-        }
-
-        const requiredRank =  adminPerm ? 4 : adminPerm ? 3 : adminPerm ? 2 : adminPerm ? 1 : 0
+            DONOR: 0,
+        };
 
         if (roleRank[decoded.role] < requiredRank) {
             res.status(403).json({ message: 'Acess denied.' });
             return false;
         }
- 
-        
-
-        // If adminPerm is true, only allow ADMIN
-        // if (adminPerm && decoded.role !== 'ADMIN') {
-        //     res.status(403).json({ message: 'Access denied: Admins only.' });
-        //     return false;
-        // } else if(tier1Perm && (decoded.role !== 'TIER_ONE') && (decoded.role !== 'ADMIN')) {
-        //     res.status(403).json({ message: 'Must be at least TIER_ONE or higher.' });
-        //     return false;
-        // } else if(tier2Perm && (decoded.role !== 'TIER_TWO') && (decoded.role !== 'TIER_ONE') && (decoded.role !== 'ADMIN')) {
-        //     res.status(403).json({ message: 'Must be at least TIER_TWO or higher.' });
-        //     return false;
-        // } else if(tier3Perm && (decoded.role !== 'TIER_THREE') && (decoded.role !== 'TIER_TWO') && (decoded.role !== 'TIER_ONE') && (decoded.role !== 'ADMIN')) {
-        //     res.status(403).json({ message: 'Must be at least TIER_THREE.' });
-        //     return false;
-        // }
 
         // Fetch user from DB to check account status (approval)
         const userRecord = await prisma.user.findUnique({

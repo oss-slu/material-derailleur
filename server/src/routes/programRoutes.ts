@@ -193,7 +193,9 @@ router.post(
 // Route to create a new program
 router.post('/', async (req: Request, res: Response) => {
     try {
-        const permGranted = await authenticateUser(req, res, true);
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 0,
+        });
         if (permGranted) {
             const { name, description, startDate, aimAndCause } = req.body;
 
@@ -220,7 +222,9 @@ router.post('/', async (req: Request, res: Response) => {
 // Route to get all programs
 router.get('/', async (req: Request, res: Response) => {
     try {
-        const permGranted = await authenticateUser(req, res, false);
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 0,
+        });
         if (permGranted) {
             const programs = await prisma.program.findMany();
             res.json(programs);

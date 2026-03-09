@@ -56,7 +56,9 @@ router.post(
     [upload.array('imageFiles', 5), donatedItemValidator],
     async (req: Request, res: Response) => {
         try {
-            const permGranted = await authenticateUser(req, res, true);
+            const permGranted = await authenticateUser(req, res, {
+                requiredRank: 0,
+            });
             if (!permGranted) return;
 
             const imageFiles = (req.files as Express.Multer.File[]) || [];
@@ -234,7 +236,9 @@ router.post(
 
 router.get('/', async (req: Request, res: Response) => {
     try {
-        const permGranted = await authenticateUser(req, res, true);
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 0,
+        });
         if (!permGranted) return;
 
         const donatedItems = await prisma.donatedItem.findMany({
@@ -260,7 +264,9 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.get('/:id', async (req: Request, res: Response) => {
     try {
-        const permGranted = await authenticateUser(req, res, true);
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 4,
+        });
         if (!permGranted) return;
 
         const donatedItemId = parseInt(String(req.params.id));
@@ -361,7 +367,9 @@ router.delete('/:id', async (req: Request, res: Response) => {
 // GET /donatedItem/:id/tags
 router.get('/:id/tags', async (req: Request, res: Response) => {
     try {
-        const permGranted = await authenticateUser(req, res, true);
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 0,
+        });
         if (!permGranted) return;
 
         const donatedItemId = parseInt(String(req.params.id));
@@ -384,7 +392,9 @@ router.get('/:id/tags', async (req: Request, res: Response) => {
 // POST /donatedItem/:id/reanalyze
 router.post('/:id/reanalyze', async (req: Request, res: Response) => {
     try {
-        const permGranted = await authenticateUser(req, res, true);
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 0,
+        });
         if (!permGranted) return;
 
         const donatedItemId = parseInt(String(req.params.id));
