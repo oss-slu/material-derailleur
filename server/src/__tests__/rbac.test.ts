@@ -79,7 +79,7 @@ describe('General Role Based Access Tests', () => {
     it('blocks donors from accessing admin pages', async () => {
         req.headers.authorization = donorToken;
 
-        const result = await authenticateUser(req, res, { requiredRank: 4 });
+        const result = await authenticateUser(req, res, { requiredRank: 0 });
 
         expect(res.status).toHaveBeenCalledWith(403);
         expect(res.json).toHaveBeenCalledWith({
