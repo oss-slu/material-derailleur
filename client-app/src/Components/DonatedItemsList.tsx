@@ -31,6 +31,45 @@ const DonatedItemsList: React.FC = () => {
 
     const navigate = useNavigate();
 
+    const isSecure = () =>
+        typeof window !== 'undefined' && window.isSecureContext;
+
+    const handleBeginScan = async () => {
+        setError(null);
+
+        // Require HTTPS. Don’t start scanning on HTTP.
+        if (!isSecure()) {
+            setError('Scanning requires HTTPS. Please open the secure site.');
+            return;
+        }
+
+        // Try permission to prevent uncaught error
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' } },
+                audio: false,
+            });
+            stream.getTracks().forEach(t => t.stop());
+            setScanning(true);
+        } catch (err) {
+            setError(explainMediaError(err));
+        }
+    };
+
+    const explainMediaError = (err: unknown) => {
+        const e = err as DOMException & { name?: string; message?: string };
+        if (!isSecure())
+            return 'Scanning requires HTTPS. Please open the secure site.';
+        if (e?.name === 'NotAllowedError')
+            return 'Camera permission denied. Allow access and try again.';
+        if (e?.name === 'NotFoundError') return 'No camera device found.';
+        if (e?.name === 'NotReadableError')
+            return 'Camera is busy or not readable.';
+        if (e?.name === 'SecurityError')
+            return 'Camera blocked by browser security policy.';
+        return e?.message || 'Camera error. Please try again.';
+    };
+
     const { ref } = useZxing({
         constraints: { video: { facingMode: 'environment' } },
         onResult(result) {
@@ -290,38 +329,35 @@ ${svgString}
         return <div>Loading...</div>;
     }
 
-    if (error && !scanning) {
-        return <div>Error: {error}</div>;
-    }
-
     return (
         <div className="donated-page">
             {/* Barcode Scanning overlay */}
-            <div
-                className="scanner-overlay"
-                style={{
-                    visibility: scanning ? 'visible' : 'hidden',
-                    pointerEvents: scanning ? 'auto' : 'none',
-                }}
-            >
-                <video ref={ref} autoPlay playsInline />
-                <button
-                    onClick={() => {
-                        setError(null);
-                        setScanning(false);
-                        const stream = ref.current
-                            ?.srcObject as MediaStream | null;
-                        stream?.getTracks().forEach(t => t.stop());
-                    }}
+            {scanning && (
+                <div
+                    className="scanner-overlay"
+                    style={{ visibility: 'visible', pointerEvents: 'auto' }}
                 >
-                    Cancel
-                </button>
-            </div>
+                    <video ref={ref} autoPlay playsInline muted />
+                    <button
+                        onClick={() => {
+                            setError(null);
+                            setScanning(false);
+                            const stream = ref.current
+                                ?.srcObject as MediaStream | null;
+                            stream?.getTracks().forEach(t => t.stop());
+                        }}
+                    >
+                        Cancel
+                    </button>
+                </div>
+            )}
 
             {}
             <header className="page-header">
                 <h1 className="page-title">Donated Items</h1>
             </header>
+
+            {error && <div className="error-message">{error}</div>}
 
             <div className="toolbar">
                 <div className="search-wrap">
@@ -340,7 +376,7 @@ ${svgString}
                         />
                         <button
                             className="btn btn-primary scan-button"
-                            onClick={() => setScanning(true)}
+                            onClick={handleBeginScan}
                             type="button"
                         >
                             Scan ▣

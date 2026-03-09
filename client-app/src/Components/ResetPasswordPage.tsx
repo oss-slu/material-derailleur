@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import '../css/ResetPasswordPage.css';
 
 const ResetPasswordPage: React.FC = () => {
     const navigate = useNavigate();
@@ -92,31 +93,39 @@ const ResetPasswordPage: React.FC = () => {
     };
 
     return (
-        <div>
+        <div style={{ padding: '2rem', paddingTop: '4rem' }}>
             <h2>Reset Password</h2>
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="password"
-                    name="password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="New Password"
-                    required
-                />
-                <input
-                    type="password"
-                    name="confirmPassword"
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm Password"
-                    required
-                />
+            <form onSubmit={handleSubmit} className="form-grid-reset">
+                <div>
+                    <h6>New Password</h6>
+                    <input
+                        type="password"
+                        name="password"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        placeholder="New Password"
+                        required
+                    />
+                </div>
+                <div>
+                    <h6>Confirm Password</h6>
+                    <input
+                        type="password"
+                        name="confirmPassword"
+                        value={confirmPassword}
+                        onChange={e => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm Password"
+                        required
+                    />
+                </div>
+            </form>
+            <div>
                 {error && <div className="alert alert-danger">{error}</div>}
                 {message && (
                     <div className="alert alert-success">{message}</div>
                 )}
                 <button type="submit">Reset Password</button>
-            </form>
+            </div>
         </div>
     );
 };
