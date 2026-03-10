@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 type Props = {
     donatedItemId: string;
     format?: 'svg' | 'png';
 };
+
+const PRINT_STYLE_ID = 'barcode-print-style';
+const PRINT_CONTAINER_ID = 'barcode-print-container';
 
 const BarcodeDisplay: React.FC<Props> = ({ donatedItemId, format = 'svg' }) => {
     const [loading, setLoading] = useState(false);
@@ -12,13 +15,17 @@ const BarcodeDisplay: React.FC<Props> = ({ donatedItemId, format = 'svg' }) => {
     const [error, setError] = useState<string>('');
     const [isSvg, setIsSvg] = useState<boolean>(false);
     const [fileExt, setFileExt] = useState<string>('png');
-    const [attempt, setAttempt] = useState<number>(0); // trigger retries without reload
+    const [attempt, setAttempt] = useState<number>(0);
+
+    //  reference the already-rendered image (so printing can be synchronous)
+    const displayImgRef = useRef<HTMLImageElement | null>(null);
 
     useEffect(() => {
         if (!donatedItemId) {
             setError('Missing donatedItemId');
             return;
         }
+
         let objectUrl: string | undefined;
 
         const handleBlobResult = (
@@ -40,10 +47,11 @@ const BarcodeDisplay: React.FC<Props> = ({ donatedItemId, format = 'svg' }) => {
             ).replace(/\/+$/, '');
             const prefix = backendBase || '';
             const fetchUrl = `${prefix}/api/barcode/${encodeURIComponent(donatedItemId)}?format=${requestedFormat}`;
-            console.debug('Fetching barcode from:', fetchUrl);
+
             const headers: Record<string, string> = { Accept: 'image/*' };
             const token = localStorage.getItem('token');
             if (token) headers.Authorization = token;
+
             return fetch(fetchUrl, {
                 method: 'GET',
                 cache: 'no-store',
@@ -59,58 +67,41 @@ const BarcodeDisplay: React.FC<Props> = ({ donatedItemId, format = 'svg' }) => {
             setIsSvg(false);
 
             try {
-                // request once (initially with desired format)
-                let res = await fetchAsFormat(format);
-                let contentType = (
+                const res = await fetchAsFormat(format);
+                const contentType = (
                     res.headers.get('content-type') || ''
                 ).toLowerCase();
-
-                // read body exactly once as blob
                 const blob = await res.blob();
 
-                // If response not ok, try to parse textual error from blob
                 if (!res.ok) {
                     let bodyText = '';
                     try {
                         bodyText = await blob.text();
-                    } catch (_) {
+                    } catch {
                         bodyText = '';
                     }
                     if (contentType.includes('application/json')) {
                         try {
                             const json = JSON.parse(bodyText);
                             bodyText = json.message || JSON.stringify(json);
-                        } catch (e) {
+                        } catch {
                             /* ignore */
                         }
                     }
-                    const msg = `Server returned ${res.status} ${res.statusText}${bodyText ? ` — ${bodyText}` : ''}`;
-                    console.error(msg);
-                    setError(msg);
+                    setError(
+                        `Server returned ${res.status} ${res.statusText}${bodyText ? ` — ${bodyText}` : ''}`,
+                    );
                     return;
                 }
 
-                // Handle explicit SVG content-type
+                // SVG
                 if (contentType.includes('svg') || blob.type.includes('svg')) {
-                    // get text to validate
                     const svgText = await blob.text();
                     const trimmed = (svgText || '').trim();
                     if (
-                        !trimmed.startsWith('<svg') &&
-                        !trimmed.startsWith('<?xml')
+                        trimmed.startsWith('<svg') ||
+                        trimmed.startsWith('<?xml')
                     ) {
-                        // Not a valid SVG text; fall back to PNG attempt if original request was SVG
-                        if (format === 'svg') {
-                            console.warn(
-                                'SVG content-type but body is not valid SVG; trying PNG fallback',
-                            );
-                            // try PNG fallback below
-                        } else {
-                            setError('Server returned invalid SVG content');
-                            return;
-                        }
-                    } else {
-                        // Use the same blob (we created it from text) for display/download
                         const svgBlob = new Blob([svgText], {
                             type: 'image/svg+xml;charset=utf-8',
                         });
@@ -119,7 +110,7 @@ const BarcodeDisplay: React.FC<Props> = ({ donatedItemId, format = 'svg' }) => {
                     }
                 }
 
-                // Handle general image/* responses (png, jpeg, etc.)
+                // image/*
                 if (
                     contentType.startsWith('image/') ||
                     blob.type.startsWith('image/')
@@ -132,11 +123,11 @@ const BarcodeDisplay: React.FC<Props> = ({ donatedItemId, format = 'svg' }) => {
                     return;
                 }
 
-                // If content-type wasn't helpful, inspect text to see if it's SVG.
+                // fallback sniff
                 let maybeText = '';
                 try {
                     maybeText = await blob.text();
-                } catch (_) {
+                } catch {
                     maybeText = '';
                 }
                 const trimmed = (maybeText || '').trim();
@@ -148,57 +139,42 @@ const BarcodeDisplay: React.FC<Props> = ({ donatedItemId, format = 'svg' }) => {
                     return;
                 }
 
-                // If we requested SVG but did not receive SVG, try PNG fallback once
+                // SVG -> PNG fallback once
                 if (format === 'svg') {
-                    console.warn(
-                        'Requested SVG but did not receive SVG; attempting PNG fallback',
-                    );
                     const pngRes = await fetchAsFormat('png');
-                    const pngContentType = (
+                    const pngType = (
                         pngRes.headers.get('content-type') || ''
                     ).toLowerCase();
                     const pngBlob = await pngRes.blob();
+
                     if (!pngRes.ok) {
                         let body = '';
                         try {
                             body = await pngBlob.text();
-                        } catch (_) {
+                        } catch {
                             body = '';
                         }
-                        const msg = `PNG fallback failed: ${pngRes.status} ${pngRes.statusText}${body ? ` — ${body}` : ''}`;
-                        console.error(msg);
-                        setError(msg);
+                        setError(
+                            `PNG fallback failed: ${pngRes.status} ${pngRes.statusText}${body ? ` — ${body}` : ''}`,
+                        );
                         return;
                     }
+
                     if (
-                        pngContentType.startsWith('image/') ||
+                        pngType.startsWith('image/') ||
                         pngBlob.type.startsWith('image/')
                     ) {
                         const ext =
-                            pngContentType.split('/')[1]?.split(';')[0] ||
+                            pngType.split('/')[1]?.split(';')[0] ||
                             pngBlob.type.split('/')[1] ||
                             'png';
                         handleBlobResult(pngBlob, ext);
                         return;
                     }
-                    let body = '';
-                    try {
-                        body = await pngBlob.text();
-                    } catch (_) {
-                        body = '';
-                    }
-                    setError(
-                        `PNG fallback returned unexpected content: ${pngContentType} — ${body.substring(0, 300)}`,
-                    );
-                    return;
                 }
 
-                // final fallback
-                setError(
-                    `Unexpected response type: ${contentType} — ${maybeText?.substring(0, 200)}`,
-                );
+                setError(`Unexpected response type: ${contentType}`);
             } catch (err: any) {
-                console.error('Fetch error:', err);
                 setError(
                     err?.message || 'Network error while fetching barcode',
                 );
@@ -212,10 +188,12 @@ const BarcodeDisplay: React.FC<Props> = ({ donatedItemId, format = 'svg' }) => {
         return () => {
             if (objectUrl) URL.revokeObjectURL(objectUrl);
         };
-        // re-run when donatedItemId, format or attempt changes
     }, [donatedItemId, format, attempt]);
 
-    const handleDownload = () => {
+    const handleDownload = (e?: React.MouseEvent) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+
         if (!dataUrl) return;
         const a = document.createElement('a');
         a.href = dataUrl;
@@ -225,48 +203,107 @@ const BarcodeDisplay: React.FC<Props> = ({ donatedItemId, format = 'svg' }) => {
         a.remove();
     };
 
-    const handlePrint = () => {
-        const w = window.open('', '_blank', 'noopener,noreferrer');
-        if (!w) return;
+    const ensurePrintStyleAndContainer = (): HTMLDivElement => {
+        if (!document.getElementById(PRINT_STYLE_ID)) {
+            const style = document.createElement('style');
+            style.id = PRINT_STYLE_ID;
+            style.textContent = `
+@media print {
+  body * { visibility: hidden !important; }
+  #${PRINT_CONTAINER_ID}, #${PRINT_CONTAINER_ID} * { visibility: visible !important; }
+  #${PRINT_CONTAINER_ID} {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12mm;
+    background: white;
+  }
+  #${PRINT_CONTAINER_ID} img, #${PRINT_CONTAINER_ID} svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
+            `;
+            document.head.appendChild(style);
+        }
 
-        if (isSvg && rawSvg) {
-            w.document.write(`
-				<!doctype html><html><head><title>Print Barcode</title></head>
-				<body style="margin:0;display:flex;align-items:center;justify-content:center">
-				${rawSvg}
-				<script>
-					window.onload = function(){ window.print(); window.onafterprint = function(){ window.close(); } };
-				</script>
-				</body></html>`);
-            w.document.close();
+        let container = document.getElementById(
+            PRINT_CONTAINER_ID,
+        ) as HTMLDivElement | null;
+        if (!container) {
+            container = document.createElement('div');
+            container.id = PRINT_CONTAINER_ID;
+            container.style.position = 'fixed';
+            container.style.left = '-99999px';
+            container.style.top = '0';
+            container.style.width = '1px';
+            container.style.height = '1px';
+            container.style.overflow = 'hidden';
+            document.body.appendChild(container);
+        }
+        return container;
+    };
+
+    // Synchronous print to keep browser “user gesture” and prevent blocking
+    const handlePrint = (e?: React.MouseEvent) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+
+        setError('');
+
+        if (!dataUrl && !(isSvg && rawSvg)) {
+            setError('No barcode available to print');
             return;
         }
 
-        if (dataUrl) {
-            w.document.write(`
-				<!doctype html><html><head><title>Print Barcode</title></head>
-				<body style="margin:0;display:flex;align-items:center;justify-content:center">
-				<img id="print-img" src="${dataUrl}" alt="barcode" style="max-width:100%;height:auto" />
-				<script>
-					(function(){
-						var img = document.getElementById('print-img');
-						if(img.complete){
-							window.print(); window.onafterprint = function(){ window.close(); };
-						} else {
-							img.onload = function(){ window.print(); window.onafterprint = function(){ window.close(); } };
-							img.onerror = function(){ document.body.innerText = 'Failed to load image for printing.'; };
-						}
-					})();
-				</script>
-				</body></html>`);
-            w.document.close();
-            return;
-        }
+        const container = ensurePrintStyleAndContainer();
 
-        w.document.write(
-            '<!doctype html><html><body><div>No barcode available to print</div></body></html>',
-        );
-        w.document.close();
+        const cleanup = () => {
+            container.innerHTML = '';
+            window.removeEventListener('afterprint', cleanup);
+        };
+        window.addEventListener('afterprint', cleanup);
+
+        try {
+            if (isSvg && rawSvg) {
+                const svgWithNamespace = rawSvg.includes('xmlns')
+                    ? rawSvg
+                    : rawSvg.replace(
+                          /^<svg/,
+                          '<svg xmlns="http://www.w3.org/2000/svg"',
+                      );
+                container.innerHTML = svgWithNamespace;
+                window.print();
+                return;
+            }
+
+            // Use the already rendered img element (should already be loaded)
+            const onScreenImg = displayImgRef.current;
+            if (
+                !onScreenImg ||
+                !onScreenImg.complete ||
+                onScreenImg.naturalWidth === 0
+            ) {
+                cleanup();
+                setError(
+                    'Barcode image is not fully loaded yet. Wait a moment and try Print again.',
+                );
+                return;
+            }
+
+            const clone = onScreenImg.cloneNode(true) as HTMLImageElement;
+            clone.removeAttribute('style'); // we control sizing via print CSS
+
+            container.innerHTML = '';
+            container.appendChild(clone);
+
+            window.print();
+        } catch (err: any) {
+            cleanup();
+            setError(err?.message || 'Failed to print barcode');
+        }
     };
 
     return (
@@ -279,7 +316,10 @@ const BarcodeDisplay: React.FC<Props> = ({ donatedItemId, format = 'svg' }) => {
                         <strong>Error:</strong> {error}
                     </div>
                     <div style={{ marginTop: 8 }}>
-                        <button onClick={() => setAttempt(a => a + 1)}>
+                        <button
+                            type="button"
+                            onClick={() => setAttempt(a => a + 1)}
+                        >
                             Retry
                         </button>
                     </div>
@@ -294,11 +334,13 @@ const BarcodeDisplay: React.FC<Props> = ({ donatedItemId, format = 'svg' }) => {
                 <>
                     <div style={{ marginBottom: 8 }}>
                         <img
+                            ref={displayImgRef}
                             src={dataUrl}
                             alt={`barcode-${donatedItemId}`}
                             style={{ maxWidth: '100%', height: 'auto' }}
                         />
                     </div>
+
                     <div style={{ display: 'flex', gap: 8 }}>
                         <button type="button" onClick={handleDownload}>
                             Download
