@@ -26,6 +26,7 @@ const ResetPasswordPage: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        console.log("got here")
         try {
             if (password !== confirmPassword) {
                 setError('Passwords do not match');
@@ -118,13 +119,13 @@ const ResetPasswordPage: React.FC = () => {
                         required
                     />
                 </div>
+                <button type="submit">Reset Password</button>
             </form>
             <div>
                 {error && <div className="alert alert-danger">{error}</div>}
                 {message && (
                     <div className="alert alert-success">{message}</div>
                 )}
-                <button type="submit">Reset Password</button>
             </div>
         </div>
     );

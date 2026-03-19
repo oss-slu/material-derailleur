@@ -99,6 +99,9 @@ model DonatedItemStatus {
 
   imageUrls     String[]
 
+  donorInformed Boolean @default(false)
+  approval      Boolean @default(false)
+
   @@index([donatedItemId])
 }
 
