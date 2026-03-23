@@ -26,7 +26,6 @@ const ResetPasswordPage: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        console.log('got here');
         try {
             if (password !== confirmPassword) {
                 setError('Passwords do not match');
