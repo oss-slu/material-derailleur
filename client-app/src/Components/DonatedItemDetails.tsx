@@ -174,8 +174,8 @@ ${svgString}
                             </button>
                         </div>
                         <Stepper orientation="vertical">
-                            {donatedItem.statuses.map(status => (
-                                status.approval ?
+                            {donatedItem.statuses.map(status =>
+                                status.approval ? (
                                     // If approved
                                     <Step
                                         key={status.id}
@@ -186,18 +186,20 @@ ${svgString}
 
                                         <StepContent>
                                             <div className="image-scroll-container">
-                                                {status.images.map((image, idx) => (
-                                                    <img
-                                                        key={idx}
-                                                        src={image}
-                                                        alt={`Status Image ${idx}`}
-                                                        className="status-image"
-                                                    />
-                                                ))}
+                                                {status.images.map(
+                                                    (image, idx) => (
+                                                        <img
+                                                            key={idx}
+                                                            src={image}
+                                                            alt={`Status Image ${idx}`}
+                                                            className="status-image"
+                                                        />
+                                                    ),
+                                                )}
                                             </div>
                                         </StepContent>
                                     </Step>
-                                    :
+                                ) : (
                                     // If not approved
                                     <Step
                                         key={status.id}
@@ -206,7 +208,8 @@ ${svgString}
                                     >
                                         <StepLabel>{`${status.statusType} (${formatDate(status.dateModified, false)}) (Pending)`}</StepLabel>
                                     </Step>
-                            ))}
+                                ),
+                            )}
                         </Stepper>
                     </section>
                 </div>

@@ -8,7 +8,9 @@ import { DonatedItem } from '../Modals/DonatedItemModal';
 import { stat } from 'fs';
 
 const AdminImageApproval: React.FC = () => {
-    const [donationStatuses, setDonationStatuses] = useState<DonatedItemStatus[]>([]);
+    const [donationStatuses, setDonationStatuses] = useState<
+        DonatedItemStatus[]
+    >([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
@@ -45,16 +47,13 @@ const AdminImageApproval: React.FC = () => {
     // If the admin approves the update, mark item approved
     const handleApprove = async (id: number) => {
         try {
-            const res = await fetch(
-                `${base}donatedItem/status/review/${id}`,
-                {
-                    method: 'PUT',
-                    headers: {
-                        Authorization: token ? `Bearer ${token}` : '',
-                        'Content-Type': 'application/json',
-                    },
+            const res = await fetch(`${base}donatedItem/status/review/${id}`, {
+                method: 'PUT',
+                headers: {
+                    Authorization: token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json',
                 },
-            );
+            });
             if (!res.ok) {
                 const txt = await res.text();
                 throw new Error(txt || res.statusText);
@@ -69,16 +68,13 @@ const AdminImageApproval: React.FC = () => {
     // If the admin denies the status update, delete it
     const handleDeny = async (id: number) => {
         try {
-            const res = await fetch(
-                `${base}donatedItem/status/review/${id}`,
-                {
-                    method: 'DELETE',
-                    headers: {
-                        Authorization: token ? `Bearer ${token}` : '',
-                        'Content-Type': 'application/json',
-                    },
+            const res = await fetch(`${base}donatedItem/status/review/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json',
                 },
-            );
+            });
             if (!res.ok) {
                 const txt = await res.text();
                 throw new Error(txt || res.statusText);
@@ -124,49 +120,83 @@ const AdminImageApproval: React.FC = () => {
                         {donationStatuses.map(donationStatus => (
                             <tr key={donationStatus.id}>
                                 <td>
-                                    {donationStatus.donatedItemId ? donationStatus.donatedItemId : '—'}
+                                    {donationStatus.donatedItemId
+                                        ? donationStatus.donatedItemId
+                                        : '—'}
                                 </td>
                                 <td>
-                                    {donationStatus.id ? donationStatus.id : '—'}
+                                    {donationStatus.id
+                                        ? donationStatus.id
+                                        : '—'}
                                 </td>
                                 <td>
-                                    {donationStatus.statusType ? donationStatus.statusType : '—'}
+                                    {donationStatus.statusType
+                                        ? donationStatus.statusType
+                                        : '—'}
                                 </td>
                                 <td>
-                                    {donationStatus.dateModified ? formatDate(donationStatus.dateModified, false).toString() : '—'}
+                                    {donationStatus.dateModified
+                                        ? formatDate(
+                                              donationStatus.dateModified,
+                                              false,
+                                          ).toString()
+                                        : '—'}
                                 </td>
                                 <td>
-                                    {donationStatus.donorInformed ? 'Yes' : 'No'}
+                                    {donationStatus.donorInformed
+                                        ? 'Yes'
+                                        : 'No'}
                                 </td>
                                 <td>
                                     <div className="image-scroll-container">
-                                        {donationStatus.images ? 
-                                        (donationStatus.images || []).map((image, idx) => (
-                                            <img key={idx} 
-                                            src={image} 
-                                            alt={`Status Image ${idx}`} 
-                                            className="status-image" />
-                                        )) : 'No images were provided'}
+                                        {donationStatus.images
+                                            ? (donationStatus.images || []).map(
+                                                  (image, idx) => (
+                                                      <img
+                                                          key={idx}
+                                                          src={image}
+                                                          alt={`Status Image ${idx}`}
+                                                          className="status-image"
+                                                      />
+                                                  ),
+                                              )
+                                            : 'No images were provided'}
                                     </div>
                                 </td>
                                 <td>
-                                    <button onClick={() => handleApprove(donationStatus.id)}>
+                                    <button
+                                        onClick={() =>
+                                            handleApprove(donationStatus.id)
+                                        }
+                                    >
                                         Approve
                                     </button>
-                                    <button onClick={() => handleDeny(donationStatus.id)}>
+                                    <button
+                                        onClick={() =>
+                                            handleDeny(donationStatus.id)
+                                        }
+                                    >
                                         Deny
                                     </button>
                                 </td>
                                 <td>
-                                    {donationStatus.donatedItemId ? <button
-                                        onClick={() =>
-                                            navigate(`/donations/${donationStatus.donatedItemId}`)
-                                        }
-                                    >Visit</button> : <div>Unavailable</div>}
+                                    {donationStatus.donatedItemId ? (
+                                        <button
+                                            onClick={() =>
+                                                navigate(
+                                                    `/donations/${donationStatus.donatedItemId}`,
+                                                )
+                                            }
+                                        >
+                                            Visit
+                                        </button>
+                                    ) : (
+                                        <div>Unavailable</div>
+                                    )}
                                 </td>
                             </tr>
                         ))}
-                        </tbody>
+                    </tbody>
                 </table>
             )}
         </div>

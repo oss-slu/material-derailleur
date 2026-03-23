@@ -70,7 +70,7 @@ router.post(
                             : new Date(),
                         donatedItemId,
                         imageUrls,
-                        donorInformed: informDonor,
+                        donorInformed: informDonor == 'true',
                         approval: false,
                     },
                 });
@@ -97,40 +97,48 @@ router.post(
 
 // Admin Image Approval Routes
 // GET /donatedItem/status/review/ - Get all statuses needing review
-router.get('/review',
-    donatedItemStatusValidator, 
+router.get(
+    '/review',
+    donatedItemStatusValidator,
     async (req: Request, res: Response) => {
-    try {
-        const permGranted = await authenticateUser(req, res, {
-            requiredRank: 3,
-        });
-        if (!permGranted) return;
+        try {
+            const permGranted = await authenticateUser(req, res, {
+                requiredRank: 3,
+            });
+            if (!permGranted) return;
 
-        const donatedStatuses = await prisma.donatedItemStatus.findMany({
-            where: { approval: false },
-        });
+            const donatedStatuses = await prisma.donatedItemStatus.findMany({
+                where: { approval: false },
+            });
 
-        await Promise.all(
-            donatedStatuses.map(async (status: DonatedItemStatus) => {
-                const filenames = status.imageUrls || [];
-                const encodedImages = await fetchImagesFromCloud(filenames);
-                status.images = encodedImages;
-            }),
-        );
+            await Promise.all(
+                donatedStatuses.map(async (status: DonatedItemStatus) => {
+                    const filenames = status.imageUrls || [];
+                    const encodedImages = await fetchImagesFromCloud(filenames);
+                    status.images = encodedImages;
+                }),
+            );
 
-        res.status(200).json(donatedStatuses);
-    } catch (error) {
-        if (error instanceof Error) {
-            console.error('Error fetching pending statuses:', error.message);
-            res.status(
-                error.message.includes('must be an integer') ? 400 : 404,
-            ).json({ error: error.message });
-        } else {
-            console.error('Error fetching pending statuses:', 'Unknown error');
-            res.status(500).json({ error: 'Unknown error' });
+            res.status(200).json(donatedStatuses);
+        } catch (error) {
+            if (error instanceof Error) {
+                console.error(
+                    'Error fetching pending statuses:',
+                    error.message,
+                );
+                res.status(
+                    error.message.includes('must be an integer') ? 400 : 404,
+                ).json({ error: error.message });
+            } else {
+                console.error(
+                    'Error fetching pending statuses:',
+                    'Unknown error',
+                );
+                res.status(500).json({ error: 'Unknown error' });
+            }
         }
-    }
-});
+    },
+);
 
 // PUT /donatedItem/status/review/:id - Approve status
 router.put('/review/:id', async (req: Request, res: Response) => {
@@ -156,7 +164,7 @@ router.put('/review/:id', async (req: Request, res: Response) => {
                 donor: true,
             },
         });
-        
+
         // Send email notification to the donor about the status update if marked
         if (statusItem.donorInformed && donatedItem?.donor.email) {
             await sendDonationUpdateEmail(
@@ -167,9 +175,9 @@ router.put('/review/:id', async (req: Request, res: Response) => {
                 statusItem.dateModified,
                 statusItem.imageUrls,
             );
-            console.log("Donor sent email of new status");
+            console.log('Donor sent email of new status');
         } else {
-            console.log("Donor not marked to be informed");
+            console.log('Donor not marked to be informed');
         }
 
         res.status(200).json(statusItem);
