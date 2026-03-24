@@ -285,7 +285,10 @@ const AddNewStatus: React.FC = () => {
             images.forEach(image =>
                 formDataToSubmit.append('imageFiles', image),
             );
-            formDataToSubmit.append('submitter', localStorage.getItem('name')?.toString() || '');
+            formDataToSubmit.append(
+                'submitter',
+                localStorage.getItem('name')?.toString() || '',
+            );
 
             const response = await axios.post(
                 `${process.env.REACT_APP_BACKEND_API_BASE_URL}donatedItem/status/${id}`,

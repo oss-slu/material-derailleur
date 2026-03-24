@@ -119,22 +119,10 @@ const AdminImageApproval: React.FC = () => {
                     <tbody>
                         {donationStatuses.map(donationStatus => (
                             <tr key={donationStatus.id}>
-                                <td>
-                                    {donationStatus.donatedItemId
-                                        ?? '—'}
-                                </td>
-                                <td>
-                                    {donationStatus.id
-                                        ?? '—'}
-                                </td>
-                                <td>
-                                    {donationStatus.statusType
-                                        ?? '—'}
-                                </td>
-                                <td>
-                                    {donationStatus.submitter
-                                        ?? '—'}
-                                </td>
+                                <td>{donationStatus.donatedItemId ?? '—'}</td>
+                                <td>{donationStatus.id ?? '—'}</td>
+                                <td>{donationStatus.statusType ?? '—'}</td>
+                                <td>{donationStatus.submitter ?? '—'}</td>
                                 <td>
                                     {donationStatus.dateModified
                                         ? formatDate(
