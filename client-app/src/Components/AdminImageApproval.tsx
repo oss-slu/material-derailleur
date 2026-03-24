@@ -108,6 +108,7 @@ const AdminImageApproval: React.FC = () => {
                             <th>Donation ID</th>
                             <th>Status ID</th>
                             <th>Status</th>
+                            <th>Submitter</th>
                             <th>Date Modified</th>
                             <th>Donor Informed</th>
                             <th>Images</th>
@@ -120,18 +121,19 @@ const AdminImageApproval: React.FC = () => {
                             <tr key={donationStatus.id}>
                                 <td>
                                     {donationStatus.donatedItemId
-                                        ? donationStatus.donatedItemId
-                                        : '—'}
+                                        ?? '—'}
                                 </td>
                                 <td>
                                     {donationStatus.id
-                                        ? donationStatus.id
-                                        : '—'}
+                                        ?? '—'}
                                 </td>
                                 <td>
                                     {donationStatus.statusType
-                                        ? donationStatus.statusType
-                                        : '—'}
+                                        ?? '—'}
+                                </td>
+                                <td>
+                                    {donationStatus.submitter
+                                        ?? '—'}
                                 </td>
                                 <td>
                                     {donationStatus.dateModified

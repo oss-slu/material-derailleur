@@ -29,7 +29,7 @@ router.post(
             if (permGranted) {
                 const donatedItemId = Number(req.params.id);
 
-                const { statusType, dateModified, informDonor } = req.body;
+                const { statusType, dateModified, informDonor, submitter } = req.body;
                 const imageFiles = req.files as Express.Multer.File[];
 
                 if (!statusType) {
@@ -72,6 +72,7 @@ router.post(
                         imageUrls,
                         donorInformed: informDonor == 'true',
                         approval: false,
+                        submitter: submitter ?? '',
                     },
                 });
 

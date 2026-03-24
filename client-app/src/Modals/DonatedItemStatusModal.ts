@@ -7,4 +7,5 @@ export interface DonatedItemStatus {
     images: string[];
     donorInformed: boolean;
     approval: boolean;
+    submitter: string;
 }
