@@ -138,7 +138,7 @@ const AdminImageApproval: React.FC = () => {
                                 </td>
                                 <td>
                                     <div className="image-scroll-container">
-                                        {donationStatus.images
+                                        {donationStatus.images.length > 0
                                             ? (donationStatus.images || []).map(
                                                   (image, idx) => (
                                                       <img
