@@ -120,6 +120,7 @@ describe('AddNewStatus Validation', () => {
             dateModified: '2023-01-01',
             donatedItemId: '123',
             informDonor: true,
+            submitter: 'John Doe',
         };
 
         it('should return errors for empty form data', () => {
@@ -128,6 +129,7 @@ describe('AddNewStatus Validation', () => {
                 dateModified: '',
                 donatedItemId: '',
                 informDonor: false,
+                submitter: '',
             };
             const result = validateStatusForm(emptyFormData, []);
             expect(result.statusType).toBe('Status type is required.');
@@ -146,6 +148,7 @@ describe('AddNewStatus Validation', () => {
                 dateModified: '2023-01-01',
                 donatedItemId: '123',
                 informDonor: true,
+                submitter: 'Jane Doe',
             };
             const mockImages = [
                 createMockFile('test.pdf', 'application/pdf', 1000000),
