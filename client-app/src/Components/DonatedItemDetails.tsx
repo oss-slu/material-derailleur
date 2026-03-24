@@ -226,18 +226,18 @@ const DonatedItemDetails: React.FC = () => {
                             </button>
                         </div>
                         <Stepper orientation="vertical">
-                            {donatedItem.statuses.map(status => (
+                            {donatedItem.statuses.map(status =>
                                 status.approval ? (
-                                  // If approved
-                                  <Step
-                                      key={status.id}
-                                      active={true}
-                                      completed={false}
-                                  >
-                                      <StepLabel>{`${status.statusType} (${formatDate(
-                                          status.dateModified,
-                                          false,
-                                      )})`}</StepLabel>
+                                    // If approved
+                                    <Step
+                                        key={status.id}
+                                        active={true}
+                                        completed={false}
+                                    >
+                                        <StepLabel>{`${status.statusType} (${formatDate(
+                                            status.dateModified,
+                                            false,
+                                        )})`}</StepLabel>
 
                                         <StepContent>
                                             <div className="image-scroll-container">

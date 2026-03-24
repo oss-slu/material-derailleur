@@ -32,7 +32,6 @@ const AdminImageApproval: React.FC = () => {
                     },
                 );
 
-                console.log(res.data);
                 setDonationStatuses(res.data); // Store statuses in state
             } catch (err: any) {
                 setError(err.message || 'Failed to load');
