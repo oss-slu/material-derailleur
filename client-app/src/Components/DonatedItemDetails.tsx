@@ -226,31 +226,45 @@ const DonatedItemDetails: React.FC = () => {
                             </button>
                         </div>
                         <Stepper orientation="vertical">
-                            {donatedItem.statuses.map(status => (
-                                <Step
-                                    key={status.id}
-                                    active={true}
-                                    completed={false}
-                                >
-                                    <StepLabel>{`${status.statusType} (${formatDate(
-                                        status.dateModified,
-                                        false,
-                                    )})`}</StepLabel>
+                            {donatedItem.statuses.map(status =>
+                                status.approval ? (
+                                    // If approved
+                                    <Step
+                                        key={status.id}
+                                        active={true}
+                                        completed={false}
+                                    >
+                                        <StepLabel>{`${status.statusType} (${formatDate(
+                                            status.dateModified,
+                                            false,
+                                        )})`}</StepLabel>
 
-                                    <StepContent>
-                                        <div className="image-scroll-container">
-                                            {status.images.map((image, idx) => (
-                                                <img
-                                                    key={idx}
-                                                    src={image}
-                                                    alt={`Status Image ${idx}`}
-                                                    className="status-image"
-                                                />
-                                            ))}
-                                        </div>
-                                    </StepContent>
-                                </Step>
-                            ))}
+                                        <StepContent>
+                                            <div className="image-scroll-container">
+                                                {status.images.map(
+                                                    (image, idx) => (
+                                                        <img
+                                                            key={idx}
+                                                            src={image}
+                                                            alt={`Status Image ${idx}`}
+                                                            className="status-image"
+                                                        />
+                                                    ),
+                                                )}
+                                            </div>
+                                        </StepContent>
+                                    </Step>
+                                ) : (
+                                    // If not approved
+                                    <Step
+                                        key={status.id}
+                                        active={true}
+                                        completed={false}
+                                    >
+                                        <StepLabel>{`${status.statusType} (${formatDate(status.dateModified, false)}) (Pending)`}</StepLabel>
+                                    </Step>
+                                ),
+                            )}
                         </Stepper>
                     </section>
                 </div>
