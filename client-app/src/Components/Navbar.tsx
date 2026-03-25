@@ -205,6 +205,14 @@ const Navbar: React.FC = () => {
                                                         Image Review
                                                     </Link>
                                                 </li>
+                                                <li>
+                                                    <Link
+                                                        className="dropdown-item"
+                                                        to="/admin/image-approval"
+                                                    >
+                                                        Image Approval
+                                                    </Link>
+                                                </li>
                                             </ul>
                                         </li>
 

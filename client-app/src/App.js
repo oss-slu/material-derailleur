@@ -23,6 +23,7 @@ import DonorDonations from './Components/DonorDonations';
 import Contact from './Components/Contact.tsx';
 import Footer from './Components/Footer.tsx';
 import AdminImageReview from './Components/AdminImageReview';
+import AdminImageApproval from './Components/AdminImageApproval';
 import BarcodeDisplay from './Components/BarcodeDisplay'; // added import
 import AdminUserManagement from './Components/AdminUserManagement';
 
@@ -116,6 +117,10 @@ function App() {
                             element={<AdminImageReview />}
                         />
                         <Route
+                            path="/admin/image-approval"
+                            element={<AdminImageApproval />}
+                        />
+                        <Route
                             path="/admin/user-management"
                             element={
                                 <ProtectedRoute allowedRole="ADMIN">
@@ -128,6 +133,14 @@ function App() {
                             element={
                                 <ProtectedRoute allowedRole="ADMIN">
                                     <AdminImageReview />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/image-approval/:id"
+                            element={
+                                <ProtectedRoute allowedRole="ADMIN">
+                                    <AdminImageApproval />
                                 </ProtectedRoute>
                             }
                         />
