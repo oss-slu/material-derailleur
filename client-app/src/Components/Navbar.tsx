@@ -333,16 +333,12 @@ const Navbar: React.FC = () => {
                                                 style={{
                                                     fontWeight:
                                                         location.pathname ===
-                                                            '/about' ||
-                                                        location.pathname ===
-                                                            '/'
-                                                            ? 'normal'
-                                                            : 'bold',
+                                                        '/admin/user-management'
+                                                            ? 'bold'
+                                                            : 'normal',
                                                     color:
                                                         location.pathname ===
-                                                            '/about' ||
-                                                        location.pathname ===
-                                                            '/'
+                                                        '/admin/user-management'
                                                             ? 'black'
                                                             : 'inherit',
                                                 }}

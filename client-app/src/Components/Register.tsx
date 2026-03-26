@@ -34,16 +34,6 @@ const REGEX = {
     special: /[$&+,:;=?@#|'<>.^*()%!-]/,
 };
 
-const initialRules: RuleState = {
-    length: false,
-    upper: false,
-    lower: false,
-    number: false,
-    special: false,
-    noName: null,
-    noEmail: null,
-};
-
 const Register: React.FC = () => {
     const [credentials, setCredentials] = useState<Credentials>({
         name: '',
@@ -55,7 +45,6 @@ const Register: React.FC = () => {
     const [passwordStrength, setPasswordStrength] = useState<
         'weak' | 'medium' | 'strong' | null
     >(null);
-    const [rules, setRules] = useState<RuleState>(initialRules);
     const [showGuidelines, setShowGuidelines] = useState(false);
 
     const [showPassword, setShowPassword] = useState(false);
@@ -106,15 +95,6 @@ const Register: React.FC = () => {
         };
     };
 
-    const isPasswordValid = (r: RuleState) =>
-        r.length &&
-        r.upper &&
-        r.lower &&
-        r.number &&
-        r.special &&
-        r.noName !== false &&
-        r.noEmail !== false;
-
     const computeStrength = (
         password: string,
     ): 'weak' | 'medium' | 'strong' | null => {
@@ -151,8 +131,7 @@ const Register: React.FC = () => {
         }
 
         if (name === 'password' || name === 'name' || name === 'email') {
-            const r = computeRules(next.password, next.name, next.email);
-            setRules(r);
+            computeRules(next.password, next.name, next.email);
             setShowGuidelines(next.password.length > 0);
         }
     };
@@ -165,7 +144,6 @@ const Register: React.FC = () => {
         const nm = name ?? credentials.name;
         const em = email ?? credentials.email;
         const r = computeRules(password, nm, em);
-        setRules(r);
 
         if (!r.length) return `Password must be at least ${MIN_LEN} characters`;
 
@@ -236,7 +214,6 @@ const Register: React.FC = () => {
                     confirm_password: '',
                 });
                 setPasswordStrength(null);
-                setRules(initialRules);
                 setShowGuidelines(false);
                 setTimeout(() => {
                     window.location.href = '/About';
@@ -327,12 +304,11 @@ const Register: React.FC = () => {
                             value={credentials.password}
                             onChange={handleChange}
                             onFocus={() => {
-                                const r = computeRules(
+                                computeRules(
                                     credentials.password,
                                     credentials.name,
                                     credentials.email,
                                 );
-                                setRules(r);
                                 setPasswordStrength(
                                     computeStrength(credentials.password),
                                 );

@@ -1,19 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Stepper, Step, StepLabel, StepContent, Button } from '@mui/material';
+import { Stepper, Step, StepLabel, StepContent } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import PersonIcon from '@mui/icons-material/Person';
 import CategoryIcon from '@mui/icons-material/Category';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
-import '../css/DonatedItemDetails.css'; // Import the new CSS file
-import { Donor } from '../Modals/DonorModal';
-import { Program } from '../Modals/ProgramModal';
-import { DonatedItemStatus } from '../Modals/DonatedItemStatusModal';
+import '../css/DonatedItemDetails.css';
 import { DonatedItem } from '../Modals/DonatedItemModal';
-import BarcodeDisplay from './BarcodeDisplay'; // added import
-import Barcode from 'react-barcode'; // add import near top
+import Barcode from 'react-barcode';
 
 const DonatedItemDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -21,10 +17,6 @@ const DonatedItemDetails: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>('');
     const navigate = useNavigate();
-
-    const handleAddNewDonationClick = (): void => {
-        navigate(`/donatedItem/status/${id}`);
-    };
 
     useEffect(() => {
         const fetchDonatedItemDetails = async () => {
@@ -188,7 +180,7 @@ ${svgString}
                                                 <img
                                                     key={idx}
                                                     src={image}
-                                                    alt={`Status Image ${idx}`}
+                                                    alt={`Status ${idx}`}
                                                     className="status-image"
                                                 />
                                             ))}

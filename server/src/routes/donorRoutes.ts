@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import prisma from '../prismaClient'; // Import Prisma client
+import prisma from '../prismaClient';
 import { donorValidator } from '../validators/donorValidator';
 import {
     sendWelcomeEmail,
@@ -10,7 +10,7 @@ import {
 import express from 'express';
 import { authenticateUser } from './routeProtection';
 import bcrypt from 'bcryptjs';
-import crypto from 'crypto'; // Make sure this is imported
+import crypto from 'crypto';
 
 import jwt from 'jsonwebtoken';
 
@@ -58,7 +58,7 @@ router.get('/', async (req: Request, res: Response) => {
         });
         if (permGranted) {
             const donors = await prisma.donor.findMany();
-            res.json(donors);
+            res.status(200).json(donors);
         }
     } catch (error) {
         console.log('Error fetching donor:', error);
@@ -81,7 +81,7 @@ router.get('/emails', async (req: Request, res: Response) => {
         const donorEmails = donors.map(({ email }: { email: string }) => email);
         // const donorEmails = donors.map(({ email}) => email);
 
-        res.json(donorEmails);
+        res.status(200).json(donorEmails);
     } catch (error) {
         console.error('Error fetching donor emails:', error);
         res.status(500).json({ message: 'Error fetching donor emails' });
@@ -207,7 +207,7 @@ router.get('/pending', async (req: Request, res: Response) => {
             },
         });
 
-        res.json(pendingUsers);
+        res.status(200).json(pendingUsers);
     } catch (error) {
         console.error('Error fetching pending users:', error);
         res.status(500).json({ message: 'Error fetching pending users' });
@@ -234,7 +234,7 @@ router.get('/users', async (req: Request, res: Response) => {
             orderBy: { createdAt: 'desc' },
         });
 
-        res.json(users);
+        res.status(200).json(users);
     } catch (error) {
         console.error('Error fetching users:', error);
         res.status(500).json({ message: 'Error fetching users' });
@@ -381,7 +381,7 @@ router.get('/me', async (req: Request, res: Response) => {
             where: { donorId: profile?.id },
         });
 
-        res.json({ profile, donations });
+        res.status(200).json({ profile, donations });
     } catch (error) {
         console.error('Error fetching donor data:', error);
         res.status(500).json({ message: 'Internal server error' });

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import prisma from '../prismaClient'; // Import Prisma client
+import prisma from '../prismaClient';
 import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -227,7 +227,7 @@ router.get('/', async (req: Request, res: Response) => {
         });
         if (permGranted) {
             const programs = await prisma.program.findMany();
-            res.json(programs);
+            res.status(200).json(programs);
         }
     } catch (error) {
         console.error('Error fetching programs:', error);
