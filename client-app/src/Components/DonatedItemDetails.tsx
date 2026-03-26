@@ -11,6 +11,9 @@ import '../css/DonatedItemDetails.css';
 import { DonatedItem } from '../Modals/DonatedItemModal';
 import Barcode from 'react-barcode';
 
+const PRINT_STYLE_ID = 'donated-item-print-style';
+const PRINT_CONTAINER_ID = 'donated-item-print-container';
+
 const DonatedItemDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const [donatedItem, setDonatedItem] = useState<DonatedItem | null>(null);
@@ -109,36 +112,36 @@ const DonatedItemDetails: React.FC = () => {
             const style = document.createElement('style');
             style.id = PRINT_STYLE_ID;
             style.textContent = `
-/* Hidden on screen */
-#${PRINT_CONTAINER_ID} { display: none; }
+                /* Hidden on screen */
+                #${PRINT_CONTAINER_ID} { display: none; }
 
-@media print {
-  body * { visibility: hidden !important; }
+                @media print {
+                body * { visibility: hidden !important; }
 
-  #${PRINT_CONTAINER_ID},
-  #${PRINT_CONTAINER_ID} * { visibility: visible !important; }
+                #${PRINT_CONTAINER_ID},
+                #${PRINT_CONTAINER_ID} * { visibility: visible !important; }
 
-  #${PRINT_CONTAINER_ID} {
-    display: flex !important;
-    position: fixed !important;
-    left: 0 !important;
-    top: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    padding: 12mm !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background: white !important;
-  }
+                #${PRINT_CONTAINER_ID} {
+                    display: flex !important;
+                    position: fixed !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    padding: 12mm !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    background: white !important;
+                }
 
-  #${PRINT_CONTAINER_ID} svg {
-    max-width: 95% !important;
-    height: auto !important;
-    display: block !important;
-  }
-}
+                #${PRINT_CONTAINER_ID} svg {
+                    max-width: 95% !important;
+                    height: auto !important;
+                    display: block !important;
+                }
+            }
             `;
             document.head.appendChild(style);
         }
