@@ -53,28 +53,31 @@ const LoginPage: React.FC = () => {
             const ctx = canvas.getContext('2d');
 
             if (ctx) {
-                
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                ctx.fillStyle = '#f3f3f3'
-                ctx.fillRect(0,0, canvas.width, canvas.height)
+                ctx.fillStyle = '#f3f3f3';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                for (let i = 0; i < 60; i++ ) {
+                for (let i = 0; i < 60; i++) {
                     ctx.fillStyle = `rgba(0,0,0, ${Math.random() * 0.6})`;
-                    ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height,2,2)
+                    ctx.fillRect(
+                        Math.random() * canvas.width,
+                        Math.random() * canvas.height,
+                        2,
+                        2,
+                    );
                 }
-              
+
                 ctx.font = '20px Arial';
                 ctx.fillStyle = 'black';
-               // ctx.fillText(text, 10, 28);
+                // ctx.fillText(text, 10, 28);
 
                 const metrics = ctx.measureText(text);
                 const textWidth = metrics.width;
 
                 const baseX = (canvas.width - textWidth) / 2;
-                const baseY = canvas.height / 2
-        
-                
+                const baseY = canvas.height / 2;
+
                 let offsetX = baseX;
                 for (let i = 0; i < text.length; i++) {
                     const char = text[i];
