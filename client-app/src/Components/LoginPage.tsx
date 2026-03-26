@@ -10,7 +10,6 @@ import { Link } from 'react-router-dom';
 import LoadingSpinner from './LoadingSpinner';
 import '../css/LoginPage.css';
 import Popup from './LoginPopup';
-import { basename } from 'path';
 
 interface Credentials {
     email: string;
