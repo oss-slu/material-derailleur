@@ -1,0 +1,12 @@
+.image-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    white-space: wrap;
+    padding: 10px 0;
+}
+
+.status-image {
+    height: 150px;
+    width: auto;
+    margin-right: 10px;
+}

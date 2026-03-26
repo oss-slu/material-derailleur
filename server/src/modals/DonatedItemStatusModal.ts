@@ -5,4 +5,5 @@ export interface DonatedItemStatus {
     donatedItemId: number;
     imageUrls?: string[];
     images?: string[];
+    submitter: string;
 }

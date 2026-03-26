@@ -99,6 +99,10 @@ model DonatedItemStatus {
 
   imageUrls     String[]
 
+  donorInformed Boolean @default(false)
+  approval      Boolean @default(false)
+  submitter     String  @db.VarChar(100) @default("Unknown")
+
   @@index([donatedItemId])
 }
 

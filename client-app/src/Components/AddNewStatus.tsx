@@ -16,6 +16,7 @@ interface FormData {
     dateModified: string;
     donatedItemId: string;
     informDonor: boolean | string; // Accept both boolean and string for checkbox value
+    submitter: string;
 }
 
 interface FormErrors {
@@ -128,6 +129,7 @@ const AddNewStatus: React.FC = () => {
         dateModified: new Date().toISOString().split('T')[0] || '',
         donatedItemId: id || '',
         informDonor: false,
+        submitter: localStorage.getItem('name') || '',
     });
     const [errors, setErrors] = useState<FormErrors>({});
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -283,6 +285,10 @@ const AddNewStatus: React.FC = () => {
             images.forEach(image =>
                 formDataToSubmit.append('imageFiles', image),
             );
+            formDataToSubmit.append(
+                'submitter',
+                localStorage.getItem('name')?.toString() || '',
+            );
 
             const response = await axios.post(
                 `${process.env.REACT_APP_BACKEND_API_BASE_URL}donatedItem/status/${id}`,
@@ -327,6 +333,7 @@ const AddNewStatus: React.FC = () => {
             dateModified: '',
             donatedItemId: id || '',
             informDonor: false,
+            submitter: localStorage.getItem('name') || '',
         });
         setImages([]);
         setPreviewUrls([]);

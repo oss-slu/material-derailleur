@@ -5,10 +5,12 @@ import { authenticateUser } from './routeProtection';
 
 import multer from 'multer';
 import {
+    fetchImagesFromCloud,
     uploadToStorage,
     getFileExtension,
 } from '../services/donatedItemService';
 import { sendDonationUpdateEmail } from '../services/emailService';
+import { DonatedItemStatus } from '../modals/DonatedItemStatusModal';
 
 const router = Router();
 
@@ -27,7 +29,8 @@ router.post(
             if (permGranted) {
                 const donatedItemId = Number(req.params.id);
 
-                const { statusType, dateModified, informDonor } = req.body;
+                const { statusType, dateModified, informDonor, submitter } =
+                    req.body;
                 const imageFiles = req.files as Express.Multer.File[];
 
                 if (!statusType) {
@@ -68,6 +71,9 @@ router.post(
                             : new Date(),
                         donatedItemId,
                         imageUrls,
+                        donorInformed: informDonor == 'true',
+                        approval: false,
+                        submitter: submitter ?? '',
                     },
                 });
 
@@ -75,18 +81,6 @@ router.post(
                     'Donated item status updated succesfully:',
                     updatedStatus,
                 );
-
-                // Send email notification to the donor about the status update if checkbox is checked
-                if (informDonor === 'true' && updatedStatus.donor?.email) {
-                    await sendDonationUpdateEmail(
-                        updatedStatus.donor.email,
-                        `${updatedStatus.donor.firstName} ${updatedStatus.donor.lastName}`,
-                        donatedItemId.toString(),
-                        newStatus.statusType,
-                        newStatus.dateModified,
-                        newStatus.imageUrls,
-                    );
-                }
 
                 res.status(200).json({
                     message: 'Donated item status updated successfully',
@@ -102,5 +96,119 @@ router.post(
         }
     },
 );
+
+// Admin Image Approval Routes
+// GET /donatedItem/status/review/ - Get all statuses needing review
+router.get(
+    '/review',
+    donatedItemStatusValidator,
+    async (req: Request, res: Response) => {
+        try {
+            const permGranted = await authenticateUser(req, res, {
+                requiredRank: 3,
+            });
+            if (!permGranted) return;
+
+            const donatedStatuses = await prisma.donatedItemStatus.findMany({
+                where: { approval: false },
+            });
+
+            await Promise.all(
+                donatedStatuses.map(async (status: DonatedItemStatus) => {
+                    const filenames = status.imageUrls || [];
+                    const encodedImages = await fetchImagesFromCloud(filenames);
+                    status.images = encodedImages;
+                }),
+            );
+
+            res.status(200).json(donatedStatuses);
+        } catch (error) {
+            if (error instanceof Error) {
+                console.error(
+                    'Error fetching pending statuses:',
+                    error.message,
+                );
+                res.status(
+                    error.message.includes('must be an integer') ? 400 : 404,
+                ).json({ error: error.message });
+            } else {
+                console.error(
+                    'Error fetching pending statuses:',
+                    'Unknown error',
+                );
+                res.status(500).json({ error: 'Unknown error' });
+            }
+        }
+    },
+);
+
+// PUT /donatedItem/status/review/:id - Approve status
+router.put('/review/:id', async (req: Request, res: Response) => {
+    try {
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 3,
+        });
+        if (!permGranted) return;
+
+        const statusId = Number(req.params.id);
+
+        const statusItem = await prisma.donatedItemStatus.update({
+            where: { id: statusId },
+            data: {
+                approval: true,
+            },
+        });
+        console.log('Donation status approved:', statusItem);
+
+        const donatedItem = await prisma.donatedItem.findUnique({
+            where: { id: statusItem.donatedItemId },
+            include: {
+                donor: true,
+            },
+        });
+
+        // Send email notification to the donor about the status update if marked
+        if (statusItem.donorInformed && donatedItem?.donor.email) {
+            await sendDonationUpdateEmail(
+                donatedItem.donor.email,
+                `${donatedItem.donor.firstName} ${donatedItem.donor.lastName}`,
+                donatedItem.id.toString(),
+                statusItem.statusType,
+                statusItem.dateModified,
+                statusItem.imageUrls,
+            );
+            console.log('Donor sent email of new status');
+        } else {
+            console.log('Donor not marked to be informed');
+        }
+
+        res.status(200).json(statusItem);
+    } catch (error) {
+        console.error('Error approving donation status:', error);
+        res.status(500).json({ message: 'Error approving donation status' });
+    }
+});
+
+// DELETE /donatedItem/status/review/:id - Deny status
+router.delete('/review/:id', async (req: Request, res: Response) => {
+    try {
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 3,
+        });
+        if (!permGranted) return;
+
+        const statusId = Number(req.params.id);
+
+        const statusItem = await prisma.donatedItemStatus.delete({
+            where: { id: statusId },
+        });
+        console.log('Donation status denied:', statusItem);
+
+        res.status(200).json(statusItem);
+    } catch (error) {
+        console.error('Error denying donation status:', error);
+        res.status(500).json({ message: 'Error denying donation status' });
+    }
+});
 
 export default router;
