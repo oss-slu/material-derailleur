@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import prisma from '../prismaClient'; // Import Prisma client
+import prisma from '../prismaClient';
 import { donatedItemStatusValidator } from '../validators/donatedItemStatusValidator';
 import { authenticateUser } from './routeProtection';
 

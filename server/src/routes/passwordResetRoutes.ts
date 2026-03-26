@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import prisma from '../prismaClient'; // Import Prisma client
+import prisma from '../prismaClient';
 import { body, validationResult } from 'express-validator';
 import { sendPasswordReset } from '../services/emailService';
 import jwt, { JwtPayload } from 'jsonwebtoken';
@@ -36,7 +36,7 @@ router.post(
 
             try {
                 await sendPasswordReset(email, token);
-                res.json({ message: 'Password reset email sent' });
+                res.status(200).json({ message: 'Password reset email sent' });
             } catch (error) {
                 console.error('Error sending reset email:', error);
                 res.status(500).json({ message: 'Error sending email' });

@@ -4,7 +4,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
-import prisma from '../prismaClient'; // singleton prisma client
+import prisma from '../prismaClient';
 import { donatedItemValidator } from '../validators/donatedItemValidator';
 import { validateDonor } from '../services/donorService';
 import { validateProgram } from '../services/programService';
@@ -248,7 +248,7 @@ router.get('/', async (req: Request, res: Response) => {
                 statuses: { orderBy: { dateModified: 'asc' } },
             },
         });
-        res.json(donatedItems);
+        res.status(200).json(donatedItems);
     } catch (error) {
         if (error instanceof Error) {
             console.error('Error fetching donated item:', error.message);
@@ -296,7 +296,7 @@ router.get('/:id', async (req: Request, res: Response) => {
             }),
         );
 
-        res.json(donatedItem);
+        res.status(200).json(donatedItem);
     } catch (error) {
         if (error instanceof Error) {
             console.error('Error fetching donated item:', error.message);
@@ -341,7 +341,7 @@ router.put(
             });
 
             console.log('Donated item updated:', updatedItem);
-            res.json(updatedItem);
+            res.status(200).json(updatedItem);
         } catch (error) {
             console.error('Error updating donated item details:', error);
             res.status(500).json({

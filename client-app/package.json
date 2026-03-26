@@ -87,6 +87,7 @@
         "@types/node": "^22.5.4",
         "@types/react": "^19.2.7",
         "@types/react-dom": "^19.2.3",
+        "baseline-browser-mapping": "^2.10.10",
         "jest-fetch-mock": "^3.0.3",
         "nodemon": "^3.0.3",
         "react-scripts": "^5.0.1",
