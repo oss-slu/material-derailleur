@@ -91,7 +91,7 @@ const AddProgramPage: React.FC = () => {
         setFormData({
             name: '',
             description: '',
-            startDate: '',
+            startDate: new Date().toISOString().split('T')[0] || '',
             aimAndCause: '',
         });
         setError(null);

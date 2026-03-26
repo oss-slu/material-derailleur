@@ -5,6 +5,7 @@ import { DonatedItemStatus } from './DonatedItemStatusModal';
 export interface DonatedItem {
     id: number;
     itemType: string;
+    category: string;
     currentStatus: string;
     dateDonated: string;
     lastUpdated: string;

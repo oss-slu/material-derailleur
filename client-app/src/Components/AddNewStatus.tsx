@@ -126,7 +126,7 @@ const AddNewStatus: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const [formData, setFormData] = useState<FormData>({
         statusType: ItemStatus.DONATED,
-        dateModified: '',
+        dateModified: new Date().toISOString().split('T')[0] || '',
         donatedItemId: id || '',
         informDonor: false,
         submitter: localStorage.getItem('name') || '',

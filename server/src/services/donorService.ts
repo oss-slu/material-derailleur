@@ -1,4 +1,4 @@
-import prisma from '../prismaClient'; // Adjust the import path as necessary
+import prisma from '../prismaClient';
 
 export async function validateDonor(donorId: number) {
     const donor = await prisma.donor.findUnique({

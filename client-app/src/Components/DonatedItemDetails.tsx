@@ -1,18 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Stepper, Step, StepLabel, StepContent, Button } from '@mui/material';
+import { Stepper, Step, StepLabel, StepContent } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import PersonIcon from '@mui/icons-material/Person';
 import CategoryIcon from '@mui/icons-material/Category';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import '../css/DonatedItemDetails.css';
-import { Donor } from '../Modals/DonorModal';
-import { Program } from '../Modals/ProgramModal';
-import { DonatedItemStatus } from '../Modals/DonatedItemStatusModal';
 import { DonatedItem } from '../Modals/DonatedItemModal';
-import BarcodeDisplay from './BarcodeDisplay';
 import Barcode from 'react-barcode';
 
 const PRINT_STYLE_ID = 'donated-item-print-style';
@@ -24,10 +20,6 @@ const DonatedItemDetails: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>('');
     const navigate = useNavigate();
-
-    const handleAddNewDonationClick = (): void => {
-        navigate(`/donatedItem/status/${id}`);
-    };
 
     useEffect(() => {
         const fetchDonatedItemDetails = async () => {
@@ -120,36 +112,36 @@ const DonatedItemDetails: React.FC = () => {
             const style = document.createElement('style');
             style.id = PRINT_STYLE_ID;
             style.textContent = `
-/* Hidden on screen */
-#${PRINT_CONTAINER_ID} { display: none; }
+                /* Hidden on screen */
+                #${PRINT_CONTAINER_ID} { display: none; }
 
-@media print {
-  body * { visibility: hidden !important; }
+                @media print {
+                body * { visibility: hidden !important; }
 
-  #${PRINT_CONTAINER_ID},
-  #${PRINT_CONTAINER_ID} * { visibility: visible !important; }
+                #${PRINT_CONTAINER_ID},
+                #${PRINT_CONTAINER_ID} * { visibility: visible !important; }
 
-  #${PRINT_CONTAINER_ID} {
-    display: flex !important;
-    position: fixed !important;
-    left: 0 !important;
-    top: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    padding: 12mm !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background: white !important;
-  }
+                #${PRINT_CONTAINER_ID} {
+                    display: flex !important;
+                    position: fixed !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    padding: 12mm !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    background: white !important;
+                }
 
-  #${PRINT_CONTAINER_ID} svg {
-    max-width: 95% !important;
-    height: auto !important;
-    display: block !important;
-  }
-}
+                #${PRINT_CONTAINER_ID} svg {
+                    max-width: 95% !important;
+                    height: auto !important;
+                    display: block !important;
+                }
+            }
             `;
             document.head.appendChild(style);
         }
@@ -246,7 +238,7 @@ const DonatedItemDetails: React.FC = () => {
                                                         <img
                                                             key={idx}
                                                             src={image}
-                                                            alt={`Status Image ${idx}`}
+                                                            alt={`Status ${idx}`}
                                                             className="status-image"
                                                         />
                                                     ),

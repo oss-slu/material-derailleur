@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
 import '../css/AdminHeader.css';
 import '../css/DonatedItemsList.css';
@@ -109,6 +109,13 @@ const DonatedItemsList: React.FC = () => {
         try {
             const response = await fetch(
                 `${process.env.REACT_APP_BACKEND_API_BASE_URL}program`,
+                {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token')}`, // The Authorization header
+                        'Content-Type': 'application/json', // Common header for JSON data
+                    },
+                },
             );
             if (!response.ok) {
                 throw new Error('Failed to fetch program options');
@@ -124,6 +131,7 @@ const DonatedItemsList: React.FC = () => {
     useEffect(() => {
         fetchDonatedItems();
         fetchProgramOptions();
+        setSelectedItemDetails(null);
     }, []);
 
     useEffect(() => {
@@ -136,8 +144,8 @@ const DonatedItemsList: React.FC = () => {
         const filtered = donatedItems.filter(
             item =>
                 item.id.toString().includes(searchTerm) ||
-                item.itemType.toLowerCase().includes(searchTerm) ||
-                item.donor?.firstName.toLowerCase().includes(searchTerm),
+                item.donor?.firstName.toLowerCase().includes(searchTerm) ||
+                item.category.toLowerCase().includes(searchTerm),
         );
         setFilteredItems(filtered);
     };
@@ -155,17 +163,6 @@ const DonatedItemsList: React.FC = () => {
             return 0;
         });
         setFilteredItems(sorted);
-    };
-
-    const handleBarcodeClick = (itemId: number): void => {
-        const selectedItem = donatedItems.find(item => item.id === itemId);
-        if (selectedItem) {
-            setSelectedItemDetails({
-                ...selectedItem,
-                statuses: selectedItem.statuses || [],
-            });
-        }
-        setModalIsOpen(true);
     };
 
     const handleFilterByItemName = (
@@ -443,6 +440,12 @@ ${svgString}
                 >
                     <option value="">Filter by Status</option>
                     <option value="RECEIVED">Received</option>
+                    <option value="DONATED">Donated</option>
+                    <option value="IN STORAGE FACILITY">
+                        In Storage Facility
+                    </option>
+                    <option value="REFURBISHED">Refurbished</option>
+                    <option value="ITEM SOLD">Item Sold</option>
                 </select>
             </div>
 
@@ -452,6 +455,7 @@ ${svgString}
                     <tr>
                         <th>S.No</th>
                         <th>Item ID</th>
+                        <th>Item Type</th>
                         <th>Item Name</th>
                         <th>Status</th>
                         <th>Donation Date</th>
@@ -471,6 +475,7 @@ ${svgString}
                             <td>{index + 1}</td>
                             <td>{item.id}</td>
                             <td>{item.itemType}</td>
+                            <td>{item.category}</td>
                             <td>{item.currentStatus}</td>
                             <td>
                                 {new Date(item.dateDonated).toLocaleDateString(
