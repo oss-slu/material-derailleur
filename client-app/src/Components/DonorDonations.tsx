@@ -196,14 +196,8 @@ const DonorDonations = () => {
                                         </StepContent>
                                     </Step>
                                 ) : (
-                                    // If not approved
-                                    <Step
-                                        key={status.id}
-                                        active={true}
-                                        completed={false}
-                                    >
-                                        <StepLabel>{`${status.statusType} (${formatDate(status.dateModified, false)}) (Pending)`}</StepLabel>
-                                    </Step>
+                                    // If not approved, do not display the step at all
+                                    <></>
                                 ),
                             )}
                         </Stepper>
