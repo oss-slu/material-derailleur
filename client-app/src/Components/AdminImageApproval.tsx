@@ -4,8 +4,6 @@ import axios from 'axios';
 import '../css/AdminImageApproval.css'; // Import the new CSS file
 
 import { DonatedItemStatus } from '../Modals/DonatedItemStatusModal';
-import { DonatedItem } from '../Modals/DonatedItemModal';
-import { stat } from 'fs';
 
 const AdminImageApproval: React.FC = () => {
     const [donationStatuses, setDonationStatuses] = useState<
@@ -144,7 +142,7 @@ const AdminImageApproval: React.FC = () => {
                                                       <img
                                                           key={idx}
                                                           src={image}
-                                                          alt={`Status Image ${idx}`}
+                                                          alt={`Status ${idx}`}
                                                           className="status-image"
                                                       />
                                                   ),

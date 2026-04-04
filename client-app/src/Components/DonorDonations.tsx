@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import Modal from 'react-modal';
+import { Stepper, Step, StepLabel, StepContent } from '@mui/material';
+import { DonatedItemStatus } from 'Modals/DonatedItemStatusModal';
+import { formatDate } from './DonatedItemDetails';
 
 interface Donation {
     id: number;
     itemType: string;
+    category: string;
+    currentStatus: string;
     dateDonated: string;
+    statuses: DonatedItemStatus[];
 }
 
 const DonorDonations = () => {
@@ -67,6 +73,22 @@ const DonorDonations = () => {
                                     padding: '8px',
                                 }}
                             >
+                                Item Category
+                            </th>
+                            <th
+                                style={{
+                                    borderBottom: '1px solid #ccc',
+                                    padding: '8px',
+                                }}
+                            >
+                                Item Current Status
+                            </th>
+                            <th
+                                style={{
+                                    borderBottom: '1px solid #ccc',
+                                    padding: '8px',
+                                }}
+                            >
                                 Donated At
                             </th>
                         </tr>
@@ -86,6 +108,12 @@ const DonorDonations = () => {
                                 </td>
                                 <td style={{ padding: '8px' }}>
                                     {donation.itemType}
+                                </td>
+                                <td style={{ padding: '8px' }}>
+                                    {donation.category}
+                                </td>
+                                <td style={{ padding: '8px' }}>
+                                    {donation.currentStatus}
                                 </td>
                                 <td style={{ padding: '8px' }}>
                                     {new Date(
@@ -130,14 +158,51 @@ const DonorDonations = () => {
                                 selectedDonation.dateDonated,
                             ).toLocaleString()}
                         </p>
+                        <button
+                            onClick={() => setDonationModalIsOpen(false)}
+                            style={{ marginTop: '1rem' }}
+                        >
+                            Close
+                        </button>
+                        <hr></hr>
+                        <h3>Item History</h3>
+                        <Stepper orientation="vertical">
+                            {selectedDonation?.statuses?.map(status =>
+                                status.approval ? (
+                                    // If approved
+                                    <Step
+                                        key={status.id}
+                                        active={true}
+                                        completed={false}
+                                    >
+                                        <StepLabel>{`${status.statusType} (${formatDate(
+                                            status.dateModified,
+                                            false,
+                                        )})`}</StepLabel>
+
+                                        <StepContent>
+                                            <div className="image-scroll-container">
+                                                {(status.images ?? []).map(
+                                                    (image, idx) => (
+                                                        <img
+                                                            key={idx}
+                                                            src={image}
+                                                            alt={`Status ${idx}`}
+                                                            className="status-image"
+                                                        />
+                                                    ),
+                                                )}
+                                            </div>
+                                        </StepContent>
+                                    </Step>
+                                ) : (
+                                    // If not approved, do not display the step at all
+                                    <></>
+                                ),
+                            )}
+                        </Stepper>
                     </>
                 )}
-                <button
-                    onClick={() => setDonationModalIsOpen(false)}
-                    style={{ marginTop: '1rem' }}
-                >
-                    Close
-                </button>
             </Modal>
         </div>
     );
