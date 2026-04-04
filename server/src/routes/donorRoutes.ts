@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import prisma from '../prismaClient';
 import { donorValidator } from '../validators/donorValidator';
+import { fetchImagesFromCloud } from '../services/donatedItemService';
+import { DonatedItemStatus } from '../modals/DonatedItemStatusModal';
 import {
     sendWelcomeEmail,
     sendPasswordReset,
@@ -351,35 +353,39 @@ router.post('/edit', async (req: Request, res: Response) => {
 });
 
 router.get('/me', async (req: Request, res: Response) => {
-    const permitted = await authenticateUser(req, res, { requiredRank: 0 }); // Donor or Admin
+    const permitted = await authenticateUser(req, res, { requiredRank: 0 });
     if (!permitted) return;
 
     const user = (req as any).user;
 
     try {
-        const profile = await prisma.donor.findFirst({
-            // Would not let me run it with unique
-
-            // FUTURE ME, REVERT BACK TO findUnique!!!!
+        const profile = await prisma.donor.findUnique({
             where: { email: user.email },
-            select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                contact: true,
-                addressLine1: true,
-                addressLine2: true,
-                city: true,
-                state: true,
-                zipcode: true,
-                emailOptIn: true,
+        });
+
+        console.log('Fetched donor profile:', profile);
+        const donations = await prisma.donatedItem.findMany({
+            where: { donorId: profile?.id },
+            include: {
+                statuses: {
+                    orderBy: { dateModified: 'desc' },
+                },
             },
         });
 
-        const donations = await prisma.donatedItem.findMany({
-            where: { donorId: profile?.id },
-        });
+        // hydrate images from cloud for each donation status
+        await Promise.all(
+            donations.map(async donation => {
+                await Promise.all(
+                    donation.statuses.map(async (status: DonatedItemStatus) => {
+                        const filenames = status.imageUrls || [];
+                        const encodedImages =
+                            await fetchImagesFromCloud(filenames);
+                        status.images = encodedImages;
+                    }),
+                );
+            }),
+        );
 
         res.status(200).json({ profile, donations });
     } catch (error) {

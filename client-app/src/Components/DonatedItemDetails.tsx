@@ -14,6 +14,14 @@ import Barcode from 'react-barcode';
 const PRINT_STYLE_ID = 'donated-item-print-style';
 const PRINT_CONTAINER_ID = 'donated-item-print-container';
 
+export const formatDate = (dateString: string, isUTC: boolean) => {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Invalid date';
+    if (!isUTC)
+        date.setTime(date.getTime() + date.getTimezoneOffset() * 60 * 1000);
+    return date.toDateString();
+};
+
 const DonatedItemDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const [donatedItem, setDonatedItem] = useState<DonatedItem | null>(null);
@@ -54,14 +62,6 @@ const DonatedItemDetails: React.FC = () => {
 
         fetchDonatedItemDetails();
     }, [id]);
-
-    const formatDate = (dateString: string, isUTC: boolean) => {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return 'Invalid date';
-        if (!isUTC)
-            date.setTime(date.getTime() + date.getTimezoneOffset() * 60 * 1000);
-        return date.toDateString();
-    };
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
