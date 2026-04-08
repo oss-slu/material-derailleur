@@ -24,6 +24,7 @@
   "dependencies": {
     "bwip-js": "^4.7.0",
     "cors": "^2.8.5",
+    "docx": "^9.6.1",
     "express": "^5.1.0",
     "react-zxing": "^2.1.0"
   }
