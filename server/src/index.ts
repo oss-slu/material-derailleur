@@ -8,7 +8,6 @@ import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
 
 import donorRouter from './routes/donorRoutes';
 import programRouter from './routes/programRoutes';
@@ -16,10 +15,9 @@ import donatedItemRouter from './routes/donatedItemRoutes';
 import donatedItemStatusRouter from './routes/donatedItemStatusRoutes';
 import passwordResetRouter from './routes/passwordResetRoutes';
 import barcodeRouter from './routes/barcode';
+import prisma from './prismaClient';
 
 dotenv.config(); // Load environment variables
-
-const prisma = new PrismaClient(); // Initialize Prisma Client
 const app = express();
 
 // CORS – allow frontend dev server for remote access
