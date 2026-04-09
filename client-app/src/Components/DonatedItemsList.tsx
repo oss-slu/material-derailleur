@@ -72,15 +72,14 @@ const DonatedItemsList: React.FC = () => {
 
     const { ref } = useZxing({
         constraints: { video: { facingMode: 'environment' } },
-        onDecodeResult(result: Result) {
+        onResult(result: Result) {
             setSearchInput(result.getText());
             setScanning(false);
             setError(null);
             handleSearch(result.getText());
         },
         onError(err: unknown) {
-            setError(err instanceof Error ? err.message : 'Scanner error');
-        },
+            setError(err instanceof Error ? err.message : 'Scanner error');      },
         paused: !scanning,
     });
 
@@ -594,3 +593,4 @@ ${svgString}
 };
 
 export default DonatedItemsList;
+
