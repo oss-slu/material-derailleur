@@ -6,7 +6,7 @@
     "scripts": {
         "start": "node dist/index.js",
         "dev": "nodemon src/index.ts",
-        "dev:docker": "npx prisma migrate dev && nodemon src/index.ts",
+	"dev:docker": "./node_modules/.bin/prisma migrate dev && nodemon src/index.ts",
         "build": "tsc",
         "test": "jest"
     },
