@@ -9,7 +9,7 @@ import { Navigate } from 'react-router-dom';
  * @property {'ADMIN' | 'DONOR' | 'TIER_ONE | 'TIER_TWO' | 'TIER_THREE'} allowedRole - The role that is allowed to access the protected route.
  */
 interface Props {
-    children: JSX.Element;
+    children: React.ReactElement;
     allowedRole: 'ADMIN' | 'DONOR' | 'TIER_ONE' | 'TIER_TWO' | 'TIER_THREE';
 }
 

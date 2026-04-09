@@ -1,12 +1,12 @@
 {
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.0",
+    "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^30.0.0",
     "concurrently": "^9.2.1",
     "prettier": "^3.8.1",
-    "serve": "^14.2.4"
+    "serve": "^14.2.6"
   },
   "scripts": {
     "prettier:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,scss,html}\"",
@@ -22,9 +22,8 @@
     "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\""
   },
   "dependencies": {
-    "bwip-js": "^4.7.0",
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "react-zxing": "^2.1.0"
+    "bwip-js": "^4.9.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
   }
 }
