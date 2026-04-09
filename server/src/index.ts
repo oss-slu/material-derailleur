@@ -38,9 +38,9 @@ app.use(
     }),
 );
 
-// View engine (if you actually use Jade views)
+// View engine (if you actually use Pug views)
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.set('view engine', 'pug');
 
 // Standard middlewares
 app.use(logger('dev'));
