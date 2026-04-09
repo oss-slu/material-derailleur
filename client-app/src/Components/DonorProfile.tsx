@@ -20,7 +20,6 @@ const DonorProfile = () => {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [modalIsOpen, setModalIsOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState<Profile | null>(null);
 
@@ -172,7 +171,7 @@ const DonorProfile = () => {
                                 Edit Details
                             </button>
                             <button
-                                onClick={() => setModalIsOpen(false)}
+                                onClick={() => setIsEditing(false)}
                                 style={{ marginLeft: '1rem' }}
                             >
                                 Close

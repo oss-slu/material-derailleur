@@ -9,7 +9,7 @@ import { Program } from '../Modals/ProgramModal';
 import { DonatedItem } from '../Modals/DonatedItemModal';
 import { DonatedItemStatus as Status } from '../Modals/DonatedItemStatusModal';
 import axios from 'axios';
-import { useZxing } from 'react-zxing';
+import { Result, useZxing } from 'react-zxing';
 
 interface SelectedItemDetails extends DonatedItem {
     statuses: Status[];
@@ -72,14 +72,14 @@ const DonatedItemsList: React.FC = () => {
 
     const { ref } = useZxing({
         constraints: { video: { facingMode: 'environment' } },
-        onResult(result) {
+        onDecodeResult(result: Result) {
             setSearchInput(result.getText());
             setScanning(false);
             setError(null);
             handleSearch(result.getText());
         },
-        onError(err) {
-            setError(err.message);
+        onError(err: unknown) {
+            setError(err instanceof Error ? err.message : 'Scanner error');
         },
         paused: !scanning,
     });

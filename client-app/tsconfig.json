@@ -18,10 +18,6 @@
         "baseUrl": "src",
         "types": ["node", "jest", "@testing-library/jest-dom"]
     },
-    "include": [
-        "src/**/*"
-    ],
-    "exclude": [
-        "node_modules"
-    ]
+    "include": ["src/**/*"],
+    "exclude": ["node_modules"]
 }

@@ -66,4 +66,6 @@ const usePopup = (): PopupContextType => {
     return context;
 };
 
-export default { PopupProvider, usePopup };
+const popup = { PopupProvider, usePopup };
+
+export default popup;

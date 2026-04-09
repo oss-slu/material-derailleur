@@ -94,11 +94,6 @@ router.post(
                     .status(400)
                     .json({ error: 'donorId must be a positive integer' });
             }
-            if (!Number.isInteger(programId) || programId <= 0) {
-                return res
-                    .status(400)
-                    .json({ error: 'programId must be a positive integer' });
-            }
 
             // validate donor/program exist
             try {

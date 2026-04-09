@@ -7,9 +7,8 @@ if (!connectionString) {
     throw new Error('DATABASE_URL must be set before Prisma is initialized');
 }
 
-const prisma =
-    new PrismaClient({
-        adapter: new PrismaPg({ connectionString }),
-    });
+const prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString }),
+});
 
 export default prisma;
