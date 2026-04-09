@@ -79,7 +79,8 @@ const DonatedItemsList: React.FC = () => {
             handleSearch(result.getText());
         },
         onError(err: unknown) {
-            setError(err instanceof Error ? err.message : 'Scanner error');      },
+            setError(err instanceof Error ? err.message : 'Scanner error');
+        },
         paused: !scanning,
     });
 
@@ -593,4 +594,3 @@ ${svgString}
 };
 
 export default DonatedItemsList;
-
