@@ -15,13 +15,13 @@
         "resolveJsonModule": true,
         "isolatedModules": true,
         "noEmit": true,
-        "baseUrl": "src"
+        "baseUrl": "src",
+        "types": ["node", "jest", "@testing-library/jest-dom"]
     },
     "include": [
-        "src/**/*" // Include all files in the src folder
+        "src/**/*"
     ],
     "exclude": [
-        "node_modules", // Exclude the node_modules directory
-        "**/*.spec.ts" // Exclude test files
+        "node_modules"
     ]
 }
