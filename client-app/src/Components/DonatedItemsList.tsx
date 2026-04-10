@@ -72,7 +72,7 @@ const DonatedItemsList: React.FC = () => {
 
     const { ref } = useZxing({
         constraints: { video: { facingMode: 'environment' } },
-        onResult(result: Result) {
+        onDecodeResult(result: Result) {
             setSearchInput(result.getText());
             setScanning(false);
             setError(null);
