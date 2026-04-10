@@ -51,6 +51,78 @@ function writeTempFileFromBase64(base64: string, ext = '.jpg'): string {
     return tmp;
 }
 
+type IncomingItemAttribute = {
+    descriptor?: unknown;
+    stringValue?: unknown;
+    numberValue?: unknown;
+    booleanValue?: unknown;
+};
+
+function parseItemAttributes(rawAttributes: unknown) {
+    if (
+        typeof rawAttributes !== 'string' ||
+        rawAttributes.trim().length === 0
+    ) {
+        return [];
+    }
+
+    const parsed = JSON.parse(rawAttributes);
+    if (!Array.isArray(parsed)) {
+        throw new Error('itemAttributes must be an array');
+    }
+
+    return parsed
+        .map((attribute: IncomingItemAttribute) => {
+            const descriptor =
+                typeof attribute?.descriptor === 'string'
+                    ? attribute.descriptor.trim()
+                    : '';
+
+            if (!descriptor) {
+                return null;
+            }
+
+            const stringValue =
+                typeof attribute?.stringValue === 'string'
+                    ? attribute.stringValue.trim()
+                    : null;
+            const numberValue =
+                typeof attribute?.numberValue === 'number' &&
+                Number.isFinite(attribute.numberValue)
+                    ? attribute.numberValue
+                    : null;
+            const booleanValue =
+                typeof attribute?.booleanValue === 'boolean'
+                    ? attribute.booleanValue
+                    : null;
+
+            if (
+                stringValue === null &&
+                numberValue === null &&
+                booleanValue === null
+            ) {
+                return null;
+            }
+
+            return {
+                descriptor,
+                stringValue,
+                numberValue,
+                booleanValue,
+            };
+        })
+        .filter(
+            (
+                attribute,
+            ): attribute is {
+                descriptor: string;
+                stringValue: string | null;
+                numberValue: number | null;
+                booleanValue: boolean | null;
+            } => attribute !== null,
+        );
+}
+
 // POST /donatedItem - Create a new DonatedItem (original flow + analysis)
 router.post(
     '/',
@@ -77,6 +149,7 @@ router.post(
             const currentStatus = String(
                 req.body.currentStatus ?? req.body.status ?? 'Received',
             ).trim();
+            const itemAttributes = parseItemAttributes(req.body.itemAttributes);
 
             const optOutAnalysis =
                 String(req.body.optOutAnalysis ?? 'false') === 'true';
@@ -127,9 +200,13 @@ router.post(
                     dateDonated: dateDonatedDateTime,
                     donorId,
                     programId,
+                    attributes: {
+                        create: itemAttributes,
+                    },
                 },
                 include: {
                     donor: true,
+                    attributes: true,
                     statuses: { orderBy: { dateModified: 'asc' } },
                 },
             });
@@ -257,7 +334,6 @@ router.get('/', async (req: Request, res: Response) => {
         }
     }
 });
-
 
 // GET /donatedItem/attributes - Get all unique item attribute descriptors
 router.get('/attributes', async (req: Request, res: Response) => {

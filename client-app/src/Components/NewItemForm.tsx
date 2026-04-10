@@ -3,7 +3,15 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from './LoadingSpinner';
 import '../css/DonorForm.css';
-import { ItemAttribute } from 'Modals/ItemAttributeModal';
+
+type AttributeValueType = 'string' | 'number' | 'boolean';
+
+interface SelectedAttribute {
+    descriptor: string;
+    valueType: AttributeValueType;
+    value: string;
+    booleanValue: boolean | null;
+}
 
 interface FormData {
     itemType: string;
@@ -14,7 +22,7 @@ interface FormData {
     imageFiles: File[];
     category: string;
     quantity: number;
-    itemAttributes: ItemAttribute[];
+    selectedItemAttributes: SelectedAttribute[];
 }
 
 interface FormErrors {
@@ -26,6 +34,45 @@ interface Option {
     label: string;
     id?: number;
 }
+
+const DEFAULT_ATTRIBUTE_DESCRIPTORS_BICYCLE = [
+    'brand',
+    'model',
+    'standover height',
+    'type',
+    'color',
+    'wheel size',
+    'condition',
+    'needs repair',
+    'note',
+];
+
+const DEFAULT_ATTRIBUTE_DESCRIPTORS_COMPUTER = [
+    'brand',
+    'model',
+    'condition',
+    'type',
+    'needs repair',
+    'cpu',
+    'ram',
+    'storage',
+    'note',
+];
+
+const getDefaultDescriptorsForItemType = (itemType: string) => {
+    if (itemType === 'bicycle') {
+        return DEFAULT_ATTRIBUTE_DESCRIPTORS_BICYCLE;
+    }
+
+    if (itemType === 'computer') {
+        return DEFAULT_ATTRIBUTE_DESCRIPTORS_COMPUTER;
+    }
+
+    return [
+        ...DEFAULT_ATTRIBUTE_DESCRIPTORS_BICYCLE,
+        ...DEFAULT_ATTRIBUTE_DESCRIPTORS_COMPUTER,
+    ];
+};
 
 const NewItemForm: React.FC = () => {
     const maxImageSize = 5 * 1024 * 1024; // 5MB
@@ -40,7 +87,7 @@ const NewItemForm: React.FC = () => {
         dateDonated: '',
         category: '',
         quantity: 1,
-        itemAttributes: [],
+        selectedItemAttributes: [],
     });
 
     const itemTypeOptions: Option[] = [
@@ -51,6 +98,8 @@ const NewItemForm: React.FC = () => {
     const [donorEmailOptions, setDonorEmailOptions] = useState<Option[]>([]);
     const [programOptions, setProgramOptions] = useState<Option[]>([]);
     const [attributeOptions, setAttributeOptions] = useState<Option[]>([]);
+    const [selectedDescriptor, setSelectedDescriptor] = useState('');
+    const [customDescriptor, setCustomDescriptor] = useState('');
     const [previews, setPreviews] = useState<string[]>([]);
     const [errors, setErrors] = useState<FormErrors>({});
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -101,6 +150,10 @@ const NewItemForm: React.FC = () => {
         };
 
         const fetchAttributes = async () => {
+            const defaultDescriptors = getDefaultDescriptorsForItemType(
+                formData.itemType,
+            );
+
             try {
                 const response = await axios.get(
                     `${process.env.REACT_APP_BACKEND_API_BASE_URL}donatedItem/attributes`,
@@ -110,21 +163,40 @@ const NewItemForm: React.FC = () => {
                         },
                     },
                 );
-                const attrOptions = response.data.map((attr: any) => ({
-                    value: String(attr.id),
-                    label: attr.descriptor,
-                    id: attr.id as number,
-                }));
-                setAttributeOptions(attrOptions);
+                const descriptors = [
+                    ...defaultDescriptors,
+                    ...response.data.map((attr: any) =>
+                        String(attr.descriptor),
+                    ),
+                ];
+                const uniqueDescriptors = Array.from(
+                    new Set(
+                        descriptors
+                            .map(descriptor => descriptor.trim())
+                            .filter(Boolean),
+                    ),
+                ).sort((a, b) => a.localeCompare(b));
+                setAttributeOptions(
+                    uniqueDescriptors.map(descriptor => ({
+                        value: descriptor,
+                        label: descriptor,
+                    })),
+                );
             } catch (error) {
                 console.error('Error fetching attributes:', error);
+                setAttributeOptions(
+                    defaultDescriptors.map(descriptor => ({
+                        value: descriptor,
+                        label: descriptor,
+                    })),
+                );
             }
         };
 
         fetchDonorEmails();
         fetchPrograms();
         fetchAttributes();
-    }, []);
+    }, [formData.itemType]);
 
     const convertToBase64 = (file: File): Promise<string> =>
         new Promise((resolve, reject) => {
@@ -263,6 +335,77 @@ const NewItemForm: React.FC = () => {
         return Object.keys(newErrors).length === 0;
     };
 
+    const addAttribute = (descriptorInput?: string) => {
+        const descriptor = (descriptorInput ?? selectedDescriptor).trim();
+        if (!descriptor) {
+            return;
+        }
+
+        const alreadySelected = formData.selectedItemAttributes.some(
+            attr => attr.descriptor.toLowerCase() === descriptor.toLowerCase(),
+        );
+        if (alreadySelected) {
+            setSelectedDescriptor('');
+            setCustomDescriptor('');
+            return;
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            selectedItemAttributes: [
+                ...prev.selectedItemAttributes,
+                {
+                    descriptor,
+                    valueType:
+                        descriptor.toLowerCase().startsWith('is') ||
+                        descriptor.toLowerCase().startsWith('has') ||
+                        descriptor.toLowerCase().startsWith('needs')
+                            ? 'boolean'
+                            : 'string',
+                    value: '',
+                    booleanValue: null,
+                },
+            ],
+        }));
+
+        if (
+            !attributeOptions.some(
+                option =>
+                    option.value.toLowerCase() === descriptor.toLowerCase(),
+            )
+        ) {
+            setAttributeOptions(prev =>
+                [...prev, { value: descriptor, label: descriptor }].sort(
+                    (a, b) => a.label.localeCompare(b.label),
+                ),
+            );
+        }
+
+        setSelectedDescriptor('');
+        setCustomDescriptor('');
+    };
+
+    const removeAttribute = (descriptor: string) => {
+        setFormData(prev => ({
+            ...prev,
+            selectedItemAttributes: prev.selectedItemAttributes.filter(
+                attr => attr.descriptor !== descriptor,
+            ),
+        }));
+    };
+
+    const updateAttribute = (
+        descriptor: string,
+        updates: Partial<SelectedAttribute>,
+    ) => {
+        setFormData(prev => ({
+            ...prev,
+            selectedItemAttributes: prev.selectedItemAttributes.map(attr =>
+                attr.descriptor === descriptor ? { ...attr, ...updates } : attr,
+            ),
+        }));
+    };
+
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         setIsLoading(true);
         event.preventDefault();
@@ -288,6 +431,46 @@ const NewItemForm: React.FC = () => {
             fd.append('dateDonated', formData.dateDonated);
             fd.append('category', formData.category);
             fd.append('quantity', String(formData.quantity));
+            fd.append(
+                'itemAttributes',
+                JSON.stringify(
+                    formData.selectedItemAttributes
+                        .map(attribute => {
+                            const trimmedValue = attribute.value.trim();
+
+                            if (attribute.valueType === 'boolean') {
+                                if (attribute.booleanValue === null) {
+                                    return null;
+                                }
+
+                                return {
+                                    descriptor: attribute.descriptor,
+                                    stringValue: null,
+                                    numberValue: null,
+                                    booleanValue: attribute.booleanValue,
+                                };
+                            }
+
+                            if (!trimmedValue) {
+                                return null;
+                            }
+
+                            return {
+                                descriptor: attribute.descriptor,
+                                stringValue:
+                                    attribute.valueType === 'string'
+                                        ? trimmedValue
+                                        : null,
+                                numberValue:
+                                    attribute.valueType === 'number'
+                                        ? Number(trimmedValue)
+                                        : null,
+                                booleanValue: null,
+                            };
+                        })
+                        .filter(Boolean),
+                ),
+            );
 
             // run analysis by default; change to 'true' to opt-out
             fd.append('optOutAnalysis', 'false');
@@ -328,8 +511,10 @@ const NewItemForm: React.FC = () => {
             dateDonated: new Date().toISOString().split('T')[0] || '',
             category: '',
             quantity: 1,
-            itemAttributes: [],
+            selectedItemAttributes: [],
         });
+        setSelectedDescriptor('');
+        setCustomDescriptor('');
         setPreviews([]);
         setErrors({});
         setErrorMessage(null);
@@ -386,6 +571,241 @@ const NewItemForm: React.FC = () => {
                             </div>
                         ))}
                     </div>
+                </div>
+            ) : name === 'selectedItemAttributes' ? (
+                <div className="attribute-editor">
+                    <div
+                        style={{
+                            display: 'flex',
+                            gap: '0.75rem',
+                            alignItems: 'end',
+                            flexWrap: 'wrap',
+                        }}
+                    >
+                        <div style={{ flex: '1 1 220px' }}>
+                            <label
+                                htmlFor="selected-attribute-descriptor"
+                                className="block text-sm font-semibold mb-1"
+                            >
+                                Pick descriptor
+                            </label>
+                            <select
+                                id="selected-attribute-descriptor"
+                                value={selectedDescriptor}
+                                onChange={e =>
+                                    setSelectedDescriptor(e.target.value)
+                                }
+                                className="w-full px-3 py-2 rounded border border-gray-300"
+                            >
+                                <option value="">Select descriptor</option>
+                                {attributeOptions.map(option => (
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => addAttribute()}
+                            className="submit-button"
+                            disabled={!selectedDescriptor}
+                        >
+                            Add
+                        </button>
+                    </div>
+
+                    <div
+                        style={{
+                            display: 'flex',
+                            gap: '0.75rem',
+                            alignItems: 'end',
+                            flexWrap: 'wrap',
+                            marginTop: '1rem',
+                        }}
+                    >
+                        <div style={{ flex: '1 1 220px' }}>
+                            <label
+                                htmlFor="custom-attribute-descriptor"
+                                className="block text-sm font-semibold mb-1"
+                            >
+                                Or create descriptor
+                            </label>
+                            <input
+                                id="custom-attribute-descriptor"
+                                type="text"
+                                value={customDescriptor}
+                                onChange={e =>
+                                    setCustomDescriptor(e.target.value)
+                                }
+                                placeholder="e.g. serial number"
+                                className="w-full px-3 py-2 rounded border border-gray-300"
+                            />
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => addAttribute(customDescriptor)}
+                            className="submit-button"
+                            disabled={!customDescriptor.trim()}
+                        >
+                            Create
+                        </button>
+                    </div>
+
+                    {formData.selectedItemAttributes.length > 0 && (
+                        <div style={{ marginTop: '1rem' }}>
+                            {formData.selectedItemAttributes.map(attribute => (
+                                <div
+                                    key={attribute.descriptor}
+                                    style={{
+                                        border: '1px solid #d1d5db',
+                                        borderRadius: '0.5rem',
+                                        padding: '1rem',
+                                        marginBottom: '0.75rem',
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            gap: '0.75rem',
+                                            flexWrap: 'wrap',
+                                        }}
+                                    >
+                                        <strong>{attribute.descriptor}</strong>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                removeAttribute(
+                                                    attribute.descriptor,
+                                                )
+                                            }
+                                            className="back-button"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            gap: '0.75rem',
+                                            flexWrap: 'wrap',
+                                            marginTop: '0.75rem',
+                                            alignItems: 'end',
+                                        }}
+                                    >
+                                        <div style={{ flex: '0 0 140px' }}>
+                                            <label className="block text-sm font-semibold mb-1">
+                                                Type
+                                            </label>
+                                            <select
+                                                value={attribute.valueType}
+                                                onChange={e =>
+                                                    updateAttribute(
+                                                        attribute.descriptor,
+                                                        {
+                                                            valueType: e.target
+                                                                .value as AttributeValueType,
+                                                            value: '',
+                                                            booleanValue: null,
+                                                        },
+                                                    )
+                                                }
+                                                className="w-full px-3 py-2 rounded border border-gray-300"
+                                            >
+                                                <option value="string">
+                                                    Text
+                                                </option>
+                                                <option value="number">
+                                                    Number
+                                                </option>
+                                                <option value="boolean">
+                                                    Yes / No
+                                                </option>
+                                            </select>
+                                        </div>
+
+                                        {attribute.valueType === 'boolean' ? (
+                                            <div style={{ flex: '1 1 220px' }}>
+                                                <label className="block text-sm font-semibold mb-1">
+                                                    Value
+                                                </label>
+                                                <select
+                                                    value={
+                                                        attribute.booleanValue ===
+                                                        null
+                                                            ? ''
+                                                            : String(
+                                                                  attribute.booleanValue,
+                                                              )
+                                                    }
+                                                    onChange={e =>
+                                                        updateAttribute(
+                                                            attribute.descriptor,
+                                                            {
+                                                                booleanValue:
+                                                                    e.target
+                                                                        .value ===
+                                                                    ''
+                                                                        ? null
+                                                                        : e
+                                                                              .target
+                                                                              .value ===
+                                                                          'true',
+                                                            },
+                                                        )
+                                                    }
+                                                    className="w-full px-3 py-2 rounded border border-gray-300"
+                                                >
+                                                    <option value="">
+                                                        Select value
+                                                    </option>
+                                                    <option value="true">
+                                                        Yes
+                                                    </option>
+                                                    <option value="false">
+                                                        No
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        ) : (
+                                            <div style={{ flex: '1 1 220px' }}>
+                                                <label className="block text-sm font-semibold mb-1">
+                                                    Value
+                                                </label>
+                                                <input
+                                                    type={
+                                                        attribute.valueType ===
+                                                        'number'
+                                                            ? 'number'
+                                                            : 'text'
+                                                    }
+                                                    value={attribute.value}
+                                                    onChange={e =>
+                                                        updateAttribute(
+                                                            attribute.descriptor,
+                                                            {
+                                                                value: e.target
+                                                                    .value,
+                                                            },
+                                                        )
+                                                    }
+                                                    className="w-full px-3 py-2 rounded border border-gray-300"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             ) : options ? (
                 <select
@@ -463,7 +883,13 @@ const NewItemForm: React.FC = () => {
                 {renderFormField('Quantity', 'quantity', 'number')}
                 {renderFormField('Date Donated', 'dateDonated', 'date')}
                 {renderFormField('Images (Max 5)', 'imageFiles', 'file', false)}
-                {renderFormField('Descriptors', 'itemAttributes', 'dropdown', false)}
+                {renderFormField(
+                    'Attributes',
+                    'selectedItemAttributes',
+                    'select',
+                    false,
+                    attributeOptions,
+                )}
 
                 <div className="form-field full-width button-container">
                     <button
