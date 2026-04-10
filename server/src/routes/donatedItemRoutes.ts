@@ -16,6 +16,7 @@ import {
     getFileExtension,
 } from '../services/donatedItemService';
 import { DonatedItemStatus } from '../modals/DonatedItemStatusModal';
+import { ItemAttribute } from '../modals/ItemAttributeModal';
 import { sendDonationEmail } from '../services/emailService';
 import { authenticateUser } from './routeProtection';
 import { date } from 'joi';
@@ -252,6 +253,36 @@ router.get('/', async (req: Request, res: Response) => {
             ).json({ error: error.message });
         } else {
             console.error('Error fetching donated item:', 'Unknown error');
+            res.status(500).json({ error: 'Unknown error' });
+        }
+    }
+});
+
+
+// GET /donatedItem/attributes - Get all unique item attribute descriptors
+router.get('/attributes', async (req: Request, res: Response) => {
+    try {
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 1,
+        });
+        if (!permGranted) return;
+
+        const attributes = await prisma.itemAttribute.groupBy({
+            by: ['descriptor'],
+            _count: {
+                _all: true,
+            },
+            orderBy: {
+                descriptor: 'asc',
+            },
+        });
+        res.status(200).json(attributes);
+    } catch (error) {
+        if (error instanceof Error) {
+            console.error('Error fetching item attributes:', error.message);
+            res.status(400).json({ error: error.message });
+        } else {
+            console.error('Error fetching item attributes:', 'Unknown error');
             res.status(500).json({ error: 'Unknown error' });
         }
     }

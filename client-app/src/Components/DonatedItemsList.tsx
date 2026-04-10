@@ -26,6 +26,9 @@ const DonatedItemsList: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [programOptions, setProgramOptions] = useState<Program[]>([]);
+    const [attributeOptions, setAttributeOptions] = useState<
+        { value: string; label: string; id: number }[]
+    >([]);
     const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
     const [itemTypes, setItemTypes] = useState<Set<string>>(new Set());
 
@@ -72,7 +75,7 @@ const DonatedItemsList: React.FC = () => {
 
     const { ref } = useZxing({
         constraints: { video: { facingMode: 'environment' } },
-        onResult(result: Result) {
+        onDecodeResult(result: Result) {
             setSearchInput(result.getText());
             setScanning(false);
             setError(null);
@@ -128,9 +131,31 @@ const DonatedItemsList: React.FC = () => {
         }
     };
 
+    const fetchAttributes = async () => {
+        try {
+            const response = await axios.get(
+                `${process.env.REACT_APP_BACKEND_API_BASE_URL}donatedItem/attributes`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+                    },
+                },
+            );
+            const attrOptions = response.data.map((attr: any) => ({
+                value: String(attr.id),
+                label: attr.descriptor,
+                id: attr.id as number,
+            }));
+            setAttributeOptions(attrOptions);
+        } catch (error) {
+            console.error('Error fetching attributes:', error);
+        }
+    };
+
     useEffect(() => {
         fetchDonatedItems();
         fetchProgramOptions();
+        fetchAttributes();
         setSelectedItemDetails(null);
     }, []);
 

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from './LoadingSpinner';
 import '../css/DonorForm.css';
+import { ItemAttribute } from 'Modals/ItemAttributeModal';
 
 interface FormData {
     itemType: string;
@@ -13,6 +14,7 @@ interface FormData {
     imageFiles: File[];
     category: string;
     quantity: number;
+    itemAttributes: ItemAttribute[];
 }
 
 interface FormErrors {
@@ -38,6 +40,7 @@ const NewItemForm: React.FC = () => {
         dateDonated: '',
         category: '',
         quantity: 1,
+        itemAttributes: [],
     });
 
     const itemTypeOptions: Option[] = [
@@ -47,6 +50,7 @@ const NewItemForm: React.FC = () => {
 
     const [donorEmailOptions, setDonorEmailOptions] = useState<Option[]>([]);
     const [programOptions, setProgramOptions] = useState<Option[]>([]);
+    const [attributeOptions, setAttributeOptions] = useState<Option[]>([]);
     const [previews, setPreviews] = useState<string[]>([]);
     const [errors, setErrors] = useState<FormErrors>({});
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -96,8 +100,30 @@ const NewItemForm: React.FC = () => {
             }
         };
 
+        const fetchAttributes = async () => {
+            try {
+                const response = await axios.get(
+                    `${process.env.REACT_APP_BACKEND_API_BASE_URL}donatedItem/attributes`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+                        },
+                    },
+                );
+                const attrOptions = response.data.map((attr: any) => ({
+                    value: String(attr.id),
+                    label: attr.descriptor,
+                    id: attr.id as number,
+                }));
+                setAttributeOptions(attrOptions);
+            } catch (error) {
+                console.error('Error fetching attributes:', error);
+            }
+        };
+
         fetchDonorEmails();
         fetchPrograms();
+        fetchAttributes();
     }, []);
 
     const convertToBase64 = (file: File): Promise<string> =>
@@ -302,6 +328,7 @@ const NewItemForm: React.FC = () => {
             dateDonated: new Date().toISOString().split('T')[0] || '',
             category: '',
             quantity: 1,
+            itemAttributes: [],
         });
         setPreviews([]);
         setErrors({});
@@ -436,6 +463,7 @@ const NewItemForm: React.FC = () => {
                 {renderFormField('Quantity', 'quantity', 'number')}
                 {renderFormField('Date Donated', 'dateDonated', 'date')}
                 {renderFormField('Images (Max 5)', 'imageFiles', 'file', false)}
+                {renderFormField('Descriptors', 'itemAttributes', 'dropdown', false)}
 
                 <div className="form-field full-width button-container">
                     <button
