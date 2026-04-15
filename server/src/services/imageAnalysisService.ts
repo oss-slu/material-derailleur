@@ -4,13 +4,10 @@ import {
     createUserContent,
     createPartFromBase64,
 } from '@google/genai';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient, Prisma } from '../generated/prisma';
+import { Prisma } from '../generated/prisma';
 import fs from 'fs';
 import path from 'path';
-
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
-const prisma = new PrismaClient({ adapter });
+import prisma from '../prismaClient';
 
 // --- Env / client ---
 const API_KEY = process.env.GOOGLE_GEMINI_API_KEY || '';

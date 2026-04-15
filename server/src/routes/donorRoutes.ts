@@ -23,6 +23,10 @@ interface Donor {
     name?: string;
 }
 
+interface DonorDonation {
+    statuses: DonatedItemStatus[];
+}
+
 router.post('/', donorValidator, async (req: Request, res: Response) => {
     try {
         const permGranted = await authenticateUser(req, res, {
@@ -56,7 +60,7 @@ router.post('/', donorValidator, async (req: Request, res: Response) => {
 router.get('/', async (req: Request, res: Response) => {
     try {
         const permGranted = await authenticateUser(req, res, {
-            requiredRank: 2,
+            requiredRank: 1,
         });
         if (permGranted) {
             const donors = await prisma.donor.findMany();
@@ -375,7 +379,7 @@ router.get('/me', async (req: Request, res: Response) => {
 
         // hydrate images from cloud for each donation status
         await Promise.all(
-            donations.map(async donation => {
+            donations.map(async (donation: DonorDonation) => {
                 await Promise.all(
                     donation.statuses.map(async (status: DonatedItemStatus) => {
                         const filenames = status.imageUrls || [];

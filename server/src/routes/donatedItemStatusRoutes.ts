@@ -158,7 +158,6 @@ router.put('/review/:id', async (req: Request, res: Response) => {
                 approval: true,
             },
         });
-        console.log('Donation status approved:', statusItem);
 
         const donatedItem = await prisma.donatedItem.findUnique({
             where: { id: statusItem.donatedItemId },

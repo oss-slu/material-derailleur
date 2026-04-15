@@ -8,8 +8,6 @@ import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from './generated/prisma';
 
 import donorRouter from './routes/donorRoutes';
 import programRouter from './routes/programRoutes';
@@ -17,11 +15,9 @@ import donatedItemRouter from './routes/donatedItemRoutes';
 import donatedItemStatusRouter from './routes/donatedItemStatusRoutes';
 import passwordResetRouter from './routes/passwordResetRoutes';
 import barcodeRouter from './routes/barcode';
+import prisma from './prismaClient';
 
 dotenv.config(); // Load environment variables
-
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
-const prisma = new PrismaClient({ adapter }); // Initialize Prisma Client
 const app = express();
 
 // CORS – allow frontend dev server for remote access
@@ -42,9 +38,9 @@ app.use(
     }),
 );
 
-// View engine (if you actually use Jade views)
+// View engine (if you actually use Pug views)
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.set('view engine', 'pug');
 
 // Standard middlewares
 app.use(logger('dev'));

@@ -359,28 +359,33 @@ const DonatedItemDetails: React.FC = () => {
                             {donatedItem.donor.zipcode}
                         </p>
                     </section>
-
-                    <section className="program-details-section">
-                        <div className="section-header">
-                            <EventNoteIcon className="icon" />
-                            <h2>Program Details</h2>
-                        </div>
-                        <p>
-                            <strong>Name:</strong> {donatedItem.program?.name}
-                        </p>
-                        <p>
-                            <strong>Description:</strong>{' '}
-                            {donatedItem.program?.description}
-                        </p>
-                        <p>
-                            <strong>Start Date:</strong>{' '}
-                            {formatDate(donatedItem.program?.startDate, false)}
-                        </p>
-                        <p>
-                            <strong>Aim and Cause:</strong>{' '}
-                            {donatedItem.program?.aimAndCause}
-                        </p>
-                    </section>
+                    {donatedItem.program && (
+                        <section className="program-details-section">
+                            <div className="section-header">
+                                <EventNoteIcon className="icon" />
+                                <h2>Program Details</h2>
+                            </div>
+                            <p>
+                                <strong>Name:</strong>{' '}
+                                {donatedItem.program?.name}
+                            </p>
+                            <p>
+                                <strong>Description:</strong>{' '}
+                                {donatedItem.program?.description}
+                            </p>
+                            <p>
+                                <strong>Start Date:</strong>{' '}
+                                {formatDate(
+                                    donatedItem.program?.startDate,
+                                    false,
+                                )}
+                            </p>
+                            <p>
+                                <strong>Aim and Cause:</strong>{' '}
+                                {donatedItem.program?.aimAndCause}
+                            </p>
+                        </section>
+                    )}
                 </div>
             </div>
         </div>

@@ -4,6 +4,7 @@ import React, {
     FormEvent,
     useEffect,
     useRef,
+    useCallback,
 } from 'react';
 import { RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -30,23 +31,7 @@ const LoginPage: React.FC = () => {
     const { usePopup } = Popup;
     const { triggerPopup } = usePopup();
 
-    useEffect(() => {
-        generateCaptcha();
-    }, []);
-
-    // Generate random captcha and draw on canvas (original logic kept)
-    const generateCaptcha = (): void => {
-        const randomCaptcha = Math.random().toString(36).substring(7);
-        setCaptcha(randomCaptcha);
-        drawCaptcha(randomCaptcha);
-    };
-
-    const resetCaptcha = (): void => {
-        generateCaptcha();
-        setCaptchaValue('');
-    };
-
-    const drawCaptcha = (text: string): void => {
+    const drawCaptcha = useCallback((text: string): void => {
         if (captchaCanvasRef.current) {
             const canvas = captchaCanvasRef.current;
             const ctx = canvas.getContext('2d');
@@ -99,6 +84,22 @@ const LoginPage: React.FC = () => {
                 }
             }
         }
+    }, []);
+
+    // Generate random captcha and draw on canvas (original logic kept)
+    const generateCaptcha = useCallback((): void => {
+        const randomCaptcha = Math.random().toString(36).substring(7);
+        setCaptcha(randomCaptcha);
+        drawCaptcha(randomCaptcha);
+    }, [drawCaptcha]);
+
+    useEffect(() => {
+        generateCaptcha();
+    }, [generateCaptcha]);
+
+    const resetCaptcha = (): void => {
+        generateCaptcha();
+        setCaptchaValue('');
     };
 
     const onChange = (e: ChangeEvent<HTMLInputElement>): void => {
@@ -167,9 +168,9 @@ const LoginPage: React.FC = () => {
                     data.role === 'TIER_TWO' ||
                     data.role === 'TIER_THREE'
                 ) {
-                    window.location.href = '/';
+                    window.location.href = (process.env.PUBLIC_URL || '') + '/';
                 } else if (data.role === 'DONOR') {
-                    window.location.href = '/donor-profile';
+                    window.location.href = (process.env.PUBLIC_URL || '') + '/donor-profile';
                 } else {
                     setErrorMessage(
                         'Unknown user role. Please contact support.',

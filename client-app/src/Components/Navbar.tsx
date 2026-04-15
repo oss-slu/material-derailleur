@@ -52,7 +52,7 @@ const Navbar: React.FC = () => {
 
         // Ensure UI updates by reloading the page or using event dispatch
         window.dispatchEvent(new Event('storage'));
-        window.location.href = '/';
+        window.location.href = (process.env.PUBLIC_URL || '') + '/';
     };
 
     return (

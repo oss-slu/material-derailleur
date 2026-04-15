@@ -223,7 +223,7 @@ router.post('/', async (req: Request, res: Response) => {
 router.get('/', async (req: Request, res: Response) => {
     try {
         const permGranted = await authenticateUser(req, res, {
-            requiredRank: 3,
+            requiredRank: 1,
         });
         if (permGranted) {
             const programs = await prisma.program.findMany();

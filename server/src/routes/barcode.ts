@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
-import bwipjs from 'bwip-js';
+// @ts-ignore
+import * as bwipjs from 'bwip-js';
 import fs from 'fs';
 import path from 'path';
 
