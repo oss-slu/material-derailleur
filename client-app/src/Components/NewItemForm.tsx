@@ -397,13 +397,13 @@ const NewItemForm: React.FC = () => {
         setFormData(prev => ({
             ...prev,
             selectedItemAttributes: [
-                ...prev.selectedItemAttributes,
                 {
                     descriptor,
                     valueType,
                     value: '',
                     booleanValue: null,
                 },
+                ...prev.selectedItemAttributes,
             ],
         }));
 
@@ -925,7 +925,7 @@ const NewItemForm: React.FC = () => {
                     false,
                     programOptions,
                 )}
-                {renderFormField('Category', 'category')}
+                {renderFormField('Item Name', 'category')}
                 {renderFormField('Quantity', 'quantity', 'number')}
                 {renderFormField('Date Donated', 'dateDonated', 'date')}
                 {renderFormField('Images (Max 5)', 'imageFiles', 'file', false)}
