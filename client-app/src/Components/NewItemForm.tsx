@@ -830,7 +830,7 @@ const NewItemForm: React.FC = () => {
                     value={String(formData[name] ?? '')}
                     onChange={handleChange}
                     className={`w-full px-3 py-2 rounded border ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
-                    disabled={name === 'currentStatus'}
+                    disabled={name === 'currentStatus' || name === 'quantity'}
                     min={name === 'quantity' ? 1 : undefined}
                 />
             )}
