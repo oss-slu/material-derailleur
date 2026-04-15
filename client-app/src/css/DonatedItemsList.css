@@ -34,25 +34,30 @@ body {
 }
 
 .toolbar {
-    max-width: var(--content-max);
+    width: min(var(--content-max), 94vw);
     margin: 8px auto 14px;
-    padding: 0 8px;
+    padding: 0;
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
+    gap: 8px;
 }
 .toolbar .search-wrap {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
+    min-width: 0;
 }
 
 .search-bar {
-    display: inline-flex;
+    display: flex;
     align-items: stretch;
     gap: 0;
+    width: 100%;
 }
 .search-bar input {
-    width: min(640px, 70vw);
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
     height: 44px;
     box-sizing: border-box;
     padding: 12px 14px;
@@ -63,6 +68,24 @@ body {
     background: #fff;
     outline: none;
     font-size: 14px;
+}
+
+.toolbar .search-bar .scan-button,
+.toolbar .search-bar .search-button {
+    width: auto;
+    height: 44px;
+    margin: 0;
+    padding: 0 16px;
+}
+
+.toolbar .search-bar .scan-button {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.toolbar .search-bar .search-button {
+    margin-left: 8px;
+    border-radius: 10px;
 }
 
 .scanner-overlay {
@@ -125,17 +148,21 @@ body {
 }
 
 .dropdowns {
-    max-width: var(--content-max);
+    width: min(var(--content-max), 94vw);
     margin: 0 auto 10px;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 8px;
-    justify-content: flex-start;
+}
+.dropdowns > .btn,
+.dropdowns > select {
+    width: 100%;
 }
 .sort-options,
 .filter-options {
     height: 44px;
-    min-width: 210px;
+    min-width: 0;
+    width: 100%;
     padding: 8px 10px;
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -211,15 +238,11 @@ body {
 @media (max-width: 900px) {
     .toolbar {
         grid-template-columns: 1fr;
-        row-gap: 8px;
-    }
-    .add-btn {
-        justify-self: end;
-    }
-    .search-bar input {
-        width: 100%;
     }
     .dropdowns {
-        justify-content: center;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .add-btn {
+        width: 100%;
     }
 }
