@@ -170,6 +170,22 @@ body {
     outline: none;
 }
 
+.results-meta {
+    width: min(var(--content-max), 94vw);
+    margin: 0 auto 8px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.results-summary {
+    padding: 10px 14px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 14px;
+}
+
 .item-list {
     width: min(var(--content-max), 94vw);
     margin: 0 auto 24px;

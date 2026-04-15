@@ -318,6 +318,7 @@ router.get('/', async (req: Request, res: Response) => {
             include: {
                 donor: true,
                 program: true,
+                attributes: true,
                 statuses: { orderBy: { dateModified: 'asc' } },
             },
         });
@@ -379,6 +380,7 @@ router.get('/:id', async (req: Request, res: Response) => {
             include: {
                 donor: true,
                 program: true,
+                attributes: true,
                 statuses: { orderBy: { dateModified: 'asc' } },
             },
         });

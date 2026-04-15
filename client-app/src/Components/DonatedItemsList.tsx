@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
 import '../css/AdminHeader.css';
@@ -6,7 +6,7 @@ import '../css/DonatedItemsList.css';
 import html2canvas from 'html2canvas';
 import Barcode from 'react-barcode';
 import { Program } from '../Modals/ProgramModal';
-import { DonatedItem } from '../Modals/DonatedItemModal';
+import { DonatedItem, ItemAttribute } from '../Modals/DonatedItemModal';
 import { DonatedItemStatus as Status } from '../Modals/DonatedItemStatusModal';
 import axios from 'axios';
 import { Result, useZxing } from 'react-zxing';
@@ -15,8 +15,87 @@ interface SelectedItemDetails extends DonatedItem {
     statuses: Status[];
 }
 
+type AttributeValueType = 'string' | 'number' | 'boolean';
+type BooleanFilterValue = '' | 'true' | 'false';
+
+interface AttributeFilter {
+    descriptor: string;
+    valueType: AttributeValueType;
+    textValue: string;
+    minValue: string;
+    maxValue: string;
+    booleanValue: BooleanFilterValue;
+}
+
+const DEFAULT_ATTRIBUTE_DESCRIPTORS_BICYCLE = [
+    'brand',
+    'model',
+    'standover height',
+    'type',
+    'color',
+    'wheel size',
+    'condition',
+    'needs repair',
+    'note',
+];
+
+const DEFAULT_ATTRIBUTE_DESCRIPTORS_COMPUTER = [
+    'brand',
+    'model',
+    'condition',
+    'type',
+    'needs repair',
+    'cpu',
+    'ram',
+    'storage',
+    'note',
+];
+
+const getDefaultAttributeDescriptors = () =>
+    Array.from(
+        new Set([
+            ...DEFAULT_ATTRIBUTE_DESCRIPTORS_BICYCLE,
+            ...DEFAULT_ATTRIBUTE_DESCRIPTORS_COMPUTER,
+        ]),
+    ).sort((a, b) => a.localeCompare(b));
+
+const normalize = (value?: string | null) => value?.trim().toLowerCase() || '';
+
+const getDefaultValueType = (descriptor: string): AttributeValueType => {
+    const normalized = normalize(descriptor);
+    if (
+        normalized.startsWith('is') ||
+        normalized.startsWith('has') ||
+        normalized.startsWith('needs')
+    ) {
+        return 'boolean';
+    }
+    return 'string';
+};
+
+const formatAttributeValue = (attribute: ItemAttribute) => {
+    if (attribute.stringValue !== null) return attribute.stringValue;
+    if (attribute.numberValue !== null) return String(attribute.numberValue);
+    if (attribute.booleanValue !== null)
+        return attribute.booleanValue ? 'yes' : 'no';
+    return '';
+};
+
 const DonatedItemsList: React.FC = () => {
     const [searchInput, setSearchInput] = useState<string>('');
+    const [sortValue, setSortValue] = useState<string>('');
+    const [itemTypeFilter, setItemTypeFilter] = useState<string>('');
+    const [programFilter, setProgramFilter] = useState<string>('');
+    const [statusFilter, setStatusFilter] = useState<string>('');
+    const [dateFrom, setDateFrom] = useState<string>('');
+    const [dateTo, setDateTo] = useState<string>('');
+    const [advancedSearchOpen, setAdvancedSearchOpen] =
+        useState<boolean>(false);
+    const [selectedAttributeDescriptor, setSelectedAttributeDescriptor] =
+        useState<string>('');
+    const [attributeFilters, setAttributeFilters] = useState<AttributeFilter[]>(
+        [],
+    );
     const [scanning, setScanning] = useState(false);
     const [filteredItems, setFilteredItems] = useState<DonatedItem[]>([]);
     const [selectedItemDetails, setSelectedItemDetails] =
@@ -26,9 +105,9 @@ const DonatedItemsList: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [programOptions, setProgramOptions] = useState<Program[]>([]);
-    const [attributeOptions, setAttributeOptions] = useState<
-        { value: string; label: string; id: number }[]
-    >([]);
+    const [attributeOptions, setAttributeOptions] = useState<string[]>(
+        getDefaultAttributeDescriptors(),
+    );
     const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
     const [itemTypes, setItemTypes] = useState<Set<string>>(new Set());
 
@@ -87,6 +166,124 @@ const DonatedItemsList: React.FC = () => {
         paused: !scanning,
     });
 
+    const applyFilters = (searchTermOverride?: string) => {
+        const searchTerm = normalize(searchTermOverride ?? searchInput);
+
+        let nextItems = donatedItems.filter(item => {
+            const donorName = `${item.donor?.firstName || ''} ${
+                item.donor?.lastName || ''
+            }`;
+
+            const attributeMatchesSearch = (item.attributes || []).some(
+                attribute =>
+                    normalize(attribute.descriptor).includes(searchTerm) ||
+                    normalize(formatAttributeValue(attribute)).includes(
+                        searchTerm,
+                    ),
+            );
+
+            const matchesSearch =
+                !searchTerm ||
+                item.id.toString().includes(searchTerm) ||
+                normalize(item.itemType).includes(searchTerm) ||
+                normalize(item.category).includes(searchTerm) ||
+                normalize(item.currentStatus).includes(searchTerm) ||
+                normalize(donorName).includes(searchTerm) ||
+                normalize(item.program?.name).includes(searchTerm) ||
+                attributeMatchesSearch;
+
+            const matchesItemType =
+                !itemTypeFilter ||
+                normalize(item.itemType) === normalize(itemTypeFilter);
+
+            const matchesProgram =
+                !programFilter || item.programId === Number(programFilter);
+
+            const matchesStatus =
+                !statusFilter ||
+                normalize(item.currentStatus) === normalize(statusFilter);
+
+            const itemDate = new Date(item.dateDonated).getTime();
+            const minDate = dateFrom
+                ? new Date(`${dateFrom}T00:00:00`).getTime()
+                : null;
+            const maxDate = dateTo
+                ? new Date(`${dateTo}T23:59:59`).getTime()
+                : null;
+            const matchesDateFrom = minDate === null || itemDate >= minDate;
+            const matchesDateTo = maxDate === null || itemDate <= maxDate;
+
+            const matchesAttributes = attributeFilters.every(filter => {
+                const matchingAttributes = (item.attributes || []).filter(
+                    attribute =>
+                        normalize(attribute.descriptor) ===
+                        normalize(filter.descriptor),
+                );
+
+                if (matchingAttributes.length === 0) {
+                    return false;
+                }
+
+                return matchingAttributes.some(attribute => {
+                    if (filter.valueType === 'boolean') {
+                        if (!filter.booleanValue) return true;
+                        return (
+                            String(attribute.booleanValue) ===
+                            filter.booleanValue
+                        );
+                    }
+
+                    if (filter.valueType === 'number') {
+                        if (attribute.numberValue === null) return false;
+                        const matchesMin =
+                            !filter.minValue ||
+                            attribute.numberValue >= Number(filter.minValue);
+                        const matchesMax =
+                            !filter.maxValue ||
+                            attribute.numberValue <= Number(filter.maxValue);
+                        return matchesMin && matchesMax;
+                    }
+
+                    return (
+                        !filter.textValue ||
+                        normalize(attribute.stringValue).includes(
+                            normalize(filter.textValue),
+                        )
+                    );
+                });
+            });
+
+            return (
+                matchesSearch &&
+                matchesItemType &&
+                matchesProgram &&
+                matchesStatus &&
+                matchesDateFrom &&
+                matchesDateTo &&
+                matchesAttributes
+            );
+        });
+
+        if (sortValue) {
+            nextItems = [...nextItems].sort((a, b) => {
+                const dateA = new Date(a.dateDonated).getTime();
+                const dateB = new Date(b.dateDonated).getTime();
+
+                if (sortValue === 'dateAsc') {
+                    return dateA - dateB;
+                }
+
+                if (sortValue === 'dateDesc') {
+                    return dateB - dateA;
+                }
+
+                return 0;
+            });
+        }
+
+        setFilteredItems(nextItems);
+    };
+
     const fetchDonatedItems = async (): Promise<void> => {
         try {
             setLoading(true);
@@ -99,35 +296,30 @@ const DonatedItemsList: React.FC = () => {
                 },
             );
             setDonatedItems(response.data);
+            setFilteredItems(response.data);
             setLoading(false);
         } catch (err) {
-            const error = err as Error;
-            console.error('Error details:', error);
-            setError(error.message);
+            const fetchError = err as Error;
+            console.error('Error details:', fetchError);
+            setError(fetchError.message);
             setLoading(false);
         }
     };
 
     const fetchProgramOptions = async (): Promise<void> => {
         try {
-            const response = await fetch(
+            const response = await axios.get<Program[]>(
                 `${process.env.REACT_APP_BACKEND_API_BASE_URL}program`,
                 {
-                    method: 'GET',
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`, // The Authorization header
-                        'Content-Type': 'application/json', // Common header for JSON data
+                        Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
                     },
                 },
             );
-            if (!response.ok) {
-                throw new Error('Failed to fetch program options');
-            }
-            const data: Program[] = await response.json();
-            setProgramOptions(data);
+            setProgramOptions(response.data);
         } catch (err) {
-            const error = err as Error;
-            console.error('Error fetching program options:', error);
+            const fetchError = err as Error;
+            console.error('Error fetching program options:', fetchError);
         }
     };
 
@@ -141,97 +333,155 @@ const DonatedItemsList: React.FC = () => {
                     },
                 },
             );
-            const attrOptions = response.data.map((attr: any) => ({
-                value: String(attr.id),
-                label: attr.descriptor,
-                id: attr.id as number,
-            }));
-            setAttributeOptions(attrOptions);
-        } catch (error) {
-            console.error('Error fetching attributes:', error);
+            const descriptorsFromApi = response.data
+                .map((attribute: { descriptor?: string }) =>
+                    attribute.descriptor?.trim(),
+                )
+                .filter(Boolean) as string[];
+            const descriptorsFromItems = donatedItems.flatMap(
+                item =>
+                    (item.attributes || [])
+                        .map(attribute => attribute.descriptor?.trim())
+                        .filter(Boolean) as string[],
+            );
+
+            setAttributeOptions(
+                Array.from(
+                    new Set([
+                        ...getDefaultAttributeDescriptors(),
+                        ...descriptorsFromApi,
+                        ...descriptorsFromItems,
+                    ]),
+                ).sort((a, b) => a.localeCompare(b)),
+            );
+        } catch (fetchError) {
+            console.error('Error fetching attributes:', fetchError);
         }
     };
 
     useEffect(() => {
         fetchDonatedItems();
         fetchProgramOptions();
-        fetchAttributes();
         setSelectedItemDetails(null);
     }, []);
 
     useEffect(() => {
         const types = new Set(donatedItems.map(item => item.itemType));
         setItemTypes(types);
-    }, [donatedItems]);
+        fetchAttributes();
+        applyFilters();
+    }, [
+        donatedItems,
+        searchInput,
+        sortValue,
+        itemTypeFilter,
+        programFilter,
+        statusFilter,
+        dateFrom,
+        dateTo,
+        attributeFilters,
+    ]);
 
     const handleSearch = (term?: string): void => {
-        const searchTerm = (term ?? searchInput).toLowerCase();
-        const filtered = donatedItems.filter(
-            item =>
-                item.id.toString().includes(searchTerm) ||
-                item.donor?.firstName.toLowerCase().includes(searchTerm) ||
-                item.category.toLowerCase().includes(searchTerm),
-        );
-        setFilteredItems(filtered);
+        if (typeof term === 'string') {
+            setSearchInput(term);
+        }
+        applyFilters(term);
     };
-    const handleSort = (event: React.ChangeEvent<HTMLSelectElement>): void => {
-        const value = event.target.value;
-        const sorted = [...donatedItems].sort((a, b) => {
-            const dateA = new Date(a.dateDonated);
-            const dateB = new Date(b.dateDonated);
 
-            if (value === 'dateAsc') {
-                return dateA.getTime() - dateB.getTime();
-            } else if (value === 'dateDesc') {
-                return dateB.getTime() - dateA.getTime();
-            }
-            return 0;
-        });
-        setFilteredItems(sorted);
+    const handleSort = (event: React.ChangeEvent<HTMLSelectElement>): void => {
+        setSortValue(event.target.value);
     };
 
     const handleFilterByItemName = (
         event: React.ChangeEvent<HTMLSelectElement>,
     ): void => {
-        if (!event.target.value) {
-            setFilteredItems([]);
-            return;
-        }
-        const filtered = donatedItems.filter(
-            item =>
-                item.itemType.toLowerCase() ===
-                event.target.value.toLowerCase(),
-        );
-        setFilteredItems(filtered);
+        setItemTypeFilter(event.target.value);
     };
 
     const handleFilterByProgram = (
         event: React.ChangeEvent<HTMLSelectElement>,
     ): void => {
-        if (!event.target.value) {
-            setFilteredItems([]);
-            return;
-        }
-        const programId = parseInt(event.target.value);
-        const filtered = donatedItems.filter(
-            item => item.programId === programId,
-        );
-        setFilteredItems(filtered);
+        setProgramFilter(event.target.value);
     };
 
     const handleFilterByStatus = (
         event: React.ChangeEvent<HTMLSelectElement>,
     ): void => {
-        if (!event.target.value) {
-            setFilteredItems([]);
+        setStatusFilter(event.target.value);
+    };
+
+    const handleAddAttributeFilter = (descriptorInput?: string) => {
+        const descriptor = (
+            descriptorInput ?? selectedAttributeDescriptor
+        ).trim();
+
+        if (!descriptor) return;
+
+        const alreadySelected = attributeFilters.some(
+            filter => normalize(filter.descriptor) === normalize(descriptor),
+        );
+        if (alreadySelected) {
+            setSelectedAttributeDescriptor('');
             return;
         }
-        const filtered = donatedItems.filter(
-            item =>
-                item.currentStatus.toLowerCase() ===
-                event.target.value.toLowerCase(),
+
+        setAttributeFilters(prev => [
+            ...prev,
+            {
+                descriptor,
+                valueType: getDefaultValueType(descriptor),
+                textValue: '',
+                minValue: '',
+                maxValue: '',
+                booleanValue: '',
+            },
+        ]);
+
+        if (
+            !attributeOptions.some(
+                option => normalize(option) === normalize(descriptor),
+            )
+        ) {
+            setAttributeOptions(prev =>
+                [...prev, descriptor].sort((a, b) => a.localeCompare(b)),
+            );
+        }
+
+        setSelectedAttributeDescriptor('');
+        setAdvancedSearchOpen(true);
+    };
+
+    const handleUpdateAttributeFilter = (
+        descriptor: string,
+        updates: Partial<AttributeFilter>,
+    ) => {
+        setAttributeFilters(prev =>
+            prev.map(filter =>
+                filter.descriptor === descriptor
+                    ? { ...filter, ...updates }
+                    : filter,
+            ),
         );
-        setFilteredItems(filtered);
+    };
+
+    const handleRemoveAttributeFilter = (descriptor: string) => {
+        setAttributeFilters(prev =>
+            prev.filter(filter => filter.descriptor !== descriptor),
+        );
+    };
+
+    const handleClearFilters = () => {
+        setSearchInput('');
+        setSortValue('');
+        setItemTypeFilter('');
+        setProgramFilter('');
+        setStatusFilter('');
+        setDateFrom('');
+        setDateTo('');
+        setSelectedAttributeDescriptor('');
+        setAttributeFilters([]);
+        setFilteredItems(donatedItems);
     };
 
     const handleAddNewDonationClick = (): void => {
@@ -373,8 +623,6 @@ ${svgString}
                     </button>
                 </div>
             )}
-
-            {}
             <header className="page-header">
                 <h1 className="page-title">Donated Items</h1>
             </header>
@@ -425,7 +673,7 @@ ${svgString}
                 <select
                     className="sort-options"
                     onChange={handleSort}
-                    defaultValue=""
+                    value={sortValue}
                 >
                     <option value="">Sort</option>
                     <option value="dateAsc">Date Ascending</option>
@@ -435,7 +683,7 @@ ${svgString}
                 <select
                     className="filter-options"
                     onChange={handleFilterByItemName}
-                    defaultValue=""
+                    value={itemTypeFilter}
                 >
                     <option value="">Filter by Item Type</option>
                     {Array.from(itemTypes).map(type => (
@@ -448,7 +696,7 @@ ${svgString}
                 <select
                     className="filter-options"
                     onChange={handleFilterByProgram}
-                    defaultValue=""
+                    value={programFilter}
                 >
                     <option value="">Filter by Program</option>
                     {programOptions.map(p => (
@@ -461,20 +709,368 @@ ${svgString}
                 <select
                     className="filter-options"
                     onChange={handleFilterByStatus}
-                    defaultValue=""
+                    value={statusFilter}
                 >
                     <option value="">Filter by Status</option>
-                    <option value="RECEIVED">Received</option>
-                    <option value="DONATED">Donated</option>
-                    <option value="IN STORAGE FACILITY">
+                    <option value="Received">Received</option>
+                    <option value="Donated">Donated</option>
+                    <option value="In storage facility">
                         In Storage Facility
                     </option>
-                    <option value="REFURBISHED">Refurbished</option>
-                    <option value="ITEM SOLD">Item Sold</option>
+                    <option value="Refurbished">Refurbished</option>
+                    <option value="Item sold">Item Sold</option>
                 </select>
+
+                <button
+                    className="btn btn-primary"
+                    type="button"
+                    onClick={() => setAdvancedSearchOpen(prev => !prev)}
+                >
+                    {advancedSearchOpen
+                        ? 'Hide Advanced Search'
+                        : 'Advanced Search'}
+                </button>
+
+                <button
+                    className="btn"
+                    type="button"
+                    onClick={handleClearFilters}
+                    style={{
+                        background: '#fff',
+                        border: '1px solid #e5eaf0',
+                    }}
+                >
+                    Clear Filters
+                </button>
             </div>
 
-            {/* Table (unchanged) */}
+            {advancedSearchOpen && (
+                <section
+                    style={{
+                        width: 'min(1200px, 94vw)',
+                        margin: '0 auto 16px',
+                        padding: '16px',
+                        background: '#fff',
+                        border: '1px solid #e5eaf0',
+                        borderRadius: 12,
+                        boxShadow:
+                            '0 10px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06)',
+                    }}
+                >
+                    <div
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns:
+                                'repeat(auto-fit, minmax(220px, 1fr))',
+                            gap: '12px',
+                            marginBottom: '16px',
+                        }}
+                    >
+                        <label>
+                            <div style={{ marginBottom: 6, fontWeight: 600 }}>
+                                Date From
+                            </div>
+                            <input
+                                type="date"
+                                value={dateFrom}
+                                onChange={e => setDateFrom(e.target.value)}
+                                className="filter-options"
+                                style={{ width: '100%' }}
+                            />
+                        </label>
+
+                        <label>
+                            <div style={{ marginBottom: 6, fontWeight: 600 }}>
+                                Date To
+                            </div>
+                            <input
+                                type="date"
+                                value={dateTo}
+                                onChange={e => setDateTo(e.target.value)}
+                                className="filter-options"
+                                style={{ width: '100%' }}
+                            />
+                        </label>
+                    </div>
+
+                    <div
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns:
+                                'repeat(auto-fit, minmax(220px, 1fr))',
+                            gap: '12px',
+                            alignItems: 'end',
+                            marginBottom: '16px',
+                        }}
+                    >
+                        <label>
+                            <div style={{ marginBottom: 6, fontWeight: 600 }}>
+                                Attribute Descriptor
+                            </div>
+                            <select
+                                value={selectedAttributeDescriptor}
+                                onChange={e =>
+                                    setSelectedAttributeDescriptor(
+                                        e.target.value,
+                                    )
+                                }
+                                className="filter-options"
+                                style={{ width: '100%' }}
+                            >
+                                <option value="">Select descriptor</option>
+                                {attributeOptions.map(option => (
+                                    <option key={option} value={option}>
+                                        {option}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+
+                        <button
+                            className="btn btn-primary"
+                            type="button"
+                            onClick={() => handleAddAttributeFilter()}
+                            disabled={!selectedAttributeDescriptor}
+                        >
+                            Add Attribute Filter
+                        </button>
+                    </div>
+
+                    {attributeFilters.length > 0 && (
+                        <div
+                            style={{
+                                display: 'grid',
+                                gap: '12px',
+                            }}
+                        >
+                            {attributeFilters.map(filter => (
+                                <div
+                                    key={filter.descriptor}
+                                    style={{
+                                        border: '1px solid #e5eaf0',
+                                        borderRadius: 10,
+                                        padding: '12px',
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            flexWrap: 'wrap',
+                                            marginBottom: '12px',
+                                        }}
+                                    >
+                                        <strong>{filter.descriptor}</strong>
+                                        <button
+                                            className="btn"
+                                            type="button"
+                                            onClick={() =>
+                                                handleRemoveAttributeFilter(
+                                                    filter.descriptor,
+                                                )
+                                            }
+                                            style={{
+                                                background: '#fff',
+                                                border: '1px solid #e5eaf0',
+                                            }}
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            display: 'grid',
+                                            gridTemplateColumns:
+                                                'repeat(auto-fit, minmax(180px, 1fr))',
+                                            gap: '12px',
+                                            alignItems: 'end',
+                                        }}
+                                    >
+                                        <label>
+                                            <div
+                                                style={{
+                                                    marginBottom: 6,
+                                                    fontWeight: 600,
+                                                }}
+                                            >
+                                                Value Type
+                                            </div>
+                                            <select
+                                                value={filter.valueType}
+                                                onChange={e =>
+                                                    handleUpdateAttributeFilter(
+                                                        filter.descriptor,
+                                                        {
+                                                            valueType: e.target
+                                                                .value as AttributeValueType,
+                                                            textValue: '',
+                                                            minValue: '',
+                                                            maxValue: '',
+                                                            booleanValue: '',
+                                                        },
+                                                    )
+                                                }
+                                                className="filter-options"
+                                                style={{ width: '100%' }}
+                                            >
+                                                <option value="string">
+                                                    Text
+                                                </option>
+                                                <option value="number">
+                                                    Number Range
+                                                </option>
+                                                <option value="boolean">
+                                                    Yes / No
+                                                </option>
+                                            </select>
+                                        </label>
+
+                                        {filter.valueType === 'string' && (
+                                            <label>
+                                                <div
+                                                    style={{
+                                                        marginBottom: 6,
+                                                        fontWeight: 600,
+                                                    }}
+                                                >
+                                                    Contains
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={filter.textValue}
+                                                    onChange={e =>
+                                                        handleUpdateAttributeFilter(
+                                                            filter.descriptor,
+                                                            {
+                                                                textValue:
+                                                                    e.target
+                                                                        .value,
+                                                            },
+                                                        )
+                                                    }
+                                                    className="filter-options"
+                                                    style={{ width: '100%' }}
+                                                />
+                                            </label>
+                                        )}
+
+                                        {filter.valueType === 'number' && (
+                                            <>
+                                                <label>
+                                                    <div
+                                                        style={{
+                                                            marginBottom: 6,
+                                                            fontWeight: 600,
+                                                        }}
+                                                    >
+                                                        Min
+                                                    </div>
+                                                    <input
+                                                        type="number"
+                                                        value={filter.minValue}
+                                                        onChange={e =>
+                                                            handleUpdateAttributeFilter(
+                                                                filter.descriptor,
+                                                                {
+                                                                    minValue:
+                                                                        e.target
+                                                                            .value,
+                                                                },
+                                                            )
+                                                        }
+                                                        className="filter-options"
+                                                        style={{
+                                                            width: '100%',
+                                                        }}
+                                                    />
+                                                </label>
+
+                                                <label>
+                                                    <div
+                                                        style={{
+                                                            marginBottom: 6,
+                                                            fontWeight: 600,
+                                                        }}
+                                                    >
+                                                        Max
+                                                    </div>
+                                                    <input
+                                                        type="number"
+                                                        value={filter.maxValue}
+                                                        onChange={e =>
+                                                            handleUpdateAttributeFilter(
+                                                                filter.descriptor,
+                                                                {
+                                                                    maxValue:
+                                                                        e.target
+                                                                            .value,
+                                                                },
+                                                            )
+                                                        }
+                                                        className="filter-options"
+                                                        style={{
+                                                            width: '100%',
+                                                        }}
+                                                    />
+                                                </label>
+                                            </>
+                                        )}
+
+                                        {filter.valueType === 'boolean' && (
+                                            <label>
+                                                <div
+                                                    style={{
+                                                        marginBottom: 6,
+                                                        fontWeight: 600,
+                                                    }}
+                                                >
+                                                    Value
+                                                </div>
+                                                <select
+                                                    value={filter.booleanValue}
+                                                    onChange={e =>
+                                                        handleUpdateAttributeFilter(
+                                                            filter.descriptor,
+                                                            {
+                                                                booleanValue: e
+                                                                    .target
+                                                                    .value as BooleanFilterValue,
+                                                            },
+                                                        )
+                                                    }
+                                                    className="filter-options"
+                                                    style={{ width: '100%' }}
+                                                >
+                                                    <option value="">
+                                                        Any
+                                                    </option>
+                                                    <option value="true">
+                                                        Yes
+                                                    </option>
+                                                    <option value="false">
+                                                        No
+                                                    </option>
+                                                </select>
+                                            </label>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </section>
+            )}
+
+            <div className="results-meta" aria-live="polite">
+                <span className="results-summary">
+                    Returned {filteredItems.length}{' '}
+                    {filteredItems.length === 1 ? 'item' : 'items'}
+                </span>
+            </div>
+
             <table className="item-list">
                 <thead>
                     <tr>
@@ -488,61 +1084,69 @@ ${svgString}
                     </tr>
                 </thead>
                 <tbody>
-                    {(filteredItems.length > 0
-                        ? filteredItems
-                        : donatedItems
-                    ).map((item, index) => (
-                        <tr
-                            key={item.id}
-                            className="clickable-row"
-                            onClick={() => navigate(`/donations/${item.id}`)}
-                        >
-                            <td>{index + 1}</td>
-                            <td>{item.id}</td>
-                            <td>{item.itemType}</td>
-                            <td>{item.category}</td>
-                            <td>{item.currentStatus}</td>
-                            <td>
-                                {new Date(item.dateDonated).toLocaleDateString(
-                                    undefined,
-                                    { timeZone: 'UTC' },
-                                )}
-                            </td>
-                            <td>
-                                <div>
-                                    <div id={`barcode-${item.id}`}>
-                                        <Barcode
-                                            value={item.id.toString()}
-                                            format="CODE128"
-                                        />
+                    {filteredItems.length > 0 ? (
+                        filteredItems.map((item, index) => (
+                            <tr
+                                key={item.id}
+                                className="clickable-row"
+                                onClick={() =>
+                                    navigate(`/donations/${item.id}`)
+                                }
+                            >
+                                <td>{index + 1}</td>
+                                <td>{item.id}</td>
+                                <td>{item.itemType}</td>
+                                <td>{item.category}</td>
+                                <td>{item.currentStatus}</td>
+                                <td>
+                                    {new Date(
+                                        item.dateDonated,
+                                    ).toLocaleDateString(undefined, {
+                                        timeZone: 'UTC',
+                                    })}
+                                </td>
+                                <td>
+                                    <div>
+                                        <div id={`barcode-${item.id}`}>
+                                            <Barcode
+                                                value={item.id.toString()}
+                                                format="CODE128"
+                                            />
+                                        </div>
+                                        <div style={{ marginTop: 6 }}>
+                                            <button
+                                                className="btn btn-link"
+                                                onClick={e => {
+                                                    e.stopPropagation();
+                                                    downloadBarcode(item.id);
+                                                }}
+                                                type="button"
+                                            >
+                                                Download SVG
+                                            </button>
+                                            <button
+                                                className="btn btn-link"
+                                                onClick={e => {
+                                                    e.stopPropagation();
+                                                    printBarcode(item.id);
+                                                }}
+                                                type="button"
+                                                style={{ marginLeft: 8 }}
+                                            >
+                                                Print
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div style={{ marginTop: 6 }}>
-                                        <button
-                                            className="btn btn-link"
-                                            onClick={e => {
-                                                e.stopPropagation();
-                                                downloadBarcode(item.id);
-                                            }}
-                                            type="button"
-                                        >
-                                            Download SVG
-                                        </button>
-                                        <button
-                                            className="btn btn-link"
-                                            onClick={e => {
-                                                e.stopPropagation();
-                                                printBarcode(item.id);
-                                            }}
-                                            type="button"
-                                            style={{ marginLeft: 8 }}
-                                        >
-                                            Print
-                                        </button>
-                                    </div>
-                                </div>
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan={7} style={{ padding: 24 }}>
+                                No donated items match the current filters.
                             </td>
                         </tr>
-                    ))}
+                    )}
                 </tbody>
             </table>
 
