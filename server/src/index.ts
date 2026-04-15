@@ -8,7 +8,8 @@ import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from './generated/prisma';
 
 import donorRouter from './routes/donorRoutes';
 import programRouter from './routes/programRoutes';
@@ -19,7 +20,8 @@ import barcodeRouter from './routes/barcode';
 
 dotenv.config(); // Load environment variables
 
-const prisma = new PrismaClient(); // Initialize Prisma Client
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter }); // Initialize Prisma Client
 const app = express();
 
 // CORS – allow frontend dev server for remote access

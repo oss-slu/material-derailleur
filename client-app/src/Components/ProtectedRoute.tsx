@@ -9,7 +9,7 @@ import { Navigate } from 'react-router-dom';
  * @property {'ADMIN' | 'DONOR' | 'TIER_ONE | 'TIER_TWO' | 'TIER_THREE'} allowedRole - The role that is allowed to access the protected route.
  */
 interface Props {
-    children: JSX.Element;
+    children: React.ReactElement;
     allowedRole: 'ADMIN' | 'DONOR' | 'TIER_ONE' | 'TIER_TWO' | 'TIER_THREE';
 }
 
@@ -18,7 +18,7 @@ interface Props {
  * If the user does not have a valid token or their role does not match the allowed role, they are redirected.
  * @component
  * @param {Props} props - The properties passed to the component.
- * @returns {JSX.Element} A JSX element to either navigate or render the children.
+ * @returns {React.ReactElement} A JSX element to either navigate or render the children.
  */
 const ProtectedRoute = ({ children, allowedRole }: Props) => {
     const token = localStorage.getItem('token');
