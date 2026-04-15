@@ -84,7 +84,7 @@ const NewItemForm: React.FC = () => {
         donorId: null,
         programId: null,
         imageFiles: [],
-        dateDonated: '',
+        dateDonated: new Date().toISOString().split('T')[0] || '',
         category: '',
         quantity: 1,
         selectedItemAttributes: [],
