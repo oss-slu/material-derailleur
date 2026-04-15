@@ -208,9 +208,7 @@ const NewItemForm: React.FC = () => {
                         return acc;
                     }, new Map<string, AttributeDefinition>()),
                     ([, definition]) => definition,
-                ).sort((a, b) =>
-                    a.descriptor.localeCompare(b.descriptor),
-                );
+                ).sort((a, b) => a.descriptor.localeCompare(b.descriptor));
                 setAttributeOptions(
                     uniqueDescriptors.map(definition => ({
                         value: definition.descriptor,
@@ -379,7 +377,9 @@ const NewItemForm: React.FC = () => {
         }
 
         const alreadySelected = formData.selectedItemAttributes.some(
-            attr => normalizeDescriptor(attr.descriptor) === normalizeDescriptor(descriptor),
+            attr =>
+                normalizeDescriptor(attr.descriptor) ===
+                normalizeDescriptor(descriptor),
         );
         if (alreadySelected) {
             setSelectedDescriptor('');
@@ -388,7 +388,9 @@ const NewItemForm: React.FC = () => {
         }
 
         const existingOption = attributeOptions.find(
-            option => normalizeDescriptor(option.value) === normalizeDescriptor(descriptor),
+            option =>
+                normalizeDescriptor(option.value) ===
+                normalizeDescriptor(descriptor),
         );
         const valueType = existingOption?.valueType ?? customAttributeType;
 
@@ -408,7 +410,8 @@ const NewItemForm: React.FC = () => {
         if (
             !attributeOptions.some(
                 option =>
-                    normalizeDescriptor(option.value) === normalizeDescriptor(descriptor),
+                    normalizeDescriptor(option.value) ===
+                    normalizeDescriptor(descriptor),
             )
         ) {
             setAttributeOptions(prev =>
@@ -419,9 +422,7 @@ const NewItemForm: React.FC = () => {
                         label: descriptor,
                         valueType,
                     },
-                ].sort(
-                    (a, b) => a.label.localeCompare(b.label),
-                ),
+                ].sort((a, b) => a.label.localeCompare(b.label)),
             );
         }
 

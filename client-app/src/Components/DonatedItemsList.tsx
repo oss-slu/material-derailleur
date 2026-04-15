@@ -58,15 +58,17 @@ const DEFAULT_ATTRIBUTE_DEFINITIONS_COMPUTER: AttributeDefinition[] = [
 
 const getDefaultAttributeDescriptors = () =>
     Array.from(
-        [...DEFAULT_ATTRIBUTE_DEFINITIONS_BICYCLE, ...DEFAULT_ATTRIBUTE_DEFINITIONS_COMPUTER].reduce(
-            (acc, definition) => {
+        [
+            ...DEFAULT_ATTRIBUTE_DEFINITIONS_BICYCLE,
+            ...DEFAULT_ATTRIBUTE_DEFINITIONS_COMPUTER,
+        ]
+            .reduce((acc, definition) => {
                 if (!acc.has(normalize(definition.descriptor))) {
                     acc.set(normalize(definition.descriptor), definition);
                 }
                 return acc;
-            },
-            new Map<string, AttributeDefinition>(),
-        ).values(),
+            }, new Map<string, AttributeDefinition>())
+            .values(),
     ).sort((a, b) => a.descriptor.localeCompare(b.descriptor));
 
 const normalize = (value?: string | null) => value?.trim().toLowerCase() || '';
@@ -107,9 +109,9 @@ const DonatedItemsList: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [programOptions, setProgramOptions] = useState<Program[]>([]);
-    const [attributeOptions, setAttributeOptions] = useState<AttributeDefinition[]>(
-        getDefaultAttributeDescriptors(),
-    );
+    const [attributeOptions, setAttributeOptions] = useState<
+        AttributeDefinition[]
+    >(getDefaultAttributeDescriptors());
     const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
     const [itemTypes, setItemTypes] = useState<Set<string>>(new Set());
 
@@ -388,8 +390,8 @@ const DonatedItemsList: React.FC = () => {
 
             setAttributeOptions(
                 Array.from(
-                    mergedDefinitions.reduce(
-                        (acc, definition) => {
+                    mergedDefinitions
+                        .reduce((acc, definition) => {
                             const key = normalize(definition.descriptor);
                             if (!key || acc.has(key)) {
                                 return acc;
@@ -397,9 +399,8 @@ const DonatedItemsList: React.FC = () => {
 
                             acc.set(key, definition);
                             return acc;
-                        },
-                        new Map<string, AttributeDefinition>(),
-                    ).values(),
+                        }, new Map<string, AttributeDefinition>())
+                        .values(),
                 ).sort((a, b) => a.descriptor.localeCompare(b.descriptor)),
             );
         } catch (fetchError) {
@@ -478,7 +479,8 @@ const DonatedItemsList: React.FC = () => {
             ...prev,
             {
                 descriptor,
-                valueType: getAttributeDefinition(descriptor)?.valueType || 'string',
+                valueType:
+                    getAttributeDefinition(descriptor)?.valueType || 'string',
                 textValue: '',
                 minValue: '',
                 maxValue: '',
@@ -488,7 +490,8 @@ const DonatedItemsList: React.FC = () => {
 
         if (
             !attributeOptions.some(
-                option => normalize(option.descriptor) === normalize(descriptor),
+                option =>
+                    normalize(option.descriptor) === normalize(descriptor),
             )
         ) {
             setAttributeOptions(prev =>

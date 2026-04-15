@@ -284,7 +284,10 @@ const DonatedItemDetails: React.FC = () => {
                         </p>
                         {donatedItem.attributes.map(attr => (
                             <p key={attr.id}>
-                                <strong>{attr.descriptor}:</strong> {attr.stringValue ?? attr.numberValue ?? (attr.booleanValue ? 'Yes' : 'No')}
+                                <strong>{attr.descriptor}:</strong>{' '}
+                                {attr.stringValue ??
+                                    attr.numberValue ??
+                                    (attr.booleanValue ? 'Yes' : 'No')}
                             </p>
                         ))}
                     </section>

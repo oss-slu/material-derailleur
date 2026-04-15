@@ -89,7 +89,10 @@ const COMMON_ATTRIBUTE_DEFINITIONS: AttributeDefinition[] = [
     { descriptor: 'note', valueType: 'string' },
 ];
 
-const ATTRIBUTE_DEFINITIONS_BY_ITEM_TYPE: Record<string, AttributeDefinition[]> = {
+const ATTRIBUTE_DEFINITIONS_BY_ITEM_TYPE: Record<
+    string,
+    AttributeDefinition[]
+> = {
     bicycle: [
         ...COMMON_ATTRIBUTE_DEFINITIONS,
         { descriptor: 'standover height (in.)', valueType: 'number' },
@@ -443,7 +446,7 @@ router.get('/attributes', async (req: Request, res: Response) => {
         >();
 
         const seededDefinitions = requestedItemType
-            ? ATTRIBUTE_DEFINITIONS_BY_ITEM_TYPE[requestedItemType] ?? []
+            ? (ATTRIBUTE_DEFINITIONS_BY_ITEM_TYPE[requestedItemType] ?? [])
             : Object.entries(KNOWN_ATTRIBUTE_VALUE_TYPES).map(
                   ([descriptor, valueType]) => ({
                       descriptor,
