@@ -3,8 +3,13 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from './LoadingSpinner';
 import '../css/DonorForm.css';
-
-type AttributeValueType = 'string' | 'number' | 'boolean';
+import {
+    type AttributeDefinition,
+    type AttributeValueType,
+    formatAttributeTypeLabel,
+    getDefaultDescriptorsForItemType,
+    normalizeDescriptor,
+} from '../constants/attributeDefinitions';
 
 interface SelectedAttribute {
     descriptor: string;
@@ -35,59 +40,6 @@ interface Option {
     id?: number;
     valueType?: AttributeValueType;
 }
-
-interface AttributeDefinition {
-    descriptor: string;
-    valueType: AttributeValueType;
-}
-
-const DEFAULT_ATTRIBUTE_DEFINITIONS_BICYCLE: AttributeDefinition[] = [
-    { descriptor: 'brand', valueType: 'string' },
-    { descriptor: 'model', valueType: 'string' },
-    { descriptor: 'standover height (in.)', valueType: 'number' },
-    { descriptor: 'type', valueType: 'string' },
-    { descriptor: 'color', valueType: 'string' },
-    { descriptor: 'wheel size (in.)', valueType: 'number' },
-    { descriptor: 'condition', valueType: 'string' },
-    { descriptor: 'needs repair', valueType: 'boolean' },
-    { descriptor: 'note', valueType: 'string' },
-];
-
-const DEFAULT_ATTRIBUTE_DEFINITIONS_COMPUTER: AttributeDefinition[] = [
-    { descriptor: 'brand', valueType: 'string' },
-    { descriptor: 'model', valueType: 'string' },
-    { descriptor: 'condition', valueType: 'string' },
-    { descriptor: 'type', valueType: 'string' },
-    { descriptor: 'needs repair', valueType: 'boolean' },
-    { descriptor: 'cpu', valueType: 'string' },
-    { descriptor: 'ram (GB)', valueType: 'number' },
-    { descriptor: 'storage (GB)', valueType: 'number' },
-    { descriptor: 'note', valueType: 'string' },
-];
-
-const getDefaultDescriptorsForItemType = (itemType: string) => {
-    if (itemType === 'bicycle') {
-        return DEFAULT_ATTRIBUTE_DEFINITIONS_BICYCLE;
-    }
-
-    if (itemType === 'computer') {
-        return DEFAULT_ATTRIBUTE_DEFINITIONS_COMPUTER;
-    }
-
-    return [
-        ...DEFAULT_ATTRIBUTE_DEFINITIONS_BICYCLE,
-        ...DEFAULT_ATTRIBUTE_DEFINITIONS_COMPUTER,
-    ];
-};
-
-const normalizeDescriptor = (value?: string | null) =>
-    value?.trim().toLowerCase() || '';
-
-const formatAttributeTypeLabel = (valueType: AttributeValueType) => {
-    if (valueType === 'number') return 'Number';
-    if (valueType === 'boolean') return 'Yes / No';
-    return 'Text';
-};
 
 const NewItemForm: React.FC = () => {
     const maxImageSize = 5 * 1024 * 1024; // 5MB

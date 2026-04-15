@@ -10,18 +10,18 @@ import { DonatedItem, ItemAttribute } from '../Modals/DonatedItemModal';
 import { DonatedItemStatus as Status } from '../Modals/DonatedItemStatusModal';
 import axios from 'axios';
 import { Result, useZxing } from 'react-zxing';
+import {
+    type AttributeDefinition,
+    type AttributeValueType,
+    getAllDefaultAttributeDefinitions,
+    normalizeDescriptor,
+} from '../constants/attributeDefinitions';
 
 interface SelectedItemDetails extends DonatedItem {
     statuses: Status[];
 }
 
-type AttributeValueType = 'string' | 'number' | 'boolean';
 type BooleanFilterValue = '' | 'true' | 'false';
-
-interface AttributeDefinition {
-    descriptor: string;
-    valueType: AttributeValueType;
-}
 
 interface AttributeFilter {
     descriptor: string;
@@ -32,46 +32,7 @@ interface AttributeFilter {
     booleanValue: BooleanFilterValue;
 }
 
-const DEFAULT_ATTRIBUTE_DEFINITIONS_BICYCLE: AttributeDefinition[] = [
-    { descriptor: 'brand', valueType: 'string' },
-    { descriptor: 'model', valueType: 'string' },
-    { descriptor: 'standover height (in.)', valueType: 'number' },
-    { descriptor: 'type', valueType: 'string' },
-    { descriptor: 'color', valueType: 'string' },
-    { descriptor: 'wheel size (in.)', valueType: 'number' },
-    { descriptor: 'condition', valueType: 'string' },
-    { descriptor: 'needs repair', valueType: 'boolean' },
-    { descriptor: 'note', valueType: 'string' },
-];
-
-const DEFAULT_ATTRIBUTE_DEFINITIONS_COMPUTER: AttributeDefinition[] = [
-    { descriptor: 'brand', valueType: 'string' },
-    { descriptor: 'model', valueType: 'string' },
-    { descriptor: 'condition', valueType: 'string' },
-    { descriptor: 'type', valueType: 'string' },
-    { descriptor: 'needs repair', valueType: 'boolean' },
-    { descriptor: 'cpu', valueType: 'string' },
-    { descriptor: 'ram (GB)', valueType: 'number' },
-    { descriptor: 'storage (GB)', valueType: 'number' },
-    { descriptor: 'note', valueType: 'string' },
-];
-
-const getDefaultAttributeDescriptors = () =>
-    Array.from(
-        [
-            ...DEFAULT_ATTRIBUTE_DEFINITIONS_BICYCLE,
-            ...DEFAULT_ATTRIBUTE_DEFINITIONS_COMPUTER,
-        ]
-            .reduce((acc, definition) => {
-                if (!acc.has(normalize(definition.descriptor))) {
-                    acc.set(normalize(definition.descriptor), definition);
-                }
-                return acc;
-            }, new Map<string, AttributeDefinition>())
-            .values(),
-    ).sort((a, b) => a.descriptor.localeCompare(b.descriptor));
-
-const normalize = (value?: string | null) => value?.trim().toLowerCase() || '';
+const normalize = normalizeDescriptor;
 
 const isAttributeDefinition = (
     value: AttributeDefinition | null,
@@ -111,7 +72,7 @@ const DonatedItemsList: React.FC = () => {
     const [programOptions, setProgramOptions] = useState<Program[]>([]);
     const [attributeOptions, setAttributeOptions] = useState<
         AttributeDefinition[]
-    >(getDefaultAttributeDescriptors());
+    >(getAllDefaultAttributeDefinitions());
     const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
     const [itemTypes, setItemTypes] = useState<Set<string>>(new Set());
 
@@ -383,7 +344,7 @@ const DonatedItemsList: React.FC = () => {
                     .filter(isAttributeDefinition),
             );
             const mergedDefinitions: AttributeDefinition[] = [
-                ...getDefaultAttributeDescriptors(),
+                ...getAllDefaultAttributeDefinitions(),
                 ...definitionsFromApi,
                 ...definitionsFromItems,
             ];
