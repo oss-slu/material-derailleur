@@ -1,7 +1,5 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(npm install *)"
-    ]
-  }
+    "permissions": {
+        "allow": ["Bash(npm install *)"]
+    }
 }
