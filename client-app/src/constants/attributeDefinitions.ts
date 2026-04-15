@@ -49,13 +49,15 @@ export const getDefaultDescriptorsForItemType = (itemType: string) => {
 
 export const getAllDefaultAttributeDefinitions = () =>
     Array.from(
-        getDefaultDescriptorsForItemType('').reduce((acc, definition) => {
-            const normalized = normalizeDescriptor(definition.descriptor);
-            if (!acc.has(normalized)) {
-                acc.set(normalized, definition);
-            }
-            return acc;
-        }, new Map<string, AttributeDefinition>()).values(),
+        getDefaultDescriptorsForItemType('')
+            .reduce((acc, definition) => {
+                const normalized = normalizeDescriptor(definition.descriptor);
+                if (!acc.has(normalized)) {
+                    acc.set(normalized, definition);
+                }
+                return acc;
+            }, new Map<string, AttributeDefinition>())
+            .values(),
     ).sort((a, b) => a.descriptor.localeCompare(b.descriptor));
 
 export const formatAttributeTypeLabel = (valueType: AttributeValueType) => {

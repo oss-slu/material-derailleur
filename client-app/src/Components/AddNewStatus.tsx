@@ -10,6 +10,27 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ItemStatus from '../constants/Enums';
 import LoadingSpinner from './LoadingSpinner';
 import '../css/AddStatus.css';
+import { DonatedItem } from '../Modals/DonatedItemModal';
+import {
+    type AttributeDefinition,
+    type AttributeValueType,
+    formatAttributeTypeLabel,
+    getDefaultDescriptorsForItemType,
+    normalizeDescriptor,
+} from '../constants/attributeDefinitions';
+
+interface SelectedAttribute {
+    descriptor: string;
+    valueType: AttributeValueType;
+    value: string;
+    booleanValue: boolean | null;
+}
+
+interface AttributeOption {
+    value: string;
+    label: string;
+    valueType?: AttributeValueType;
+}
 
 interface FormData {
     statusType: string;
@@ -17,6 +38,7 @@ interface FormData {
     donatedItemId: string;
     informDonor: boolean | string; // Accept both boolean and string for checkbox value
     submitter: string;
+    selectedItemAttributes?: SelectedAttribute[];
 }
 
 interface FormErrors {
@@ -130,6 +152,7 @@ const AddNewStatus: React.FC = () => {
         donatedItemId: id || '',
         informDonor: false,
         submitter: localStorage.getItem('name') || '',
+        selectedItemAttributes: [],
     });
     const [errors, setErrors] = useState<FormErrors>({});
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -141,12 +164,130 @@ const AddNewStatus: React.FC = () => {
     const [currentPreviewImage, setCurrentPreviewImage] = useState<
         string | null
     >(null);
+    const [attributeOptions, setAttributeOptions] = useState<AttributeOption[]>(
+        [],
+    );
+    const [selectedDescriptor, setSelectedDescriptor] = useState('');
+    const [customDescriptor, setCustomDescriptor] = useState('');
+    const [customAttributeType, setCustomAttributeType] =
+        useState<AttributeValueType>('string');
+    const [itemType, setItemType] = useState('');
 
     useEffect(() => {
         if (id) {
             setFormData(prev => ({ ...prev, donatedItemId: id }));
         }
     }, [id]);
+
+    useEffect(() => {
+        const fetchDonatedItem = async () => {
+            if (!id) return;
+
+            try {
+                const response = await axios.get<DonatedItem>(
+                    `${process.env.REACT_APP_BACKEND_API_BASE_URL}donatedItem/${id}`,
+                    {
+                        headers: {
+                            Authorization: localStorage.getItem('token') || '',
+                        },
+                    },
+                );
+
+                const item = response.data;
+                setItemType(item.itemType?.toLowerCase() || '');
+
+                setFormData(prev => ({
+                    ...prev,
+                    selectedItemAttributes: (item.attributes || []).map(
+                        attribute => ({
+                            descriptor: attribute.descriptor,
+                            valueType:
+                                attribute.booleanValue !== null
+                                    ? 'boolean'
+                                    : attribute.numberValue !== null
+                                      ? 'number'
+                                      : 'string',
+                            value:
+                                attribute.stringValue ??
+                                (attribute.numberValue !== null
+                                    ? String(attribute.numberValue)
+                                    : ''),
+                            booleanValue: attribute.booleanValue,
+                        }),
+                    ),
+                }));
+            } catch (error) {
+                console.error('Error fetching donated item:', error);
+                setErrorMessage('Error loading existing item attributes');
+            }
+        };
+
+        fetchDonatedItem();
+    }, [id]);
+
+    useEffect(() => {
+        const fetchAttributes = async () => {
+            const defaultDefinitions =
+                getDefaultDescriptorsForItemType(itemType);
+
+            try {
+                const response = await axios.get(
+                    `${process.env.REACT_APP_BACKEND_API_BASE_URL}donatedItem/attributes`,
+                    {
+                        params: itemType ? { itemType } : undefined,
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+                        },
+                    },
+                );
+
+                const definitions = [
+                    ...defaultDefinitions,
+                    ...response.data.map((attr: any) => ({
+                        descriptor: String(attr.descriptor ?? '').trim(),
+                        valueType: attr.valueType as AttributeValueType,
+                    })),
+                ];
+
+                const uniqueDescriptors = Array.from(
+                    definitions.reduce((acc, definition) => {
+                        const descriptor = definition.descriptor.trim();
+                        if (!descriptor) return acc;
+
+                        const normalized = normalizeDescriptor(descriptor);
+                        if (!acc.has(normalized)) {
+                            acc.set(normalized, {
+                                descriptor,
+                                valueType: definition.valueType ?? 'string',
+                            });
+                        }
+
+                        return acc;
+                    }, new Map<string, AttributeDefinition>()),
+                    ([, definition]) => definition,
+                ).sort((a, b) => a.descriptor.localeCompare(b.descriptor));
+
+                setAttributeOptions(
+                    uniqueDescriptors.map(definition => ({
+                        value: definition.descriptor,
+                        label: definition.descriptor,
+                        valueType: definition.valueType,
+                    })),
+                );
+            } catch (error) {
+                console.error('Error fetching attributes:', error);
+                setAttributeOptions(
+                    defaultDefinitions.map(definition => ({
+                        value: definition.descriptor,
+                        label: definition.descriptor,
+                        valueType: definition.valueType,
+                    })),
+                );
+            }
+        };
+
+        fetchAttributes();
+    }, [itemType]);
 
     // Clean up object URLs on unmount
     useEffect(() => {
@@ -248,6 +389,91 @@ const AddNewStatus: React.FC = () => {
         setIsModalOpen(true);
     };
 
+    const addAttribute = (descriptorInput?: string) => {
+        const descriptor = (descriptorInput ?? selectedDescriptor).trim();
+        if (!descriptor) {
+            return;
+        }
+
+        const alreadySelected = (formData.selectedItemAttributes ?? []).some(
+            attr =>
+                normalizeDescriptor(attr.descriptor) ===
+                normalizeDescriptor(descriptor),
+        );
+        if (alreadySelected) {
+            setSelectedDescriptor('');
+            setCustomDescriptor('');
+            return;
+        }
+
+        const existingOption = attributeOptions.find(
+            option =>
+                normalizeDescriptor(option.value) ===
+                normalizeDescriptor(descriptor),
+        );
+        const valueType = existingOption?.valueType ?? customAttributeType;
+
+        setFormData(prev => ({
+            ...prev,
+            selectedItemAttributes: [
+                {
+                    descriptor,
+                    valueType,
+                    value: '',
+                    booleanValue: null,
+                },
+                ...(prev.selectedItemAttributes ?? []),
+            ],
+        }));
+
+        if (
+            !attributeOptions.some(
+                option =>
+                    normalizeDescriptor(option.value) ===
+                    normalizeDescriptor(descriptor),
+            )
+        ) {
+            setAttributeOptions(prev =>
+                [
+                    ...prev,
+                    {
+                        value: descriptor,
+                        label: descriptor,
+                        valueType,
+                    },
+                ].sort((a, b) => a.label.localeCompare(b.label)),
+            );
+        }
+
+        setSelectedDescriptor('');
+        setCustomDescriptor('');
+        setCustomAttributeType('string');
+    };
+
+    const removeAttribute = (descriptor: string) => {
+        setFormData(prev => ({
+            ...prev,
+            selectedItemAttributes: (prev.selectedItemAttributes ?? []).filter(
+                attr => attr.descriptor !== descriptor,
+            ),
+        }));
+    };
+
+    const updateAttribute = (
+        descriptor: string,
+        updates: Partial<SelectedAttribute>,
+    ) => {
+        setFormData(prev => ({
+            ...prev,
+            selectedItemAttributes: (prev.selectedItemAttributes ?? []).map(
+                attr =>
+                    attr.descriptor === descriptor
+                        ? { ...attr, ...updates }
+                        : attr,
+            ),
+        }));
+    };
+
     const closeModal = () => {
         setIsModalOpen(false);
         setCurrentPreviewImage(null);
@@ -282,6 +508,46 @@ const AddNewStatus: React.FC = () => {
                 formData.informDonor.toString(),
             );
             formDataToSubmit.append('donatedItemId', formData.donatedItemId);
+            formDataToSubmit.append(
+                'itemAttributes',
+                JSON.stringify(
+                    (formData.selectedItemAttributes ?? [])
+                        .map(attribute => {
+                            const trimmedValue = attribute.value.trim();
+
+                            if (attribute.valueType === 'boolean') {
+                                if (attribute.booleanValue === null) {
+                                    return null;
+                                }
+
+                                return {
+                                    descriptor: attribute.descriptor,
+                                    stringValue: null,
+                                    numberValue: null,
+                                    booleanValue: attribute.booleanValue,
+                                };
+                            }
+
+                            if (!trimmedValue) {
+                                return null;
+                            }
+
+                            return {
+                                descriptor: attribute.descriptor,
+                                stringValue:
+                                    attribute.valueType === 'string'
+                                        ? trimmedValue
+                                        : null,
+                                numberValue:
+                                    attribute.valueType === 'number'
+                                        ? Number(trimmedValue)
+                                        : null,
+                                booleanValue: null,
+                            };
+                        })
+                        .filter(Boolean),
+                ),
+            );
             images.forEach(image =>
                 formDataToSubmit.append('imageFiles', image),
             );
@@ -334,12 +600,16 @@ const AddNewStatus: React.FC = () => {
             donatedItemId: id || '',
             informDonor: false,
             submitter: localStorage.getItem('name') || '',
+            selectedItemAttributes: [],
         });
         setImages([]);
         setPreviewUrls([]);
         setErrors({});
         setErrorMessage(null);
         setSuccessMessage(null);
+        setSelectedDescriptor('');
+        setCustomDescriptor('');
+        setCustomAttributeType('string');
     };
 
     return (
@@ -459,6 +729,258 @@ const AddNewStatus: React.FC = () => {
                             Inform donor about this status update
                         </span>
                     </label>
+                </div>
+
+                <div className="form-field full-width">
+                    <label className="block text-sm font-semibold mb-1">
+                        Attributes
+                    </label>
+
+                    <div
+                        style={{
+                            display: 'flex',
+                            gap: '0.75rem',
+                            alignItems: 'end',
+                            flexWrap: 'wrap',
+                        }}
+                    >
+                        <div style={{ flex: '1 1 220px' }}>
+                            <label
+                                htmlFor="selected-attribute-descriptor"
+                                className="block text-sm font-semibold mb-1"
+                            >
+                                Pick descriptor
+                            </label>
+                            <select
+                                id="selected-attribute-descriptor"
+                                value={selectedDescriptor}
+                                onChange={e =>
+                                    setSelectedDescriptor(e.target.value)
+                                }
+                                className="w-full px-3 py-2 rounded border border-gray-300"
+                            >
+                                <option value="">Select descriptor</option>
+                                {attributeOptions.map(option => (
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => addAttribute()}
+                            className="submit-button"
+                            disabled={!selectedDescriptor}
+                        >
+                            Add
+                        </button>
+                    </div>
+
+                    <div
+                        style={{
+                            display: 'flex',
+                            gap: '0.75rem',
+                            alignItems: 'end',
+                            flexWrap: 'wrap',
+                            marginTop: '1rem',
+                        }}
+                    >
+                        <div style={{ flex: '1 1 220px' }}>
+                            <label
+                                htmlFor="custom-attribute-descriptor"
+                                className="block text-sm font-semibold mb-1"
+                            >
+                                Or create descriptor
+                            </label>
+                            <input
+                                id="custom-attribute-descriptor"
+                                type="text"
+                                value={customDescriptor}
+                                onChange={e =>
+                                    setCustomDescriptor(e.target.value)
+                                }
+                                placeholder="e.g. serial number"
+                                className="w-full px-3 py-2 rounded border border-gray-300"
+                            />
+                        </div>
+
+                        <div style={{ flex: '0 0 160px' }}>
+                            <label className="block text-sm font-semibold mb-1">
+                                Type
+                            </label>
+                            <select
+                                value={customAttributeType}
+                                onChange={e =>
+                                    setCustomAttributeType(
+                                        e.target.value as AttributeValueType,
+                                    )
+                                }
+                                className="w-full px-3 py-2 rounded border border-gray-300"
+                            >
+                                <option value="string">Text</option>
+                                <option value="number">Number</option>
+                                <option value="boolean">Yes / No</option>
+                            </select>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => addAttribute(customDescriptor)}
+                            className="submit-button"
+                            disabled={!customDescriptor.trim()}
+                        >
+                            Create
+                        </button>
+                    </div>
+
+                    {(formData.selectedItemAttributes ?? []).length > 0 && (
+                        <div style={{ marginTop: '1rem' }}>
+                            {(formData.selectedItemAttributes ?? []).map(
+                                attribute => (
+                                    <div
+                                        key={attribute.descriptor}
+                                        style={{
+                                            border: '1px solid #d1d5db',
+                                            borderRadius: '0.5rem',
+                                            padding: '1rem',
+                                            marginBottom: '0.75rem',
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                gap: '0.75rem',
+                                                flexWrap: 'wrap',
+                                            }}
+                                        >
+                                            <strong>
+                                                {attribute.descriptor}
+                                            </strong>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    removeAttribute(
+                                                        attribute.descriptor,
+                                                    )
+                                                }
+                                                className="back-button"
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+
+                                        <div
+                                            style={{
+                                                display: 'flex',
+                                                gap: '0.75rem',
+                                                flexWrap: 'wrap',
+                                                marginTop: '0.75rem',
+                                                alignItems: 'end',
+                                            }}
+                                        >
+                                            <div style={{ flex: '0 0 140px' }}>
+                                                <label className="block text-sm font-semibold mb-1">
+                                                    Type
+                                                </label>
+                                                <div className="w-full px-3 py-2 rounded border border-gray-300 bg-gray-50">
+                                                    {formatAttributeTypeLabel(
+                                                        attribute.valueType,
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {attribute.valueType ===
+                                            'boolean' ? (
+                                                <div
+                                                    style={{
+                                                        flex: '1 1 220px',
+                                                    }}
+                                                >
+                                                    <label className="block text-sm font-semibold mb-1">
+                                                        Value
+                                                    </label>
+                                                    <select
+                                                        value={
+                                                            attribute.booleanValue ===
+                                                            null
+                                                                ? ''
+                                                                : String(
+                                                                      attribute.booleanValue,
+                                                                  )
+                                                        }
+                                                        onChange={e =>
+                                                            updateAttribute(
+                                                                attribute.descriptor,
+                                                                {
+                                                                    booleanValue:
+                                                                        e.target
+                                                                            .value ===
+                                                                        ''
+                                                                            ? null
+                                                                            : e
+                                                                                  .target
+                                                                                  .value ===
+                                                                              'true',
+                                                                },
+                                                            )
+                                                        }
+                                                        className="w-full px-3 py-2 rounded border border-gray-300"
+                                                    >
+                                                        <option value="">
+                                                            Select value
+                                                        </option>
+                                                        <option value="true">
+                                                            Yes
+                                                        </option>
+                                                        <option value="false">
+                                                            No
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            ) : (
+                                                <div
+                                                    style={{
+                                                        flex: '1 1 220px',
+                                                    }}
+                                                >
+                                                    <label className="block text-sm font-semibold mb-1">
+                                                        Value
+                                                    </label>
+                                                    <input
+                                                        type={
+                                                            attribute.valueType ===
+                                                            'number'
+                                                                ? 'number'
+                                                                : 'text'
+                                                        }
+                                                        value={attribute.value}
+                                                        onChange={e =>
+                                                            updateAttribute(
+                                                                attribute.descriptor,
+                                                                {
+                                                                    value: e
+                                                                        .target
+                                                                        .value,
+                                                                },
+                                                            )
+                                                        }
+                                                        className="w-full px-3 py-2 rounded border border-gray-300"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ),
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Image Upload Field */}
