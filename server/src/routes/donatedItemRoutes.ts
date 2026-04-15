@@ -60,6 +60,11 @@ type IncomingItemAttribute = {
 
 type AttributeValueType = 'string' | 'number' | 'boolean';
 
+type AttributeDefinition = {
+    descriptor: string;
+    valueType: AttributeValueType;
+};
+
 const KNOWN_ATTRIBUTE_VALUE_TYPES: Record<string, AttributeValueType> = {
     brand: 'string',
     model: 'string',
@@ -73,6 +78,30 @@ const KNOWN_ATTRIBUTE_VALUE_TYPES: Record<string, AttributeValueType> = {
     cpu: 'string',
     'ram (GB)': 'number',
     'storage (GB)': 'number',
+};
+
+const COMMON_ATTRIBUTE_DEFINITIONS: AttributeDefinition[] = [
+    { descriptor: 'brand', valueType: 'string' },
+    { descriptor: 'model', valueType: 'string' },
+    { descriptor: 'condition', valueType: 'string' },
+    { descriptor: 'type', valueType: 'string' },
+    { descriptor: 'needs repair', valueType: 'boolean' },
+    { descriptor: 'note', valueType: 'string' },
+];
+
+const ATTRIBUTE_DEFINITIONS_BY_ITEM_TYPE: Record<string, AttributeDefinition[]> = {
+    bicycle: [
+        ...COMMON_ATTRIBUTE_DEFINITIONS,
+        { descriptor: 'standover height (in.)', valueType: 'number' },
+        { descriptor: 'color', valueType: 'string' },
+        { descriptor: 'wheel size (in.)', valueType: 'number' },
+    ],
+    computer: [
+        ...COMMON_ATTRIBUTE_DEFINITIONS,
+        { descriptor: 'cpu', valueType: 'string' },
+        { descriptor: 'ram (GB)', valueType: 'number' },
+        { descriptor: 'storage (GB)', valueType: 'number' },
+    ],
 };
 
 const normalizeDescriptor = (value?: string | null) =>
@@ -381,6 +410,10 @@ router.get('/attributes', async (req: Request, res: Response) => {
         });
         if (!permGranted) return;
 
+        const requestedItemType = normalizeDescriptor(
+            typeof req.query.itemType === 'string' ? req.query.itemType : '',
+        );
+
         const attributes = await prisma.itemAttribute.findMany({
             select: {
                 descriptor: true,
@@ -388,6 +421,16 @@ router.get('/attributes', async (req: Request, res: Response) => {
                 numberValue: true,
                 booleanValue: true,
             },
+            where: requestedItemType
+                ? {
+                      donatedItem: {
+                          itemType: {
+                              equals: requestedItemType,
+                              mode: 'insensitive',
+                          },
+                      },
+                  }
+                : undefined,
         });
 
         const definitions = new Map<
@@ -399,15 +442,23 @@ router.get('/attributes', async (req: Request, res: Response) => {
             }
         >();
 
-        Object.entries(KNOWN_ATTRIBUTE_VALUE_TYPES).forEach(
-            ([normalizedDescriptor, valueType]) => {
-                definitions.set(normalizedDescriptor, {
-                    descriptor: normalizedDescriptor,
-                    valueType,
-                    count: 0,
-                });
-            },
-        );
+        const seededDefinitions = requestedItemType
+            ? ATTRIBUTE_DEFINITIONS_BY_ITEM_TYPE[requestedItemType] ?? []
+            : Object.entries(KNOWN_ATTRIBUTE_VALUE_TYPES).map(
+                  ([descriptor, valueType]) => ({
+                      descriptor,
+                      valueType,
+                  }),
+              );
+
+        seededDefinitions.forEach(({ descriptor, valueType }) => {
+            const normalizedDescriptor = normalizeDescriptor(descriptor);
+            definitions.set(normalizedDescriptor, {
+                descriptor,
+                valueType,
+                count: 0,
+            });
+        });
 
         attributes.forEach(attribute => {
             const normalizedDescriptor = normalizeDescriptor(
