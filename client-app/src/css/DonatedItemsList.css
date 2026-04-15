@@ -16,7 +16,8 @@
 body {
     background: var(--bg-soft);
 }
-.header {
+.donated-page {
+    min-height: 100vh;
     padding-top: calc(var(--navbar-h) + 8px);
 }
 
