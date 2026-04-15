@@ -33,45 +33,60 @@ interface Option {
     value: string; // keep as string for <select>, store numeric id separately in id
     label: string;
     id?: number;
+    valueType?: AttributeValueType;
 }
 
-const DEFAULT_ATTRIBUTE_DESCRIPTORS_BICYCLE = [
-    'brand',
-    'model',
-    'standover height',
-    'type',
-    'color',
-    'wheel size',
-    'condition',
-    'needs repair',
-    'note',
+interface AttributeDefinition {
+    descriptor: string;
+    valueType: AttributeValueType;
+}
+
+const DEFAULT_ATTRIBUTE_DEFINITIONS_BICYCLE: AttributeDefinition[] = [
+    { descriptor: 'brand', valueType: 'string' },
+    { descriptor: 'model', valueType: 'string' },
+    { descriptor: 'standover height (in.)', valueType: 'number' },
+    { descriptor: 'type', valueType: 'string' },
+    { descriptor: 'color', valueType: 'string' },
+    { descriptor: 'wheel size (in.)', valueType: 'number' },
+    { descriptor: 'condition', valueType: 'string' },
+    { descriptor: 'needs repair', valueType: 'boolean' },
+    { descriptor: 'note', valueType: 'string' },
 ];
 
-const DEFAULT_ATTRIBUTE_DESCRIPTORS_COMPUTER = [
-    'brand',
-    'model',
-    'condition',
-    'type',
-    'needs repair',
-    'cpu',
-    'ram',
-    'storage',
-    'note',
+const DEFAULT_ATTRIBUTE_DEFINITIONS_COMPUTER: AttributeDefinition[] = [
+    { descriptor: 'brand', valueType: 'string' },
+    { descriptor: 'model', valueType: 'string' },
+    { descriptor: 'condition', valueType: 'string' },
+    { descriptor: 'type', valueType: 'string' },
+    { descriptor: 'needs repair', valueType: 'boolean' },
+    { descriptor: 'cpu', valueType: 'string' },
+    { descriptor: 'ram (GB)', valueType: 'number' },
+    { descriptor: 'storage (GB)', valueType: 'number' },
+    { descriptor: 'note', valueType: 'string' },
 ];
 
 const getDefaultDescriptorsForItemType = (itemType: string) => {
     if (itemType === 'bicycle') {
-        return DEFAULT_ATTRIBUTE_DESCRIPTORS_BICYCLE;
+        return DEFAULT_ATTRIBUTE_DEFINITIONS_BICYCLE;
     }
 
     if (itemType === 'computer') {
-        return DEFAULT_ATTRIBUTE_DESCRIPTORS_COMPUTER;
+        return DEFAULT_ATTRIBUTE_DEFINITIONS_COMPUTER;
     }
 
     return [
-        ...DEFAULT_ATTRIBUTE_DESCRIPTORS_BICYCLE,
-        ...DEFAULT_ATTRIBUTE_DESCRIPTORS_COMPUTER,
+        ...DEFAULT_ATTRIBUTE_DEFINITIONS_BICYCLE,
+        ...DEFAULT_ATTRIBUTE_DEFINITIONS_COMPUTER,
     ];
+};
+
+const normalizeDescriptor = (value?: string | null) =>
+    value?.trim().toLowerCase() || '';
+
+const formatAttributeTypeLabel = (valueType: AttributeValueType) => {
+    if (valueType === 'number') return 'Number';
+    if (valueType === 'boolean') return 'Yes / No';
+    return 'Text';
 };
 
 const NewItemForm: React.FC = () => {
@@ -100,6 +115,8 @@ const NewItemForm: React.FC = () => {
     const [attributeOptions, setAttributeOptions] = useState<Option[]>([]);
     const [selectedDescriptor, setSelectedDescriptor] = useState('');
     const [customDescriptor, setCustomDescriptor] = useState('');
+    const [customAttributeType, setCustomAttributeType] =
+        useState<AttributeValueType>('string');
     const [previews, setPreviews] = useState<string[]>([]);
     const [errors, setErrors] = useState<FormErrors>({});
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -150,7 +167,7 @@ const NewItemForm: React.FC = () => {
         };
 
         const fetchAttributes = async () => {
-            const defaultDescriptors = getDefaultDescriptorsForItemType(
+            const defaultDefinitions = getDefaultDescriptorsForItemType(
                 formData.itemType,
             );
 
@@ -163,31 +180,48 @@ const NewItemForm: React.FC = () => {
                         },
                     },
                 );
-                const descriptors = [
-                    ...defaultDescriptors,
-                    ...response.data.map((attr: any) =>
-                        String(attr.descriptor),
-                    ),
+                const definitions = [
+                    ...defaultDefinitions,
+                    ...response.data.map((attr: any) => ({
+                        descriptor: String(attr.descriptor ?? '').trim(),
+                        valueType: attr.valueType as AttributeValueType,
+                    })),
                 ];
                 const uniqueDescriptors = Array.from(
-                    new Set(
-                        descriptors
-                            .map(descriptor => descriptor.trim())
-                            .filter(Boolean),
-                    ),
-                ).sort((a, b) => a.localeCompare(b));
+                    definitions.reduce((acc, definition) => {
+                        const descriptor = definition.descriptor.trim();
+                        if (!descriptor) {
+                            return acc;
+                        }
+
+                        const normalized = normalizeDescriptor(descriptor);
+                        if (!acc.has(normalized)) {
+                            acc.set(normalized, {
+                                descriptor,
+                                valueType: definition.valueType ?? 'string',
+                            });
+                        }
+
+                        return acc;
+                    }, new Map<string, AttributeDefinition>()),
+                    ([, definition]) => definition,
+                ).sort((a, b) =>
+                    a.descriptor.localeCompare(b.descriptor),
+                );
                 setAttributeOptions(
-                    uniqueDescriptors.map(descriptor => ({
-                        value: descriptor,
-                        label: descriptor,
+                    uniqueDescriptors.map(definition => ({
+                        value: definition.descriptor,
+                        label: definition.descriptor,
+                        valueType: definition.valueType,
                     })),
                 );
             } catch (error) {
                 console.error('Error fetching attributes:', error);
                 setAttributeOptions(
-                    defaultDescriptors.map(descriptor => ({
-                        value: descriptor,
-                        label: descriptor,
+                    defaultDefinitions.map(definition => ({
+                        value: definition.descriptor,
+                        label: definition.descriptor,
+                        valueType: definition.valueType,
                     })),
                 );
             }
@@ -342,7 +376,7 @@ const NewItemForm: React.FC = () => {
         }
 
         const alreadySelected = formData.selectedItemAttributes.some(
-            attr => attr.descriptor.toLowerCase() === descriptor.toLowerCase(),
+            attr => normalizeDescriptor(attr.descriptor) === normalizeDescriptor(descriptor),
         );
         if (alreadySelected) {
             setSelectedDescriptor('');
@@ -350,18 +384,18 @@ const NewItemForm: React.FC = () => {
             return;
         }
 
+        const existingOption = attributeOptions.find(
+            option => normalizeDescriptor(option.value) === normalizeDescriptor(descriptor),
+        );
+        const valueType = existingOption?.valueType ?? customAttributeType;
+
         setFormData(prev => ({
             ...prev,
             selectedItemAttributes: [
                 ...prev.selectedItemAttributes,
                 {
                     descriptor,
-                    valueType:
-                        descriptor.toLowerCase().startsWith('is') ||
-                        descriptor.toLowerCase().startsWith('has') ||
-                        descriptor.toLowerCase().startsWith('needs')
-                            ? 'boolean'
-                            : 'string',
+                    valueType,
                     value: '',
                     booleanValue: null,
                 },
@@ -371,11 +405,18 @@ const NewItemForm: React.FC = () => {
         if (
             !attributeOptions.some(
                 option =>
-                    option.value.toLowerCase() === descriptor.toLowerCase(),
+                    normalizeDescriptor(option.value) === normalizeDescriptor(descriptor),
             )
         ) {
             setAttributeOptions(prev =>
-                [...prev, { value: descriptor, label: descriptor }].sort(
+                [
+                    ...prev,
+                    {
+                        value: descriptor,
+                        label: descriptor,
+                        valueType,
+                    },
+                ].sort(
                     (a, b) => a.label.localeCompare(b.label),
                 ),
             );
@@ -383,6 +424,7 @@ const NewItemForm: React.FC = () => {
 
         setSelectedDescriptor('');
         setCustomDescriptor('');
+        setCustomAttributeType('string');
     };
 
     const removeAttribute = (descriptor: string) => {
@@ -515,6 +557,7 @@ const NewItemForm: React.FC = () => {
         });
         setSelectedDescriptor('');
         setCustomDescriptor('');
+        setCustomAttributeType('string');
         setPreviews([]);
         setErrors({});
         setErrorMessage(null);
@@ -647,6 +690,25 @@ const NewItemForm: React.FC = () => {
                             />
                         </div>
 
+                        <div style={{ flex: '0 0 160px' }}>
+                            <label className="block text-sm font-semibold mb-1">
+                                Type
+                            </label>
+                            <select
+                                value={customAttributeType}
+                                onChange={e =>
+                                    setCustomAttributeType(
+                                        e.target.value as AttributeValueType,
+                                    )
+                                }
+                                className="w-full px-3 py-2 rounded border border-gray-300"
+                            >
+                                <option value="string">Text</option>
+                                <option value="number">Number</option>
+                                <option value="boolean">Yes / No</option>
+                            </select>
+                        </div>
+
                         <button
                             type="button"
                             onClick={() => addAttribute(customDescriptor)}
@@ -705,31 +767,11 @@ const NewItemForm: React.FC = () => {
                                             <label className="block text-sm font-semibold mb-1">
                                                 Type
                                             </label>
-                                            <select
-                                                value={attribute.valueType}
-                                                onChange={e =>
-                                                    updateAttribute(
-                                                        attribute.descriptor,
-                                                        {
-                                                            valueType: e.target
-                                                                .value as AttributeValueType,
-                                                            value: '',
-                                                            booleanValue: null,
-                                                        },
-                                                    )
-                                                }
-                                                className="w-full px-3 py-2 rounded border border-gray-300"
-                                            >
-                                                <option value="string">
-                                                    Text
-                                                </option>
-                                                <option value="number">
-                                                    Number
-                                                </option>
-                                                <option value="boolean">
-                                                    Yes / No
-                                                </option>
-                                            </select>
+                                            <div className="w-full px-3 py-2 rounded border border-gray-300 bg-gray-50">
+                                                {formatAttributeTypeLabel(
+                                                    attribute.valueType,
+                                                )}
+                                            </div>
                                         </div>
 
                                         {attribute.valueType === 'boolean' ? (

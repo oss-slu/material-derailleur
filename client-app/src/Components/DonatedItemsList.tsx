@@ -18,6 +18,11 @@ interface SelectedItemDetails extends DonatedItem {
 type AttributeValueType = 'string' | 'number' | 'boolean';
 type BooleanFilterValue = '' | 'true' | 'false';
 
+interface AttributeDefinition {
+    descriptor: string;
+    valueType: AttributeValueType;
+}
+
 interface AttributeFilter {
     descriptor: string;
     valueType: AttributeValueType;
@@ -27,51 +32,48 @@ interface AttributeFilter {
     booleanValue: BooleanFilterValue;
 }
 
-const DEFAULT_ATTRIBUTE_DESCRIPTORS_BICYCLE = [
-    'brand',
-    'model',
-    'standover height',
-    'type',
-    'color',
-    'wheel size',
-    'condition',
-    'needs repair',
-    'note',
+const DEFAULT_ATTRIBUTE_DEFINITIONS_BICYCLE: AttributeDefinition[] = [
+    { descriptor: 'brand', valueType: 'string' },
+    { descriptor: 'model', valueType: 'string' },
+    { descriptor: 'standover height (in.)', valueType: 'number' },
+    { descriptor: 'type', valueType: 'string' },
+    { descriptor: 'color', valueType: 'string' },
+    { descriptor: 'wheel size (in.)', valueType: 'number' },
+    { descriptor: 'condition', valueType: 'string' },
+    { descriptor: 'needs repair', valueType: 'boolean' },
+    { descriptor: 'note', valueType: 'string' },
 ];
 
-const DEFAULT_ATTRIBUTE_DESCRIPTORS_COMPUTER = [
-    'brand',
-    'model',
-    'condition',
-    'type',
-    'needs repair',
-    'cpu',
-    'ram',
-    'storage',
-    'note',
+const DEFAULT_ATTRIBUTE_DEFINITIONS_COMPUTER: AttributeDefinition[] = [
+    { descriptor: 'brand', valueType: 'string' },
+    { descriptor: 'model', valueType: 'string' },
+    { descriptor: 'condition', valueType: 'string' },
+    { descriptor: 'type', valueType: 'string' },
+    { descriptor: 'needs repair', valueType: 'boolean' },
+    { descriptor: 'cpu', valueType: 'string' },
+    { descriptor: 'ram (GB)', valueType: 'number' },
+    { descriptor: 'storage (GB)', valueType: 'number' },
+    { descriptor: 'note', valueType: 'string' },
 ];
 
 const getDefaultAttributeDescriptors = () =>
     Array.from(
-        new Set([
-            ...DEFAULT_ATTRIBUTE_DESCRIPTORS_BICYCLE,
-            ...DEFAULT_ATTRIBUTE_DESCRIPTORS_COMPUTER,
-        ]),
-    ).sort((a, b) => a.localeCompare(b));
+        [...DEFAULT_ATTRIBUTE_DEFINITIONS_BICYCLE, ...DEFAULT_ATTRIBUTE_DEFINITIONS_COMPUTER].reduce(
+            (acc, definition) => {
+                if (!acc.has(normalize(definition.descriptor))) {
+                    acc.set(normalize(definition.descriptor), definition);
+                }
+                return acc;
+            },
+            new Map<string, AttributeDefinition>(),
+        ).values(),
+    ).sort((a, b) => a.descriptor.localeCompare(b.descriptor));
 
 const normalize = (value?: string | null) => value?.trim().toLowerCase() || '';
 
-const getDefaultValueType = (descriptor: string): AttributeValueType => {
-    const normalized = normalize(descriptor);
-    if (
-        normalized.startsWith('is') ||
-        normalized.startsWith('has') ||
-        normalized.startsWith('needs')
-    ) {
-        return 'boolean';
-    }
-    return 'string';
-};
+const isAttributeDefinition = (
+    value: AttributeDefinition | null,
+): value is AttributeDefinition => value !== null;
 
 const formatAttributeValue = (attribute: ItemAttribute) => {
     if (attribute.stringValue !== null) return attribute.stringValue;
@@ -105,13 +107,18 @@ const DonatedItemsList: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [programOptions, setProgramOptions] = useState<Program[]>([]);
-    const [attributeOptions, setAttributeOptions] = useState<string[]>(
+    const [attributeOptions, setAttributeOptions] = useState<AttributeDefinition[]>(
         getDefaultAttributeDescriptors(),
     );
     const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
     const [itemTypes, setItemTypes] = useState<Set<string>>(new Set());
 
     const navigate = useNavigate();
+
+    const getAttributeDefinition = (descriptor: string) =>
+        attributeOptions.find(
+            option => normalize(option.descriptor) === normalize(descriptor),
+        );
 
     const isSecure = () =>
         typeof window !== 'undefined' && window.isSecureContext;
@@ -325,7 +332,12 @@ const DonatedItemsList: React.FC = () => {
 
     const fetchAttributes = async () => {
         try {
-            const response = await axios.get(
+            const response = await axios.get<
+                Array<{
+                    descriptor?: string;
+                    valueType?: AttributeValueType;
+                }>
+            >(
                 `${process.env.REACT_APP_BACKEND_API_BASE_URL}donatedItem/attributes`,
                 {
                     headers: {
@@ -333,26 +345,62 @@ const DonatedItemsList: React.FC = () => {
                     },
                 },
             );
-            const descriptorsFromApi = response.data
-                .map((attribute: { descriptor?: string }) =>
-                    attribute.descriptor?.trim(),
-                )
-                .filter(Boolean) as string[];
-            const descriptorsFromItems = donatedItems.flatMap(
-                item =>
-                    (item.attributes || [])
-                        .map(attribute => attribute.descriptor?.trim())
-                        .filter(Boolean) as string[],
+            const definitionsFromApi: AttributeDefinition[] = response.data
+                .map(attribute => {
+                    const descriptor = attribute.descriptor?.trim();
+                    if (!descriptor) {
+                        return null;
+                    }
+
+                    return {
+                        descriptor,
+                        valueType: attribute.valueType ?? 'string',
+                    };
+                })
+                .filter(isAttributeDefinition);
+            const definitionsFromItems = donatedItems.flatMap(item =>
+                (item.attributes || [])
+                    .map(attribute => {
+                        const descriptor = attribute.descriptor?.trim();
+                        if (!descriptor) {
+                            return null;
+                        }
+
+                        let valueType: AttributeValueType = 'string';
+                        if (attribute.booleanValue !== null) {
+                            valueType = 'boolean';
+                        } else if (attribute.numberValue !== null) {
+                            valueType = 'number';
+                        }
+
+                        return {
+                            descriptor,
+                            valueType,
+                        };
+                    })
+                    .filter(isAttributeDefinition),
             );
+            const mergedDefinitions: AttributeDefinition[] = [
+                ...getDefaultAttributeDescriptors(),
+                ...definitionsFromApi,
+                ...definitionsFromItems,
+            ];
 
             setAttributeOptions(
                 Array.from(
-                    new Set([
-                        ...getDefaultAttributeDescriptors(),
-                        ...descriptorsFromApi,
-                        ...descriptorsFromItems,
-                    ]),
-                ).sort((a, b) => a.localeCompare(b)),
+                    mergedDefinitions.reduce(
+                        (acc, definition) => {
+                            const key = normalize(definition.descriptor);
+                            if (!key || acc.has(key)) {
+                                return acc;
+                            }
+
+                            acc.set(key, definition);
+                            return acc;
+                        },
+                        new Map<string, AttributeDefinition>(),
+                    ).values(),
+                ).sort((a, b) => a.descriptor.localeCompare(b.descriptor)),
             );
         } catch (fetchError) {
             console.error('Error fetching attributes:', fetchError);
@@ -430,7 +478,7 @@ const DonatedItemsList: React.FC = () => {
             ...prev,
             {
                 descriptor,
-                valueType: getDefaultValueType(descriptor),
+                valueType: getAttributeDefinition(descriptor)?.valueType || 'string',
                 textValue: '',
                 minValue: '',
                 maxValue: '',
@@ -440,11 +488,17 @@ const DonatedItemsList: React.FC = () => {
 
         if (
             !attributeOptions.some(
-                option => normalize(option) === normalize(descriptor),
+                option => normalize(option.descriptor) === normalize(descriptor),
             )
         ) {
             setAttributeOptions(prev =>
-                [...prev, descriptor].sort((a, b) => a.localeCompare(b)),
+                [
+                    ...prev,
+                    {
+                        descriptor,
+                        valueType: 'string' as AttributeValueType,
+                    },
+                ].sort((a, b) => a.descriptor.localeCompare(b.descriptor)),
             );
         }
 
@@ -819,8 +873,11 @@ ${svgString}
                             >
                                 <option value="">Select descriptor</option>
                                 {attributeOptions.map(option => (
-                                    <option key={option} value={option}>
-                                        {option}
+                                    <option
+                                        key={option.descriptor}
+                                        value={option.descriptor}
+                                    >
+                                        {option.descriptor}
                                     </option>
                                 ))}
                             </select>
@@ -896,36 +953,23 @@ ${svgString}
                                                     fontWeight: 600,
                                                 }}
                                             >
-                                                Value Type
+                                                Type
                                             </div>
-                                            <select
-                                                value={filter.valueType}
-                                                onChange={e =>
-                                                    handleUpdateAttributeFilter(
-                                                        filter.descriptor,
-                                                        {
-                                                            valueType: e.target
-                                                                .value as AttributeValueType,
-                                                            textValue: '',
-                                                            minValue: '',
-                                                            maxValue: '',
-                                                            booleanValue: '',
-                                                        },
-                                                    )
-                                                }
+                                            <div
                                                 className="filter-options"
-                                                style={{ width: '100%' }}
+                                                style={{
+                                                    width: '100%',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                }}
                                             >
-                                                <option value="string">
-                                                    Text
-                                                </option>
-                                                <option value="number">
-                                                    Number Range
-                                                </option>
-                                                <option value="boolean">
-                                                    Yes / No
-                                                </option>
-                                            </select>
+                                                {filter.valueType === 'number'
+                                                    ? 'Number Range'
+                                                    : filter.valueType ===
+                                                        'boolean'
+                                                      ? 'Yes / No'
+                                                      : 'Text'}
+                                            </div>
                                         </label>
 
                                         {filter.valueType === 'string' && (

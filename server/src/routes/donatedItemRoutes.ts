@@ -58,6 +58,43 @@ type IncomingItemAttribute = {
     booleanValue?: unknown;
 };
 
+type AttributeValueType = 'string' | 'number' | 'boolean';
+
+const KNOWN_ATTRIBUTE_VALUE_TYPES: Record<string, AttributeValueType> = {
+    brand: 'string',
+    model: 'string',
+    'standover height (in.)': 'number',
+    type: 'string',
+    color: 'string',
+    'wheel size (in.)': 'number',
+    condition: 'string',
+    'needs repair': 'boolean',
+    note: 'string',
+    cpu: 'string',
+    'ram (GB)': 'number',
+    'storage (GB)': 'number',
+};
+
+const normalizeDescriptor = (value?: string | null) =>
+    value?.trim().toLowerCase() || '';
+
+const getKnownAttributeValueType = (
+    descriptor: string,
+): AttributeValueType | null =>
+    KNOWN_ATTRIBUTE_VALUE_TYPES[normalizeDescriptor(descriptor)] ?? null;
+
+const inferAttributeValueType = (attribute: {
+    descriptor: string;
+    stringValue: string | null;
+    numberValue: number | null;
+    booleanValue: boolean | null;
+}): AttributeValueType | null => {
+    if (attribute.booleanValue !== null) return 'boolean';
+    if (attribute.numberValue !== null) return 'number';
+    if (attribute.stringValue !== null) return 'string';
+    return null;
+};
+
 function parseItemAttributes(rawAttributes: unknown) {
     if (
         typeof rawAttributes !== 'string' ||
@@ -344,16 +381,61 @@ router.get('/attributes', async (req: Request, res: Response) => {
         });
         if (!permGranted) return;
 
-        const attributes = await prisma.itemAttribute.groupBy({
-            by: ['descriptor'],
-            _count: {
-                _all: true,
-            },
-            orderBy: {
-                descriptor: 'asc',
+        const attributes = await prisma.itemAttribute.findMany({
+            select: {
+                descriptor: true,
+                stringValue: true,
+                numberValue: true,
+                booleanValue: true,
             },
         });
-        res.status(200).json(attributes);
+
+        const definitions = new Map<
+            string,
+            {
+                descriptor: string;
+                valueType: AttributeValueType;
+                count: number;
+            }
+        >();
+
+        Object.entries(KNOWN_ATTRIBUTE_VALUE_TYPES).forEach(
+            ([normalizedDescriptor, valueType]) => {
+                definitions.set(normalizedDescriptor, {
+                    descriptor: normalizedDescriptor,
+                    valueType,
+                    count: 0,
+                });
+            },
+        );
+
+        attributes.forEach(attribute => {
+            const normalizedDescriptor = normalizeDescriptor(
+                attribute.descriptor,
+            );
+            if (!normalizedDescriptor) {
+                return;
+            }
+
+            const existing = definitions.get(normalizedDescriptor);
+            const inferredType =
+                inferAttributeValueType(attribute) ??
+                existing?.valueType ??
+                getKnownAttributeValueType(attribute.descriptor) ??
+                'string';
+
+            definitions.set(normalizedDescriptor, {
+                descriptor: attribute.descriptor.trim(),
+                valueType: existing?.valueType ?? inferredType,
+                count: (existing?.count ?? 0) + 1,
+            });
+        });
+
+        res.status(200).json(
+            Array.from(definitions.values()).sort((a, b) =>
+                a.descriptor.localeCompare(b.descriptor),
+            ),
+        );
     } catch (error) {
         if (error instanceof Error) {
             console.error('Error fetching item attributes:', error.message);
