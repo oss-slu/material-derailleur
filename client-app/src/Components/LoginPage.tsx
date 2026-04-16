@@ -168,9 +168,9 @@ const LoginPage: React.FC = () => {
                     data.role === 'TIER_TWO' ||
                     data.role === 'TIER_THREE'
                 ) {
-                    window.location.href = '/';
+                    window.location.href = (process.env.PUBLIC_URL || '') + '/';
                 } else if (data.role === 'DONOR') {
-                    window.location.href = '/donor-profile';
+                    window.location.href = (process.env.PUBLIC_URL || '') + '/donor-profile';
                 } else {
                     setErrorMessage(
                         'Unknown user role. Please contact support.',

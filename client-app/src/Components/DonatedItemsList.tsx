@@ -9,13 +9,7 @@ import { Program } from '../Modals/ProgramModal';
 import { DonatedItem, ItemAttribute } from '../Modals/DonatedItemModal';
 import { DonatedItemStatus as Status } from '../Modals/DonatedItemStatusModal';
 import axios from 'axios';
-import { Result, useZxing } from 'react-zxing';
-import {
-    type AttributeDefinition,
-    type AttributeValueType,
-    getAllDefaultAttributeDefinitions,
-    normalizeDescriptor,
-} from '../constants/attributeDefinitions';
+import { useZxing } from 'react-zxing';
 
 interface SelectedItemDetails extends DonatedItem {
     statuses: Status[];
@@ -124,7 +118,7 @@ const DonatedItemsList: React.FC = () => {
 
     const { ref } = useZxing({
         constraints: { video: { facingMode: 'environment' } },
-        onDecodeResult(result: Result) {
+        onDecodeResult(result) {
             setSearchInput(result.getText());
             setScanning(false);
             setError(null);
@@ -554,67 +548,108 @@ const DonatedItemsList: React.FC = () => {
     };
 
     const printBarcode = (id: number) => {
-        const svgEl = document.querySelector<SVGElement>(`#barcode-${id} svg`);
-        if (svgEl) {
-            const serializer = new XMLSerializer();
-            let svgString = serializer.serializeToString(svgEl);
+        // Try to find and print the SVG barcode
+        const barcodeContainer = document.getElementById(`barcode-${id}`);
+        if (!barcodeContainer) {
+            console.error('Barcode element not found for print');
+            return;
+        }
 
-            // Ensure xmlns is present (some renderers omit it)
-            if (!/xmlns=/.test(svgString)) {
-                svgString = svgString.replace(
-                    /^<svg/,
-                    '<svg xmlns="http://www.w3.org/2000/svg"',
-                );
-            }
+        // Find SVG within the container
+        const svgEl = barcodeContainer.querySelector('svg') as SVGElement | null;
+        if (svgEl && svgEl.outerHTML) {
+            try {
+                let svgString = svgEl.outerHTML;
 
-            // Build full HTML for print with charset and basic styling
-            const printHtml = `<!doctype html>
+                // Ensure xmlns is present (some renderers omit it)
+                if (!/xmlns=/.test(svgString)) {
+                    svgString = svgString.replace(
+                        /^<svg/,
+                        '<svg xmlns="http://www.w3.org/2000/svg"',
+                    );
+                }
+
+                // Build full HTML for print with charset and basic styling
+                const printHtml = `<!doctype html>
 <html>
 <head>
 <meta charset="utf-8" />
 <title>Print Barcode</title>
 <style>
-  html,body{height:100%;margin:0;padding:0;}
-  body{display:flex;align-items:center;justify-content:center;background:#fff;}
-  svg{max-width:95%;height:auto;display:block;}
+  * { margin: 0; padding: 0; }
+  html, body { height: 100%; margin: 0; padding: 0; }
+  body { display: flex; align-items: center; justify-content: center; background: #fff; }
+  svg { width: 150px; height: auto; display: block; }
+  @page { margin: 5mm; size: A4; }
+  @media print { * { margin: 0; padding: 0; } }
 </style>
 </head>
 <body>
 ${svgString}
-<script>
-  // allow render to settle before printing
-  window.onload = function(){
-    setTimeout(function(){ window.print(); window.onafterprint = function(){ window.close(); }; }, 200);
-  };
-</script>
 </body>
 </html>`;
 
-            const w = window.open('', '_blank', 'noopener,noreferrer');
-            if (!w) return;
-            w.document.open();
-            w.document.write(printHtml);
-            w.document.close();
-            return;
+                // Open new window and write content
+                const w = window.open('', '_blank');
+                if (!w) {
+                    console.error('Failed to open print window');
+                    return;
+                }
+                w.document.open();
+                w.document.write(printHtml);
+                w.document.close();
+                
+                // Print after a very short delay to ensure rendering
+                setTimeout(() => {
+                    w.print();
+                }, 50);
+                
+                return;
+            } catch (err) {
+                console.error('Error serializing SVG:', err);
+            }
         }
 
-        // fallback: try printing as image via html2canvas
-        const el = document.getElementById(`barcode-${id}`);
-        if (el) {
-            html2canvas(el).then(canvas => {
+        // fallback: use html2canvas to capture the barcode as image
+        html2canvas(barcodeContainer, { scale: 2 })
+            .then(canvas => {
                 const dataUrl = canvas.toDataURL();
-                const w = window.open('', '_blank', 'noopener,noreferrer');
-                if (!w) return;
-                w.document.write(`
-                    <!doctype html><html><head><title>Print Barcode</title></head>
-                    <body style="margin:0;display:flex;align-items:center;justify-content:center">
-                    <img src="${dataUrl}" onload="window.print();window.onafterprint=function(){window.close();}" />
-                    </body></html>`);
+                const printHtml = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Print Barcode</title>
+<style>
+  * { margin: 0; padding: 0; }
+  html, body { height: 100%; margin: 0; padding: 0; }
+  body { display: flex; align-items: center; justify-content: center; background: #fff; }
+  img { width: 150px; height: auto; display: block; }
+  @page { margin: 5mm; size: A4; }
+  @media print { * { margin: 0; padding: 0; } }
+</style>
+</head>
+<body>
+<img src="${dataUrl}" />
+</body>
+</html>`;
+
+                const w = window.open('', '_blank');
+                if (!w) {
+                    console.error('Failed to open print window');
+                    return;
+                }
+                w.document.open();
+                w.document.write(printHtml);
                 w.document.close();
+                
+                // Print after a very short delay to ensure rendering
+                setTimeout(() => {
+                    w.print();
+                }, 50);
+            })
+            .catch(err => {
+                console.error('Error generating barcode image for print:', err);
             });
-        } else {
-            console.error('Barcode element not found for print');
-        }
     };
 
     if (loading) {

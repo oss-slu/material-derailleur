@@ -4,7 +4,7 @@ import {
     createUserContent,
     createPartFromBase64,
 } from '@google/genai';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma';
 import fs from 'fs';
 import path from 'path';
 import prisma from '../prismaClient';
