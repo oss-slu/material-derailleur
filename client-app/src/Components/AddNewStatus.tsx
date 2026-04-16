@@ -783,14 +783,20 @@ const AddNewStatus: React.FC = () => {
 
                     <div
                         style={{
-                            display: 'flex',
+                            display: 'grid',
+                            gridTemplateColumns:
+                                'minmax(220px, 1fr) minmax(160px, 220px) auto',
                             gap: '0.75rem',
-                            alignItems: 'end',
-                            flexWrap: 'wrap',
+                            alignItems: 'start',
                             marginTop: '1rem',
                         }}
                     >
-                        <div style={{ flex: '1 1 220px' }}>
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                            }}
+                        >
                             <label
                                 htmlFor="custom-attribute-descriptor"
                                 className="block text-sm font-semibold mb-1"
@@ -809,7 +815,12 @@ const AddNewStatus: React.FC = () => {
                             />
                         </div>
 
-                        <div style={{ flex: '0 0 160px' }}>
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                            }}
+                        >
                             <label className="block text-sm font-semibold mb-1">
                                 Type
                             </label>
@@ -828,14 +839,27 @@ const AddNewStatus: React.FC = () => {
                             </select>
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={() => addAttribute(customDescriptor)}
-                            className="submit-button"
-                            disabled={!customDescriptor.trim()}
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                            }}
                         >
-                            Create
-                        </button>
+                            <label
+                                className="block text-sm font-semibold mb-1"
+                                style={{ visibility: 'hidden' }}
+                            >
+                                Action
+                            </label>
+                            <button
+                                type="button"
+                                onClick={() => addAttribute(customDescriptor)}
+                                className="submit-button"
+                                disabled={!customDescriptor.trim()}
+                            >
+                                Create
+                            </button>
+                        </div>
                     </div>
 
                     {(formData.selectedItemAttributes ?? []).length > 0 && (
