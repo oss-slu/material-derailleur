@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
     webpack: {
@@ -12,6 +13,19 @@ module.exports = {
                     'node_modules/react-router/dist/development/dom-export.js'
                 ),
             };
+
+            // Suppress "Critical dependency: the request of a dependency is an expression"
+            // warnings from react-router's dynamic requires using ContextReplacementPlugin
+            webpackConfig.plugins.push(
+                new webpack.ContextReplacementPlugin(
+                    /react-router/,
+                    (context) => {
+                        // Ignore warnings for react-router dynamic requires
+                        return context;
+                    }
+                )
+            );
+
             return webpackConfig;
         },
     },
