@@ -18,7 +18,7 @@ interface Props {
  * If the user does not have a valid token or their role does not match the allowed role, they are redirected.
  * @component
  * @param {Props} props - The properties passed to the component.
- * @returns {JSX.Element} A JSX element to either navigate or render the children.
+ * @returns {React.ReactElement} A JSX element to either navigate or render the children.
  */
 const ProtectedRoute = ({ children, allowedRole }: Props) => {
     const token = localStorage.getItem('token');
