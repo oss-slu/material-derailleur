@@ -216,7 +216,8 @@ const Register: React.FC = () => {
                 setPasswordStrength(null);
                 setShowGuidelines(false);
                 setTimeout(() => {
-                    window.location.href = (process.env.PUBLIC_URL || '') + '/About';
+                    window.location.href =
+                        (process.env.PUBLIC_URL || '') + '/About';
                 }, 2000);
             } else {
                 setErrorMessage(data.message || 'Registration failed');

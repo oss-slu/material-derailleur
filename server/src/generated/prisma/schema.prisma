@@ -76,6 +76,8 @@ model DonatedItem {
   imagePath        String?
   analysisMetadata Json? // <— where your code writes tags/metadata
 
+  attributes ItemAttribute[]
+
   // Relations
   donorId Int
   donor   Donor @relation(fields: [donorId], references: [id])
@@ -117,4 +119,21 @@ model User {
   firstLogin       Boolean    @default(true)
   resetToken       String?
   resetTokenExpiry DateTime?
+}
+
+model ItemAttribute {
+  id           Int      @id @default(autoincrement())
+  descriptor   String
+  stringValue  String?
+  numberValue  Float?
+  booleanValue Boolean?
+
+  donatedItemId Int
+  donatedItem   DonatedItem @relation(fields: [donatedItemId], references: [id], onDelete: Cascade)
+
+  @@index([donatedItemId])
+  @@index([descriptor])
+  @@index([descriptor, stringValue])
+  @@index([descriptor, numberValue])
+  @@index([descriptor, booleanValue])
 }

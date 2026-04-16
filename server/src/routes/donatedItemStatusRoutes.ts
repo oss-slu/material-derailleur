@@ -16,6 +16,78 @@ const router = Router();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+type IncomingItemAttribute = {
+    descriptor?: unknown;
+    stringValue?: unknown;
+    numberValue?: unknown;
+    booleanValue?: unknown;
+};
+
+function parseItemAttributes(rawAttributes: unknown) {
+    if (
+        typeof rawAttributes !== 'string' ||
+        rawAttributes.trim().length === 0
+    ) {
+        return [];
+    }
+
+    const parsed = JSON.parse(rawAttributes);
+    if (!Array.isArray(parsed)) {
+        throw new Error('itemAttributes must be an array');
+    }
+
+    return parsed
+        .map((attribute: IncomingItemAttribute) => {
+            const descriptor =
+                typeof attribute?.descriptor === 'string'
+                    ? attribute.descriptor.trim()
+                    : '';
+
+            if (!descriptor) {
+                return null;
+            }
+
+            const stringValue =
+                typeof attribute?.stringValue === 'string'
+                    ? attribute.stringValue.trim()
+                    : null;
+            const numberValue =
+                typeof attribute?.numberValue === 'number' &&
+                Number.isFinite(attribute.numberValue)
+                    ? attribute.numberValue
+                    : null;
+            const booleanValue =
+                typeof attribute?.booleanValue === 'boolean'
+                    ? attribute.booleanValue
+                    : null;
+
+            if (
+                stringValue === null &&
+                numberValue === null &&
+                booleanValue === null
+            ) {
+                return null;
+            }
+
+            return {
+                descriptor,
+                stringValue,
+                numberValue,
+                booleanValue,
+            };
+        })
+        .filter(
+            (
+                attribute,
+            ): attribute is {
+                descriptor: string;
+                stringValue: string | null;
+                numberValue: number | null;
+                booleanValue: boolean | null;
+            } => attribute !== null,
+        );
+}
+
 // PUT /donatedItem/status/:id - Update the status of a DonatedItem
 router.post(
     '/:id',
@@ -32,6 +104,9 @@ router.post(
                 const { statusType, dateModified, informDonor, submitter } =
                     req.body;
                 const imageFiles = req.files as Express.Multer.File[];
+                const itemAttributes = parseItemAttributes(
+                    req.body.itemAttributes,
+                );
 
                 if (!statusType) {
                     return res
@@ -55,10 +130,18 @@ router.post(
                     data: {
                         currentStatus: statusType,
                         lastUpdated: new Date(),
+                        attributes:
+                            req.body.itemAttributes !== undefined
+                                ? {
+                                      deleteMany: {},
+                                      create: itemAttributes,
+                                  }
+                                : undefined,
                     },
                     // Return donor information and item type for email content
                     include: {
                         donor: true,
+                        attributes: true,
                     },
                 });
 

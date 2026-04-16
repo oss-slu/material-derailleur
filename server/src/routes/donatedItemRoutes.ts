@@ -16,6 +16,7 @@ import {
     getFileExtension,
 } from '../services/donatedItemService';
 import { DonatedItemStatus } from '../modals/DonatedItemStatusModal';
+import { ItemAttribute } from '../modals/ItemAttributeModal';
 import { sendDonationEmail } from '../services/emailService';
 import { authenticateUser } from './routeProtection';
 import { date } from 'joi';
@@ -50,6 +51,147 @@ function writeTempFileFromBase64(base64: string, ext = '.jpg'): string {
     return tmp;
 }
 
+type IncomingItemAttribute = {
+    descriptor?: unknown;
+    stringValue?: unknown;
+    numberValue?: unknown;
+    booleanValue?: unknown;
+};
+
+type AttributeValueType = 'string' | 'number' | 'boolean';
+
+type AttributeDefinition = {
+    descriptor: string;
+    valueType: AttributeValueType;
+};
+
+const KNOWN_ATTRIBUTE_VALUE_TYPES: Record<string, AttributeValueType> = {
+    brand: 'string',
+    model: 'string',
+    'standover height (in.)': 'number',
+    type: 'string',
+    color: 'string',
+    'wheel size (in.)': 'number',
+    condition: 'string',
+    'needs repair': 'boolean',
+    note: 'string',
+    cpu: 'string',
+    'ram (GB)': 'number',
+    'storage (GB)': 'number',
+};
+
+const COMMON_ATTRIBUTE_DEFINITIONS: AttributeDefinition[] = [
+    { descriptor: 'brand', valueType: 'string' },
+    { descriptor: 'model', valueType: 'string' },
+    { descriptor: 'condition', valueType: 'string' },
+    { descriptor: 'type', valueType: 'string' },
+    { descriptor: 'needs repair', valueType: 'boolean' },
+    { descriptor: 'note', valueType: 'string' },
+];
+
+const ATTRIBUTE_DEFINITIONS_BY_ITEM_TYPE: Record<
+    string,
+    AttributeDefinition[]
+> = {
+    bicycle: [
+        ...COMMON_ATTRIBUTE_DEFINITIONS,
+        { descriptor: 'standover height (in.)', valueType: 'number' },
+        { descriptor: 'color', valueType: 'string' },
+        { descriptor: 'wheel size (in.)', valueType: 'number' },
+    ],
+    computer: [
+        ...COMMON_ATTRIBUTE_DEFINITIONS,
+        { descriptor: 'cpu', valueType: 'string' },
+        { descriptor: 'ram (GB)', valueType: 'number' },
+        { descriptor: 'storage (GB)', valueType: 'number' },
+    ],
+};
+
+const normalizeDescriptor = (value?: string | null) =>
+    value?.trim().toLowerCase() || '';
+
+const getKnownAttributeValueType = (
+    descriptor: string,
+): AttributeValueType | null =>
+    KNOWN_ATTRIBUTE_VALUE_TYPES[normalizeDescriptor(descriptor)] ?? null;
+
+const inferAttributeValueType = (attribute: {
+    descriptor: string;
+    stringValue: string | null;
+    numberValue: number | null;
+    booleanValue: boolean | null;
+}): AttributeValueType | null => {
+    if (attribute.booleanValue !== null) return 'boolean';
+    if (attribute.numberValue !== null) return 'number';
+    if (attribute.stringValue !== null) return 'string';
+    return null;
+};
+
+function parseItemAttributes(rawAttributes: unknown) {
+    if (
+        typeof rawAttributes !== 'string' ||
+        rawAttributes.trim().length === 0
+    ) {
+        return [];
+    }
+
+    const parsed = JSON.parse(rawAttributes);
+    if (!Array.isArray(parsed)) {
+        throw new Error('itemAttributes must be an array');
+    }
+
+    return parsed
+        .map((attribute: IncomingItemAttribute) => {
+            const descriptor =
+                typeof attribute?.descriptor === 'string'
+                    ? attribute.descriptor.trim()
+                    : '';
+
+            if (!descriptor) {
+                return null;
+            }
+
+            const stringValue =
+                typeof attribute?.stringValue === 'string'
+                    ? attribute.stringValue.trim()
+                    : null;
+            const numberValue =
+                typeof attribute?.numberValue === 'number' &&
+                Number.isFinite(attribute.numberValue)
+                    ? attribute.numberValue
+                    : null;
+            const booleanValue =
+                typeof attribute?.booleanValue === 'boolean'
+                    ? attribute.booleanValue
+                    : null;
+
+            if (
+                stringValue === null &&
+                numberValue === null &&
+                booleanValue === null
+            ) {
+                return null;
+            }
+
+            return {
+                descriptor,
+                stringValue,
+                numberValue,
+                booleanValue,
+            };
+        })
+        .filter(
+            (
+                attribute,
+            ): attribute is {
+                descriptor: string;
+                stringValue: string | null;
+                numberValue: number | null;
+                booleanValue: boolean | null;
+            } => attribute !== null,
+        );
+}
+
 // POST /donatedItem - Create a new DonatedItem (original flow + analysis)
 router.post(
     '/',
@@ -76,6 +218,7 @@ router.post(
             const currentStatus = String(
                 req.body.currentStatus ?? req.body.status ?? 'Received',
             ).trim();
+            const itemAttributes = parseItemAttributes(req.body.itemAttributes);
 
             const optOutAnalysis =
                 String(req.body.optOutAnalysis ?? 'false') === 'true';
@@ -126,9 +269,13 @@ router.post(
                     dateDonated: dateDonatedDateTime,
                     donorId,
                     programId,
+                    attributes: {
+                        create: itemAttributes,
+                    },
                 },
                 include: {
                     donor: true,
+                    attributes: true,
                     statuses: { orderBy: { dateModified: 'asc' } },
                 },
             });
@@ -240,6 +387,7 @@ router.get('/', async (req: Request, res: Response) => {
             include: {
                 donor: true,
                 program: true,
+                attributes: true,
                 statuses: { orderBy: { dateModified: 'asc' } },
             },
         });
@@ -252,6 +400,110 @@ router.get('/', async (req: Request, res: Response) => {
             ).json({ error: error.message });
         } else {
             console.error('Error fetching donated item:', 'Unknown error');
+            res.status(500).json({ error: 'Unknown error' });
+        }
+    }
+});
+
+// GET /donatedItem/attributes - Get all unique item attribute descriptors
+router.get('/attributes', async (req: Request, res: Response) => {
+    try {
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 1,
+        });
+        if (!permGranted) return;
+
+        const requestedItemType = normalizeDescriptor(
+            typeof req.query.itemType === 'string' ? req.query.itemType : '',
+        );
+
+        const attributes: {
+            descriptor: string | null;
+            stringValue: string | null;
+            numberValue: number | null;
+            booleanValue: boolean | null;
+        }[] = await prisma.itemAttribute.findMany({
+            select: {
+                descriptor: true,
+                stringValue: true,
+                numberValue: true,
+                booleanValue: true,
+            },
+            where: requestedItemType
+                ? {
+                      donatedItem: {
+                          itemType: {
+                              equals: requestedItemType,
+                              mode: 'insensitive',
+                          },
+                      },
+                  }
+                : undefined,
+        });
+
+        const definitions = new Map<
+            string,
+            {
+                descriptor: string;
+                valueType: AttributeValueType;
+                count: number;
+            }
+        >();
+
+        const seededDefinitions = requestedItemType
+            ? (ATTRIBUTE_DEFINITIONS_BY_ITEM_TYPE[requestedItemType] ?? [])
+            : Object.entries(KNOWN_ATTRIBUTE_VALUE_TYPES).map(
+                  ([descriptor, valueType]) => ({
+                      descriptor,
+                      valueType,
+                  }),
+              );
+
+        seededDefinitions.forEach(({ descriptor, valueType }) => {
+            const normalizedDescriptor = normalizeDescriptor(descriptor);
+            definitions.set(normalizedDescriptor, {
+                descriptor,
+                valueType,
+                count: 0,
+            });
+        });
+
+        attributes.forEach(attribute => {
+            const normalizedDescriptor = normalizeDescriptor(
+                attribute.descriptor,
+            );
+            if (!normalizedDescriptor) {
+                return;
+            }
+
+            const existing = definitions.get(normalizedDescriptor);
+            const inferredType =
+                inferAttributeValueType({
+                    ...attribute,
+                    descriptor: attribute.descriptor ?? '',
+                }) ??
+                existing?.valueType ??
+                getKnownAttributeValueType(attribute.descriptor ?? '') ??
+                'string';
+
+            definitions.set(normalizedDescriptor, {
+                descriptor: attribute.descriptor?.trim() || '',
+                valueType: existing?.valueType ?? inferredType,
+                count: (existing?.count ?? 0) + 1,
+            });
+        });
+
+        res.status(200).json(
+            Array.from(definitions.values()).sort((a, b) =>
+                a.descriptor.localeCompare(b.descriptor),
+            ),
+        );
+    } catch (error) {
+        if (error instanceof Error) {
+            console.error('Error fetching item attributes:', error.message);
+            res.status(400).json({ error: error.message });
+        } else {
+            console.error('Error fetching item attributes:', 'Unknown error');
             res.status(500).json({ error: 'Unknown error' });
         }
     }
@@ -272,6 +524,7 @@ router.get('/:id', async (req: Request, res: Response) => {
             include: {
                 donor: true,
                 program: true,
+                attributes: true,
                 statuses: { orderBy: { dateModified: 'asc' } },
             },
         });

@@ -1,6 +1,14 @@
 // Mock Prisma BEFORE any other imports
 jest.mock('../prismaClient', () => require('../__mocks__/mockPrismaClient'));
 
+// Mock SMCloudStoreConfig to prevent Azure credential errors during tests
+jest.mock('../configs/SMCloudStoreConfig', () => ({
+    storage: {
+        putObject: jest.fn(),
+        getObject: jest.fn(),
+    },
+}));
+
 // Mock authenticateUser to check role from JWT token and user status
 jest.mock('../routes/routeProtection', () => ({
     authenticateUser: jest.fn(

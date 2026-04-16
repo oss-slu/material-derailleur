@@ -10,6 +10,17 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ItemStatus from '../constants/Enums';
 import LoadingSpinner from './LoadingSpinner';
 import '../css/AddStatus.css';
+import { DonatedItem } from '../Modals/DonatedItemModal';
+import {
+    type AttributeValueType,
+    type SelectedAttribute,
+    type AttributeOption,
+    formatAttributeTypeLabel,
+    normalizeDescriptor,
+    fetchAttributes,
+    serializeAttributes,
+} from '../constants/attributeDefinitions';
+import AttributeEditor from './AttributeEditor';
 
 interface FormData {
     statusType: string;
@@ -17,6 +28,7 @@ interface FormData {
     donatedItemId: string;
     informDonor: boolean | string; // Accept both boolean and string for checkbox value
     submitter: string;
+    selectedItemAttributes?: SelectedAttribute[];
 }
 
 interface FormErrors {
@@ -130,6 +142,7 @@ const AddNewStatus: React.FC = () => {
         donatedItemId: id || '',
         informDonor: false,
         submitter: localStorage.getItem('name') || '',
+        selectedItemAttributes: [],
     });
     const [errors, setErrors] = useState<FormErrors>({});
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -141,12 +154,70 @@ const AddNewStatus: React.FC = () => {
     const [currentPreviewImage, setCurrentPreviewImage] = useState<
         string | null
     >(null);
+    const [attributeOptions, setAttributeOptions] = useState<AttributeOption[]>(
+        [],
+    );
+    const [selectedDescriptor, setSelectedDescriptor] = useState('');
+    const [customDescriptor, setCustomDescriptor] = useState('');
+    const [customAttributeType, setCustomAttributeType] =
+        useState<AttributeValueType>('string');
+    const [itemType, setItemType] = useState('');
 
     useEffect(() => {
         if (id) {
             setFormData(prev => ({ ...prev, donatedItemId: id }));
         }
     }, [id]);
+
+    useEffect(() => {
+        const fetchDonatedItem = async () => {
+            if (!id) return;
+
+            try {
+                const response = await axios.get<DonatedItem>(
+                    `${process.env.REACT_APP_BACKEND_API_BASE_URL}donatedItem/${id}`,
+                    {
+                        headers: {
+                            Authorization: localStorage.getItem('token') || '',
+                        },
+                    },
+                );
+
+                const item = response.data;
+                setItemType(item.itemType?.toLowerCase() || '');
+
+                setFormData(prev => ({
+                    ...prev,
+                    selectedItemAttributes: (item.attributes || []).map(
+                        attribute => ({
+                            descriptor: attribute.descriptor,
+                            valueType:
+                                attribute.booleanValue !== null
+                                    ? 'boolean'
+                                    : attribute.numberValue !== null
+                                      ? 'number'
+                                      : 'string',
+                            value:
+                                attribute.stringValue ??
+                                (attribute.numberValue !== null
+                                    ? String(attribute.numberValue)
+                                    : ''),
+                            booleanValue: attribute.booleanValue,
+                        }),
+                    ),
+                }));
+            } catch (error) {
+                console.error('Error fetching donated item:', error);
+                setErrorMessage('Error loading existing item attributes');
+            }
+        };
+
+        fetchDonatedItem();
+    }, [id]);
+
+    useEffect(() => {
+        fetchAttributes(itemType).then(options => setAttributeOptions(options));
+    }, [itemType]);
 
     // Clean up object URLs on unmount
     useEffect(() => {
@@ -248,6 +319,91 @@ const AddNewStatus: React.FC = () => {
         setIsModalOpen(true);
     };
 
+    const addAttribute = (descriptorInput?: string) => {
+        const descriptor = (descriptorInput ?? selectedDescriptor).trim();
+        if (!descriptor) {
+            return;
+        }
+
+        const alreadySelected = (formData.selectedItemAttributes ?? []).some(
+            attr =>
+                normalizeDescriptor(attr.descriptor) ===
+                normalizeDescriptor(descriptor),
+        );
+        if (alreadySelected) {
+            setSelectedDescriptor('');
+            setCustomDescriptor('');
+            return;
+        }
+
+        const existingOption = attributeOptions.find(
+            option =>
+                normalizeDescriptor(option.value) ===
+                normalizeDescriptor(descriptor),
+        );
+        const valueType = existingOption?.valueType ?? customAttributeType;
+
+        setFormData(prev => ({
+            ...prev,
+            selectedItemAttributes: [
+                {
+                    descriptor,
+                    valueType,
+                    value: '',
+                    booleanValue: null,
+                },
+                ...(prev.selectedItemAttributes ?? []),
+            ],
+        }));
+
+        if (
+            !attributeOptions.some(
+                option =>
+                    normalizeDescriptor(option.value) ===
+                    normalizeDescriptor(descriptor),
+            )
+        ) {
+            setAttributeOptions(prev =>
+                [
+                    ...prev,
+                    {
+                        value: descriptor,
+                        label: descriptor,
+                        valueType,
+                    },
+                ].sort((a, b) => a.label.localeCompare(b.label)),
+            );
+        }
+
+        setSelectedDescriptor('');
+        setCustomDescriptor('');
+        setCustomAttributeType('string');
+    };
+
+    const removeAttribute = (descriptor: string) => {
+        setFormData(prev => ({
+            ...prev,
+            selectedItemAttributes: (prev.selectedItemAttributes ?? []).filter(
+                attr => attr.descriptor !== descriptor,
+            ),
+        }));
+    };
+
+    const updateAttribute = (
+        descriptor: string,
+        updates: Partial<SelectedAttribute>,
+    ) => {
+        setFormData(prev => ({
+            ...prev,
+            selectedItemAttributes: (prev.selectedItemAttributes ?? []).map(
+                attr =>
+                    attr.descriptor === descriptor
+                        ? { ...attr, ...updates }
+                        : attr,
+            ),
+        }));
+    };
+
     const closeModal = () => {
         setIsModalOpen(false);
         setCurrentPreviewImage(null);
@@ -282,6 +438,10 @@ const AddNewStatus: React.FC = () => {
                 formData.informDonor.toString(),
             );
             formDataToSubmit.append('donatedItemId', formData.donatedItemId);
+            formDataToSubmit.append(
+                'itemAttributes',
+                serializeAttributes(formData.selectedItemAttributes || []),
+            );
             images.forEach(image =>
                 formDataToSubmit.append('imageFiles', image),
             );
@@ -334,12 +494,16 @@ const AddNewStatus: React.FC = () => {
             donatedItemId: id || '',
             informDonor: false,
             submitter: localStorage.getItem('name') || '',
+            selectedItemAttributes: [],
         });
         setImages([]);
         setPreviewUrls([]);
         setErrors({});
         setErrorMessage(null);
         setSuccessMessage(null);
+        setSelectedDescriptor('');
+        setCustomDescriptor('');
+        setCustomAttributeType('string');
     };
 
     return (
@@ -459,6 +623,28 @@ const AddNewStatus: React.FC = () => {
                             Inform donor about this status update
                         </span>
                     </label>
+                </div>
+
+                <div className="form-field full-width">
+                    <label className="block text-sm font-semibold mb-1">
+                        Attributes
+                    </label>
+
+                    <AttributeEditor
+                        selectedItemAttributes={
+                            formData.selectedItemAttributes ?? []
+                        }
+                        attributeOptions={attributeOptions}
+                        selectedDescriptor={selectedDescriptor}
+                        customDescriptor={customDescriptor}
+                        customAttributeType={customAttributeType}
+                        onSelectedDescriptorChange={setSelectedDescriptor}
+                        onCustomDescriptorChange={setCustomDescriptor}
+                        onCustomAttributeTypeChange={setCustomAttributeType}
+                        onAddAttribute={addAttribute}
+                        onRemoveAttribute={removeAttribute}
+                        onUpdateAttribute={updateAttribute}
+                    />
                 </div>
 
                 {/* Image Upload Field */}
