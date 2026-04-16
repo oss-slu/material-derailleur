@@ -417,7 +417,12 @@ router.get('/attributes', async (req: Request, res: Response) => {
             typeof req.query.itemType === 'string' ? req.query.itemType : '',
         );
 
-        const attributes = await prisma.itemAttribute.findMany({
+        const attributes: {
+            descriptor: string | null;
+            stringValue: string | null;
+            numberValue: number | null;
+            booleanValue: boolean | null;
+        }[] = await prisma.itemAttribute.findMany({
             select: {
                 descriptor: true,
                 stringValue: true,
@@ -473,13 +478,16 @@ router.get('/attributes', async (req: Request, res: Response) => {
 
             const existing = definitions.get(normalizedDescriptor);
             const inferredType =
-                inferAttributeValueType(attribute) ??
+                inferAttributeValueType({
+                    ...attribute,
+                    descriptor: attribute.descriptor ?? '',
+                }) ??
                 existing?.valueType ??
-                getKnownAttributeValueType(attribute.descriptor) ??
+                getKnownAttributeValueType(attribute.descriptor ?? '') ??
                 'string';
 
             definitions.set(normalizedDescriptor, {
-                descriptor: attribute.descriptor.trim(),
+                descriptor: attribute.descriptor?.trim() || '',
                 valueType: existing?.valueType ?? inferredType,
                 count: (existing?.count ?? 0) + 1,
             });
