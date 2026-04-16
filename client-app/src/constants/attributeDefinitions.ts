@@ -14,18 +14,6 @@ export interface SelectedAttribute {
     booleanValue: boolean | null;
 }
 
-export interface FormData {
-    itemType: string;
-    currentStatus: string;
-    donorId: number | null;
-    programId: number | null;
-    dateDonated: string;
-    imageFiles: File[];
-    category: string;
-    quantity: number;
-    selectedItemAttributes: SelectedAttribute[];
-}
-
 export interface AttributeOption {
     value: string; // keep as string for <select>, store numeric id separately in id
     label: string;
