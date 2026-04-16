@@ -170,7 +170,8 @@ const LoginPage: React.FC = () => {
                 ) {
                     window.location.href = (process.env.PUBLIC_URL || '') + '/';
                 } else if (data.role === 'DONOR') {
-                    window.location.href = (process.env.PUBLIC_URL || '') + '/donor-profile';
+                    window.location.href =
+                        (process.env.PUBLIC_URL || '') + '/donor-profile';
                 } else {
                     setErrorMessage(
                         'Unknown user role. Please contact support.',

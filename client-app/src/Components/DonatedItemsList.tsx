@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
 import '../css/AdminHeader.css';
@@ -10,6 +10,12 @@ import { DonatedItem, ItemAttribute } from '../Modals/DonatedItemModal';
 import { DonatedItemStatus as Status } from '../Modals/DonatedItemStatusModal';
 import axios from 'axios';
 import { useZxing } from 'react-zxing';
+import {
+    type AttributeDefinition,
+    type AttributeValueType,
+    getAllDefaultAttributeDefinitions,
+    normalizeDescriptor,
+} from '../constants/attributeDefinitions';
 
 interface SelectedItemDetails extends DonatedItem {
     statuses: Status[];
@@ -130,123 +136,138 @@ const DonatedItemsList: React.FC = () => {
         paused: !scanning,
     });
 
-    const applyFilters = (searchTermOverride?: string) => {
-        const searchTerm = normalize(searchTermOverride ?? searchInput);
+    const applyFilters = useCallback(
+        (searchTermOverride?: string) => {
+            const searchTerm = normalize(searchTermOverride ?? searchInput);
 
-        let nextItems = donatedItems.filter(item => {
-            const donorName = `${item.donor?.firstName || ''} ${
-                item.donor?.lastName || ''
-            }`;
+            let nextItems = donatedItems.filter(item => {
+                const donorName = `${item.donor?.firstName || ''} ${
+                    item.donor?.lastName || ''
+                }`;
 
-            const attributeMatchesSearch = (item.attributes || []).some(
-                attribute =>
-                    normalize(attribute.descriptor).includes(searchTerm) ||
-                    normalize(formatAttributeValue(attribute)).includes(
-                        searchTerm,
-                    ),
-            );
-
-            const matchesSearch =
-                !searchTerm ||
-                item.id.toString().includes(searchTerm) ||
-                normalize(item.itemType).includes(searchTerm) ||
-                normalize(item.category).includes(searchTerm) ||
-                normalize(item.currentStatus).includes(searchTerm) ||
-                normalize(donorName).includes(searchTerm) ||
-                normalize(item.program?.name).includes(searchTerm) ||
-                attributeMatchesSearch;
-
-            const matchesItemType =
-                !itemTypeFilter ||
-                normalize(item.itemType) === normalize(itemTypeFilter);
-
-            const matchesProgram =
-                !programFilter || item.programId === Number(programFilter);
-
-            const matchesStatus =
-                !statusFilter ||
-                normalize(item.currentStatus) === normalize(statusFilter);
-
-            const itemDate = new Date(item.dateDonated).getTime();
-            const minDate = dateFrom
-                ? new Date(`${dateFrom}T00:00:00`).getTime()
-                : null;
-            const maxDate = dateTo
-                ? new Date(`${dateTo}T23:59:59`).getTime()
-                : null;
-            const matchesDateFrom = minDate === null || itemDate >= minDate;
-            const matchesDateTo = maxDate === null || itemDate <= maxDate;
-
-            const matchesAttributes = attributeFilters.every(filter => {
-                const matchingAttributes = (item.attributes || []).filter(
+                const attributeMatchesSearch = (item.attributes || []).some(
                     attribute =>
-                        normalize(attribute.descriptor) ===
-                        normalize(filter.descriptor),
+                        normalize(attribute.descriptor).includes(searchTerm) ||
+                        normalize(formatAttributeValue(attribute)).includes(
+                            searchTerm,
+                        ),
                 );
 
-                if (matchingAttributes.length === 0) {
-                    return false;
-                }
+                const matchesSearch =
+                    !searchTerm ||
+                    item.id.toString().includes(searchTerm) ||
+                    normalize(item.itemType).includes(searchTerm) ||
+                    normalize(item.category).includes(searchTerm) ||
+                    normalize(item.currentStatus).includes(searchTerm) ||
+                    normalize(donorName).includes(searchTerm) ||
+                    normalize(item.program?.name).includes(searchTerm) ||
+                    attributeMatchesSearch;
 
-                return matchingAttributes.some(attribute => {
-                    if (filter.valueType === 'boolean') {
-                        if (!filter.booleanValue) return true;
-                        return (
-                            String(attribute.booleanValue) ===
-                            filter.booleanValue
-                        );
-                    }
+                const matchesItemType =
+                    !itemTypeFilter ||
+                    normalize(item.itemType) === normalize(itemTypeFilter);
 
-                    if (filter.valueType === 'number') {
-                        if (attribute.numberValue === null) return false;
-                        const matchesMin =
-                            !filter.minValue ||
-                            attribute.numberValue >= Number(filter.minValue);
-                        const matchesMax =
-                            !filter.maxValue ||
-                            attribute.numberValue <= Number(filter.maxValue);
-                        return matchesMin && matchesMax;
-                    }
+                const matchesProgram =
+                    !programFilter || item.programId === Number(programFilter);
 
-                    return (
-                        !filter.textValue ||
-                        normalize(attribute.stringValue).includes(
-                            normalize(filter.textValue),
-                        )
+                const matchesStatus =
+                    !statusFilter ||
+                    normalize(item.currentStatus) === normalize(statusFilter);
+
+                const itemDate = new Date(item.dateDonated).getTime();
+                const minDate = dateFrom
+                    ? new Date(`${dateFrom}T00:00:00`).getTime()
+                    : null;
+                const maxDate = dateTo
+                    ? new Date(`${dateTo}T23:59:59`).getTime()
+                    : null;
+                const matchesDateFrom = minDate === null || itemDate >= minDate;
+                const matchesDateTo = maxDate === null || itemDate <= maxDate;
+
+                const matchesAttributes = attributeFilters.every(filter => {
+                    const matchingAttributes = (item.attributes || []).filter(
+                        attribute =>
+                            normalize(attribute.descriptor) ===
+                            normalize(filter.descriptor),
                     );
+
+                    if (matchingAttributes.length === 0) {
+                        return false;
+                    }
+
+                    return matchingAttributes.some(attribute => {
+                        if (filter.valueType === 'boolean') {
+                            if (!filter.booleanValue) return true;
+                            return (
+                                String(attribute.booleanValue) ===
+                                filter.booleanValue
+                            );
+                        }
+
+                        if (filter.valueType === 'number') {
+                            if (attribute.numberValue === null) return false;
+                            const matchesMin =
+                                !filter.minValue ||
+                                attribute.numberValue >=
+                                    Number(filter.minValue);
+                            const matchesMax =
+                                !filter.maxValue ||
+                                attribute.numberValue <=
+                                    Number(filter.maxValue);
+                            return matchesMin && matchesMax;
+                        }
+
+                        return (
+                            !filter.textValue ||
+                            normalize(attribute.stringValue).includes(
+                                normalize(filter.textValue),
+                            )
+                        );
+                    });
                 });
+
+                return (
+                    matchesSearch &&
+                    matchesItemType &&
+                    matchesProgram &&
+                    matchesStatus &&
+                    matchesDateFrom &&
+                    matchesDateTo &&
+                    matchesAttributes
+                );
             });
 
-            return (
-                matchesSearch &&
-                matchesItemType &&
-                matchesProgram &&
-                matchesStatus &&
-                matchesDateFrom &&
-                matchesDateTo &&
-                matchesAttributes
-            );
-        });
+            if (sortValue) {
+                nextItems = [...nextItems].sort((a, b) => {
+                    const dateA = new Date(a.dateDonated).getTime();
+                    const dateB = new Date(b.dateDonated).getTime();
 
-        if (sortValue) {
-            nextItems = [...nextItems].sort((a, b) => {
-                const dateA = new Date(a.dateDonated).getTime();
-                const dateB = new Date(b.dateDonated).getTime();
+                    if (sortValue === 'dateAsc') {
+                        return dateA - dateB;
+                    }
 
-                if (sortValue === 'dateAsc') {
-                    return dateA - dateB;
-                }
+                    if (sortValue === 'dateDesc') {
+                        return dateB - dateA;
+                    }
 
-                if (sortValue === 'dateDesc') {
-                    return dateB - dateA;
-                }
+                    return 0;
+                });
+            }
 
-                return 0;
-            });
-        }
-
-        setFilteredItems(nextItems);
-    };
+            setFilteredItems(nextItems);
+        },
+        [
+            attributeFilters,
+            dateFrom,
+            dateTo,
+            donatedItems,
+            itemTypeFilter,
+            programFilter,
+            searchInput,
+            sortValue,
+            statusFilter,
+        ],
+    );
 
     const fetchDonatedItems = async (): Promise<void> => {
         try {
@@ -287,7 +308,7 @@ const DonatedItemsList: React.FC = () => {
         }
     };
 
-    const fetchAttributes = async () => {
+    const fetchAttributes = useCallback(async () => {
         try {
             const response = await axios.get<
                 Array<{
@@ -361,7 +382,7 @@ const DonatedItemsList: React.FC = () => {
         } catch (fetchError) {
             console.error('Error fetching attributes:', fetchError);
         }
-    };
+    }, [donatedItems]);
 
     useEffect(() => {
         fetchDonatedItems();
@@ -373,7 +394,7 @@ const DonatedItemsList: React.FC = () => {
         const types = new Set(donatedItems.map(item => item.itemType));
         setItemTypes(types);
         fetchAttributes();
-    }, [donatedItems]);
+    }, [donatedItems, fetchAttributes]);
 
     useEffect(() => {
         applyFilters();
@@ -386,6 +407,7 @@ const DonatedItemsList: React.FC = () => {
         dateFrom,
         dateTo,
         attributeFilters,
+        applyFilters,
     ]);
 
     const handleSearch = (term?: string): void => {
@@ -556,7 +578,9 @@ const DonatedItemsList: React.FC = () => {
         }
 
         // Find SVG within the container
-        const svgEl = barcodeContainer.querySelector('svg') as SVGElement | null;
+        const svgEl = barcodeContainer.querySelector(
+            'svg',
+        ) as SVGElement | null;
         if (svgEl && svgEl.outerHTML) {
             try {
                 let svgString = svgEl.outerHTML;
@@ -598,12 +622,12 @@ ${svgString}
                 w.document.open();
                 w.document.write(printHtml);
                 w.document.close();
-                
+
                 // Print after a very short delay to ensure rendering
                 setTimeout(() => {
                     w.print();
                 }, 50);
-                
+
                 return;
             } catch (err) {
                 console.error('Error serializing SVG:', err);
@@ -641,7 +665,7 @@ ${svgString}
                 w.document.open();
                 w.document.write(printHtml);
                 w.document.close();
-                
+
                 // Print after a very short delay to ensure rendering
                 setTimeout(() => {
                     w.print();

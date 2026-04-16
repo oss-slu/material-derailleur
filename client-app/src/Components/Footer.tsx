@@ -32,8 +32,7 @@ const Footer = () => {
                 &nbsp;|&nbsp; 2414 Menard Street, St. Louis, MO 63104
                 &nbsp;|&nbsp; (314) 664-0828
                 <Link to="/contact" style={linkStyle}>
-                  
-		  Contact Page
+                    Contact Page
                 </Link>
             </div>
         </footer>
