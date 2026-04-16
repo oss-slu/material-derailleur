@@ -180,6 +180,15 @@ exports.Prisma.UserScalarFieldEnum = {
   resetTokenExpiry: 'resetTokenExpiry'
 };
 
+exports.Prisma.ItemAttributeScalarFieldEnum = {
+  id: 'id',
+  descriptor: 'descriptor',
+  stringValue: 'stringValue',
+  numberValue: 'numberValue',
+  booleanValue: 'booleanValue',
+  donatedItemId: 'donatedItemId'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -224,7 +233,8 @@ exports.Prisma.ModelName = {
   Program: 'Program',
   DonatedItem: 'DonatedItem',
   DonatedItemStatus: 'DonatedItemStatus',
-  User: 'User'
+  User: 'User',
+  ItemAttribute: 'ItemAttribute'
 };
 
 /**
