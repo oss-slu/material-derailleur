@@ -12,25 +12,13 @@ import LoadingSpinner from './LoadingSpinner';
 import '../css/AddStatus.css';
 import { DonatedItem } from '../Modals/DonatedItemModal';
 import {
-    type AttributeDefinition,
     type AttributeValueType,
+    type SelectedAttribute,
+    type AttributeOption,
     formatAttributeTypeLabel,
-    getDefaultDescriptorsForItemType,
     normalizeDescriptor,
+    fetchAttributes,
 } from '../constants/attributeDefinitions';
-
-interface SelectedAttribute {
-    descriptor: string;
-    valueType: AttributeValueType;
-    value: string;
-    booleanValue: boolean | null;
-}
-
-interface AttributeOption {
-    value: string;
-    label: string;
-    valueType?: AttributeValueType;
-}
 
 interface FormData {
     statusType: string;
@@ -226,67 +214,7 @@ const AddNewStatus: React.FC = () => {
     }, [id]);
 
     useEffect(() => {
-        const fetchAttributes = async () => {
-            const defaultDefinitions =
-                getDefaultDescriptorsForItemType(itemType);
-
-            try {
-                const response = await axios.get(
-                    `${process.env.REACT_APP_BACKEND_API_BASE_URL}donatedItem/attributes`,
-                    {
-                        params: itemType ? { itemType } : undefined,
-                        headers: {
-                            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
-                        },
-                    },
-                );
-
-                const definitions = [
-                    ...defaultDefinitions,
-                    ...response.data.map((attr: any) => ({
-                        descriptor: String(attr.descriptor ?? '').trim(),
-                        valueType: attr.valueType as AttributeValueType,
-                    })),
-                ];
-
-                const uniqueDescriptors = Array.from(
-                    definitions.reduce((acc, definition) => {
-                        const descriptor = definition.descriptor.trim();
-                        if (!descriptor) return acc;
-
-                        const normalized = normalizeDescriptor(descriptor);
-                        if (!acc.has(normalized)) {
-                            acc.set(normalized, {
-                                descriptor,
-                                valueType: definition.valueType ?? 'string',
-                            });
-                        }
-
-                        return acc;
-                    }, new Map<string, AttributeDefinition>()),
-                    ([, definition]) => definition,
-                ).sort((a, b) => a.descriptor.localeCompare(b.descriptor));
-
-                setAttributeOptions(
-                    uniqueDescriptors.map(definition => ({
-                        value: definition.descriptor,
-                        label: definition.descriptor,
-                        valueType: definition.valueType,
-                    })),
-                );
-            } catch (error) {
-                console.error('Error fetching attributes:', error);
-                setAttributeOptions(
-                    defaultDefinitions.map(definition => ({
-                        value: definition.descriptor,
-                        label: definition.descriptor,
-                        valueType: definition.valueType,
-                    })),
-                );
-            }
-        };
-
-        fetchAttributes();
+        fetchAttributes(itemType).then(options => setAttributeOptions(options));
     }, [itemType]);
 
     // Clean up object URLs on unmount

@@ -4,19 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from './LoadingSpinner';
 import '../css/DonorForm.css';
 import {
-    type AttributeDefinition,
     type AttributeValueType,
+    type SelectedAttribute,
+    type AttributeOption,
     formatAttributeTypeLabel,
-    getDefaultDescriptorsForItemType,
     normalizeDescriptor,
+    fetchAttributes,
 } from '../constants/attributeDefinitions';
-
-interface SelectedAttribute {
-    descriptor: string;
-    valueType: AttributeValueType;
-    value: string;
-    booleanValue: boolean | null;
-}
 
 interface FormData {
     itemType: string;
@@ -32,13 +26,6 @@ interface FormData {
 
 interface FormErrors {
     [key: string]: string;
-}
-
-interface Option {
-    value: string; // keep as string for <select>, store numeric id separately in id
-    label: string;
-    id?: number;
-    valueType?: AttributeValueType;
 }
 
 const NewItemForm: React.FC = () => {
@@ -57,14 +44,18 @@ const NewItemForm: React.FC = () => {
         selectedItemAttributes: [],
     });
 
-    const itemTypeOptions: Option[] = [
+    const itemTypeOptions: AttributeOption[] = [
         { value: 'bicycle', label: 'Bicycle' },
         { value: 'computer', label: 'Computer' },
     ];
 
-    const [donorEmailOptions, setDonorEmailOptions] = useState<Option[]>([]);
-    const [programOptions, setProgramOptions] = useState<Option[]>([]);
-    const [attributeOptions, setAttributeOptions] = useState<Option[]>([]);
+    const [donorEmailOptions, setDonorEmailOptions] = useState<
+        AttributeOption[]
+    >([]);
+    const [programOptions, setProgramOptions] = useState<AttributeOption[]>([]);
+    const [attributeOptions, setAttributeOptions] = useState<AttributeOption[]>(
+        [],
+    );
     const [selectedDescriptor, setSelectedDescriptor] = useState('');
     const [customDescriptor, setCustomDescriptor] = useState('');
     const [customAttributeType, setCustomAttributeType] =
@@ -118,71 +109,11 @@ const NewItemForm: React.FC = () => {
             }
         };
 
-        const fetchAttributes = async () => {
-            const defaultDefinitions = getDefaultDescriptorsForItemType(
-                formData.itemType,
-            );
-
-            try {
-                const response = await axios.get(
-                    `${process.env.REACT_APP_BACKEND_API_BASE_URL}donatedItem/attributes`,
-                    {
-                        params: formData.itemType
-                            ? { itemType: formData.itemType }
-                            : undefined,
-                        headers: {
-                            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
-                        },
-                    },
-                );
-                const definitions = [
-                    ...defaultDefinitions,
-                    ...response.data.map((attr: any) => ({
-                        descriptor: String(attr.descriptor ?? '').trim(),
-                        valueType: attr.valueType as AttributeValueType,
-                    })),
-                ];
-                const uniqueDescriptors = Array.from(
-                    definitions.reduce((acc, definition) => {
-                        const descriptor = definition.descriptor.trim();
-                        if (!descriptor) {
-                            return acc;
-                        }
-
-                        const normalized = normalizeDescriptor(descriptor);
-                        if (!acc.has(normalized)) {
-                            acc.set(normalized, {
-                                descriptor,
-                                valueType: definition.valueType ?? 'string',
-                            });
-                        }
-
-                        return acc;
-                    }, new Map<string, AttributeDefinition>()),
-                    ([, definition]) => definition,
-                ).sort((a, b) => a.descriptor.localeCompare(b.descriptor));
-                setAttributeOptions(
-                    uniqueDescriptors.map(definition => ({
-                        value: definition.descriptor,
-                        label: definition.descriptor,
-                        valueType: definition.valueType,
-                    })),
-                );
-            } catch (error) {
-                console.error('Error fetching attributes:', error);
-                setAttributeOptions(
-                    defaultDefinitions.map(definition => ({
-                        value: definition.descriptor,
-                        label: definition.descriptor,
-                        valueType: definition.valueType,
-                    })),
-                );
-            }
-        };
-
         fetchDonorEmails();
         fetchPrograms();
-        fetchAttributes();
+        fetchAttributes(formData.itemType).then(options =>
+            setAttributeOptions(options),
+        );
     }, [formData.itemType]);
 
     const convertToBase64 = (file: File): Promise<string> =>
@@ -532,7 +463,7 @@ const NewItemForm: React.FC = () => {
         name: keyof FormData,
         type = 'text',
         required = true,
-        options?: Option[],
+        options?: AttributeOption[],
     ) => (
         <div className="form-field">
             <label htmlFor={name} className="block text-sm font-semibold mb-1">

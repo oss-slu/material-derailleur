@@ -1,8 +1,36 @@
+import axios from 'axios';
+
 export type AttributeValueType = 'string' | 'number' | 'boolean';
 
 export interface AttributeDefinition {
     descriptor: string;
     valueType: AttributeValueType;
+}
+
+export interface SelectedAttribute {
+    descriptor: string;
+    valueType: AttributeValueType;
+    value: string;
+    booleanValue: boolean | null;
+}
+
+export interface FormData {
+    itemType: string;
+    currentStatus: string;
+    donorId: number | null;
+    programId: number | null;
+    dateDonated: string;
+    imageFiles: File[];
+    category: string;
+    quantity: number;
+    selectedItemAttributes: SelectedAttribute[];
+}
+
+export interface AttributeOption {
+    value: string; // keep as string for <select>, store numeric id separately in id
+    label: string;
+    id?: number;
+    valueType?: AttributeValueType;
 }
 
 export const DEFAULT_ATTRIBUTE_DEFINITIONS_BICYCLE: AttributeDefinition[] = [
@@ -64,4 +92,61 @@ export const formatAttributeTypeLabel = (valueType: AttributeValueType) => {
     if (valueType === 'number') return 'Number';
     if (valueType === 'boolean') return 'Yes / No';
     return 'Text';
+};
+
+export const fetchAttributes = async (
+    itemType: string,
+): Promise<AttributeOption[]> => {
+    const defaultDefinitions = getDefaultDescriptorsForItemType(itemType);
+
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_BACKEND_API_BASE_URL}donatedItem/attributes`,
+            {
+                params: itemType ? { itemType: itemType } : undefined,
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+                },
+            },
+        );
+        const definitions = [
+            ...defaultDefinitions,
+            ...response.data.map((attr: any) => ({
+                descriptor: String(attr.descriptor ?? '').trim(),
+                valueType: attr.valueType as AttributeValueType,
+            })),
+        ];
+        const uniqueDescriptors = Array.from(
+            definitions.reduce((acc, definition) => {
+                const descriptor = definition.descriptor.trim();
+                if (!descriptor) {
+                    return acc;
+                }
+
+                const normalized = normalizeDescriptor(descriptor);
+                if (!acc.has(normalized)) {
+                    acc.set(normalized, {
+                        descriptor,
+                        valueType: definition.valueType ?? 'string',
+                    });
+                }
+
+                return acc;
+            }, new Map<string, AttributeDefinition>()),
+            ([, definition]) => definition,
+        ).sort((a, b) => a.descriptor.localeCompare(b.descriptor));
+
+        return uniqueDescriptors.map(definition => ({
+            value: definition.descriptor,
+            label: definition.descriptor,
+            valueType: definition.valueType,
+        }));
+    } catch (error) {
+        console.error('Error fetching attributes:', error);
+        return defaultDefinitions.map(definition => ({
+            value: definition.descriptor,
+            label: definition.descriptor,
+            valueType: definition.valueType,
+        }));
+    }
 };
