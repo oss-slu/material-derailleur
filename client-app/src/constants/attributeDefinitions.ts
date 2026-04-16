@@ -150,3 +150,43 @@ export const fetchAttributes = async (
         }));
     }
 };
+
+export const serializeAttributes = (
+    selectedItemAttributes: SelectedAttribute[] | undefined,
+) => {
+    return JSON.stringify(
+        (selectedItemAttributes ?? [])
+            .map(attribute => {
+                const trimmedValue = attribute.value.trim();
+
+                if (attribute.valueType === 'boolean') {
+                    if (attribute.booleanValue === null) {
+                        return null;
+                    }
+
+                    return {
+                        descriptor: attribute.descriptor,
+                        stringValue: null,
+                        numberValue: null,
+                        booleanValue: attribute.booleanValue,
+                    };
+                }
+
+                if (!trimmedValue) {
+                    return null;
+                }
+
+                return {
+                    descriptor: attribute.descriptor,
+                    stringValue:
+                        attribute.valueType === 'string' ? trimmedValue : null,
+                    numberValue:
+                        attribute.valueType === 'number'
+                            ? Number(trimmedValue)
+                            : null,
+                    booleanValue: null,
+                };
+            })
+            .filter(Boolean),
+    );
+};

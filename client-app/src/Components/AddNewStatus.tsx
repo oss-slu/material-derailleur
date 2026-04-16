@@ -18,6 +18,7 @@ import {
     formatAttributeTypeLabel,
     normalizeDescriptor,
     fetchAttributes,
+    serializeAttributes,
 } from '../constants/attributeDefinitions';
 
 interface FormData {
@@ -438,43 +439,7 @@ const AddNewStatus: React.FC = () => {
             formDataToSubmit.append('donatedItemId', formData.donatedItemId);
             formDataToSubmit.append(
                 'itemAttributes',
-                JSON.stringify(
-                    (formData.selectedItemAttributes ?? [])
-                        .map(attribute => {
-                            const trimmedValue = attribute.value.trim();
-
-                            if (attribute.valueType === 'boolean') {
-                                if (attribute.booleanValue === null) {
-                                    return null;
-                                }
-
-                                return {
-                                    descriptor: attribute.descriptor,
-                                    stringValue: null,
-                                    numberValue: null,
-                                    booleanValue: attribute.booleanValue,
-                                };
-                            }
-
-                            if (!trimmedValue) {
-                                return null;
-                            }
-
-                            return {
-                                descriptor: attribute.descriptor,
-                                stringValue:
-                                    attribute.valueType === 'string'
-                                        ? trimmedValue
-                                        : null,
-                                numberValue:
-                                    attribute.valueType === 'number'
-                                        ? Number(trimmedValue)
-                                        : null,
-                                booleanValue: null,
-                            };
-                        })
-                        .filter(Boolean),
-                ),
+                serializeAttributes(formData.selectedItemAttributes || []),
             );
             images.forEach(image =>
                 formDataToSubmit.append('imageFiles', image),
