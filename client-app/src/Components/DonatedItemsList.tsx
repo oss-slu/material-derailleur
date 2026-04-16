@@ -379,9 +379,11 @@ const DonatedItemsList: React.FC = () => {
         const types = new Set(donatedItems.map(item => item.itemType));
         setItemTypes(types);
         fetchAttributes();
+    }, [donatedItems]);
+
+    useEffect(() => {
         applyFilters();
     }, [
-        donatedItems,
         searchInput,
         sortValue,
         itemTypeFilter,
@@ -437,7 +439,6 @@ const DonatedItemsList: React.FC = () => {
         }
 
         setAttributeFilters(prev => [
-            ...prev,
             {
                 descriptor,
                 valueType:
@@ -447,6 +448,7 @@ const DonatedItemsList: React.FC = () => {
                 maxValue: '',
                 booleanValue: '',
             },
+            ...prev,
         ]);
 
         if (
