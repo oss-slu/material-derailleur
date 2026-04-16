@@ -20,6 +20,7 @@ import {
     fetchAttributes,
     serializeAttributes,
 } from '../constants/attributeDefinitions';
+import AttributeEditor from './AttributeEditor';
 
 interface FormData {
     statusType: string;
@@ -629,275 +630,21 @@ const AddNewStatus: React.FC = () => {
                         Attributes
                     </label>
 
-                    <div
-                        style={{
-                            display: 'flex',
-                            gap: '0.75rem',
-                            alignItems: 'end',
-                            flexWrap: 'wrap',
-                        }}
-                    >
-                        <div style={{ flex: '1 1 220px' }}>
-                            <label
-                                htmlFor="selected-attribute-descriptor"
-                                className="block text-sm font-semibold mb-1"
-                            >
-                                Pick descriptor
-                            </label>
-                            <select
-                                id="selected-attribute-descriptor"
-                                value={selectedDescriptor}
-                                onChange={e =>
-                                    setSelectedDescriptor(e.target.value)
-                                }
-                                className="w-full px-3 py-2 rounded border border-gray-300"
-                            >
-                                <option value="">Select descriptor</option>
-                                {attributeOptions.map(option => (
-                                    <option
-                                        key={option.value}
-                                        value={option.value}
-                                    >
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={() => addAttribute()}
-                            className="submit-button"
-                            disabled={!selectedDescriptor}
-                        >
-                            Add
-                        </button>
-                    </div>
-
-                    <div
-                        style={{
-                            display: 'grid',
-                            gridTemplateColumns:
-                                'minmax(220px, 1fr) minmax(160px, 220px) auto',
-                            gap: '0.75rem',
-                            alignItems: 'start',
-                            marginTop: '1rem',
-                        }}
-                    >
-                        <div
-                            style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                            }}
-                        >
-                            <label
-                                htmlFor="custom-attribute-descriptor"
-                                className="block text-sm font-semibold mb-1"
-                            >
-                                Or create descriptor
-                            </label>
-                            <input
-                                id="custom-attribute-descriptor"
-                                type="text"
-                                value={customDescriptor}
-                                onChange={e =>
-                                    setCustomDescriptor(e.target.value)
-                                }
-                                placeholder="e.g. serial number"
-                                className="w-full px-3 py-2 rounded border border-gray-300"
-                            />
-                        </div>
-
-                        <div
-                            style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                            }}
-                        >
-                            <label className="block text-sm font-semibold mb-1">
-                                Type
-                            </label>
-                            <select
-                                value={customAttributeType}
-                                onChange={e =>
-                                    setCustomAttributeType(
-                                        e.target.value as AttributeValueType,
-                                    )
-                                }
-                                className="w-full px-3 py-2 rounded border border-gray-300"
-                            >
-                                <option value="string">Text</option>
-                                <option value="number">Number</option>
-                                <option value="boolean">Yes / No</option>
-                            </select>
-                        </div>
-
-                        <div
-                            style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                            }}
-                        >
-                            <label
-                                className="block text-sm font-semibold mb-1"
-                                style={{ visibility: 'hidden' }}
-                            >
-                                Action
-                            </label>
-                            <button
-                                type="button"
-                                onClick={() => addAttribute(customDescriptor)}
-                                className="submit-button"
-                                disabled={!customDescriptor.trim()}
-                            >
-                                Create
-                            </button>
-                        </div>
-                    </div>
-
-                    {(formData.selectedItemAttributes ?? []).length > 0 && (
-                        <div style={{ marginTop: '1rem' }}>
-                            {(formData.selectedItemAttributes ?? []).map(
-                                attribute => (
-                                    <div
-                                        key={attribute.descriptor}
-                                        style={{
-                                            border: '1px solid #d1d5db',
-                                            borderRadius: '0.5rem',
-                                            padding: '1rem',
-                                            marginBottom: '0.75rem',
-                                        }}
-                                    >
-                                        <div
-                                            style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                                gap: '0.75rem',
-                                                flexWrap: 'wrap',
-                                            }}
-                                        >
-                                            <strong>
-                                                {attribute.descriptor}
-                                            </strong>
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    removeAttribute(
-                                                        attribute.descriptor,
-                                                    )
-                                                }
-                                                className="back-button"
-                                            >
-                                                Remove
-                                            </button>
-                                        </div>
-
-                                        <div
-                                            style={{
-                                                display: 'flex',
-                                                gap: '0.75rem',
-                                                flexWrap: 'wrap',
-                                                marginTop: '0.75rem',
-                                                alignItems: 'end',
-                                            }}
-                                        >
-                                            <div style={{ flex: '0 0 140px' }}>
-                                                <label className="block text-sm font-semibold mb-1">
-                                                    Type
-                                                </label>
-                                                <div className="w-full px-3 py-2 rounded border border-gray-300 bg-gray-50">
-                                                    {formatAttributeTypeLabel(
-                                                        attribute.valueType,
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {attribute.valueType ===
-                                            'boolean' ? (
-                                                <div
-                                                    style={{
-                                                        flex: '1 1 220px',
-                                                    }}
-                                                >
-                                                    <label className="block text-sm font-semibold mb-1">
-                                                        Value
-                                                    </label>
-                                                    <select
-                                                        value={
-                                                            attribute.booleanValue ===
-                                                            null
-                                                                ? ''
-                                                                : String(
-                                                                      attribute.booleanValue,
-                                                                  )
-                                                        }
-                                                        onChange={e =>
-                                                            updateAttribute(
-                                                                attribute.descriptor,
-                                                                {
-                                                                    booleanValue:
-                                                                        e.target
-                                                                            .value ===
-                                                                        ''
-                                                                            ? null
-                                                                            : e
-                                                                                  .target
-                                                                                  .value ===
-                                                                              'true',
-                                                                },
-                                                            )
-                                                        }
-                                                        className="w-full px-3 py-2 rounded border border-gray-300"
-                                                    >
-                                                        <option value="">
-                                                            Select value
-                                                        </option>
-                                                        <option value="true">
-                                                            Yes
-                                                        </option>
-                                                        <option value="false">
-                                                            No
-                                                        </option>
-                                                    </select>
-                                                </div>
-                                            ) : (
-                                                <div
-                                                    style={{
-                                                        flex: '1 1 220px',
-                                                    }}
-                                                >
-                                                    <label className="block text-sm font-semibold mb-1">
-                                                        Value
-                                                    </label>
-                                                    <input
-                                                        type={
-                                                            attribute.valueType ===
-                                                            'number'
-                                                                ? 'number'
-                                                                : 'text'
-                                                        }
-                                                        value={attribute.value}
-                                                        onChange={e =>
-                                                            updateAttribute(
-                                                                attribute.descriptor,
-                                                                {
-                                                                    value: e
-                                                                        .target
-                                                                        .value,
-                                                                },
-                                                            )
-                                                        }
-                                                        className="w-full px-3 py-2 rounded border border-gray-300"
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ),
-                            )}
-                        </div>
-                    )}
+                    <AttributeEditor
+                        selectedItemAttributes={
+                            formData.selectedItemAttributes ?? []
+                        }
+                        attributeOptions={attributeOptions}
+                        selectedDescriptor={selectedDescriptor}
+                        customDescriptor={customDescriptor}
+                        customAttributeType={customAttributeType}
+                        onSelectedDescriptorChange={setSelectedDescriptor}
+                        onCustomDescriptorChange={setCustomDescriptor}
+                        onCustomAttributeTypeChange={setCustomAttributeType}
+                        onAddAttribute={addAttribute}
+                        onRemoveAttribute={removeAttribute}
+                        onUpdateAttribute={updateAttribute}
+                    />
                 </div>
 
                 {/* Image Upload Field */}
