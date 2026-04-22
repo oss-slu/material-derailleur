@@ -19,6 +19,7 @@ jest.mock('../prismaClient', () => ({
         donatedItem: {
             create: jest.fn(),
             findUnique: jest.fn(),
+            findMany: jest.fn(),
         },
         donatedItemStatus: {
             create: jest.fn(),
@@ -26,6 +27,9 @@ jest.mock('../prismaClient', () => ({
         donor: {
             findUnique: jest.fn(),
             create: jest.fn(),
+        },
+        itemAttribute: {
+            groupBy: jest.fn(),
         },
     },
 }));
@@ -116,6 +120,168 @@ describe('ImportExport API Tests', () => {
                     id: 102,
                     category: 'Giant Kids',
                     donorId: 11,
+                }),
+            }),
+        );
+    });
+
+    it('exports a CSV file with fixed item columns and dynamic attribute headers', async () => {
+        (prisma.itemAttribute.groupBy as jest.Mock).mockResolvedValue([
+            { descriptor: 'color' },
+            { descriptor: 'type' },
+            { descriptor: 'wheel size (in.)' },
+            { descriptor: 'standover height (in.)' },
+            { descriptor: 'condition' },
+        ]);
+
+        (prisma.donatedItem.findMany as jest.Mock).mockResolvedValue([
+            {
+                id: 101,
+                itemType: 'bicycle',
+                category: 'Trek 820',
+                quantity: 1,
+                currentStatus: 'Received',
+                dateDonated: new Date('2026-04-22T00:00:00.000Z'),
+                programId: null,
+                donor: { email: 'existing@example.com' },
+                attributes: [
+                    { descriptor: 'type', stringValue: 'MTB' },
+                    { descriptor: 'color', stringValue: 'Blue' },
+                    {
+                        descriptor: 'wheel size (in.)',
+                        numberValue: 26,
+                    },
+                    {
+                        descriptor: 'standover height (in.)',
+                        numberValue: 18,
+                    },
+                    { descriptor: 'condition', stringValue: 'Good' },
+                ],
+            },
+        ]);
+
+        const response = await request(app).get('/import-export/api/csv');
+
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toContain('text/csv');
+        expect(response.headers['content-disposition']).toContain(
+            'donated-items-export.csv',
+        );
+
+        const [headerLine, dataLine] = response.text.trim().split('\n');
+
+        expect(headerLine).toContain('"ID"');
+        expect(headerLine).toContain('"Item Type"');
+        expect(headerLine).toContain('"Item Name"');
+        expect(headerLine).toContain('"Quantity"');
+        expect(headerLine).toContain('"Current Status"');
+        expect(headerLine).toContain('"Date Donated"');
+        expect(headerLine).toContain('"Donor Email"');
+        expect(headerLine).toContain('"Program ID"');
+        expect(headerLine).toContain('"color"');
+        expect(headerLine).toContain('"type"');
+        expect(headerLine).toContain('"wheel size (in.)"');
+        expect(headerLine).toContain('"standover height (in.)"');
+        expect(headerLine).toContain('"condition"');
+
+        expect(dataLine).toContain('"101"');
+        expect(dataLine).toContain('"bicycle"');
+        expect(dataLine).toContain('"Trek 820"');
+        expect(dataLine).toContain('"1"');
+        expect(dataLine).toContain('"Received"');
+        expect(dataLine).toContain('"2026-04-22T00:00:00.000Z"');
+        expect(dataLine).toContain('"MTB"');
+        expect(dataLine).toContain('"Blue"');
+        expect(dataLine).toContain('"26"');
+        expect(dataLine).toContain('"existing@example.com"');
+        expect(dataLine).toContain('""');
+        expect(dataLine).toContain('"18"');
+        expect(dataLine).toContain('"Good"');
+    });
+
+    it('can import the exact CSV produced by the export route', async () => {
+        (prisma.itemAttribute.groupBy as jest.Mock).mockResolvedValue([
+            { descriptor: 'color' },
+            { descriptor: 'type' },
+            { descriptor: 'wheel size (in.)' },
+            { descriptor: 'standover height (in.)' },
+        ]);
+
+        (prisma.donatedItem.findMany as jest.Mock).mockResolvedValue([
+            {
+                id: 201,
+                itemType: 'bicycle',
+                category: 'Round Trip Bike',
+                quantity: 1,
+                currentStatus: 'Received',
+                dateDonated: new Date('2026-04-22T00:00:00.000Z'),
+                programId: null,
+                donor: { email: 'roundtrip@example.com' },
+                attributes: [
+                    { descriptor: 'type', stringValue: 'Road' },
+                    { descriptor: 'color', stringValue: 'Red' },
+                    {
+                        descriptor: 'wheel size (in.)',
+                        numberValue: 27,
+                    },
+                    {
+                        descriptor: 'standover height (in.)',
+                        numberValue: 20,
+                    },
+                ],
+            },
+        ]);
+
+        const exportResponse = await request(app).get('/import-export/api/csv');
+
+        expect(exportResponse.status).toBe(200);
+
+        (prisma.donor.findUnique as jest.Mock).mockResolvedValue({
+            id: 20,
+            email: 'roundtrip@example.com',
+        });
+
+        (prisma.donatedItem.findUnique as jest.Mock).mockResolvedValue(null);
+        (prisma.donatedItem.create as jest.Mock).mockResolvedValue({ id: 201 });
+        (prisma.donatedItemStatus.create as jest.Mock).mockResolvedValue({});
+
+        const importResponse = await request(app)
+            .post('/import-export/api/csv')
+            .attach(
+                'csvFile',
+                Buffer.from(exportResponse.text, 'utf8'),
+                'roundtrip.csv',
+            );
+
+        expect(importResponse.status).toBe(201);
+        expect(importResponse.body.importedCount).toBe(1);
+        expect(importResponse.body.failedCount).toBe(0);
+        expect(prisma.donatedItem.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    id: 201,
+                    category: 'Round Trip Bike',
+                    donorId: 20,
+                    attributes: {
+                        create: expect.arrayContaining([
+                            expect.objectContaining({
+                                descriptor: 'type',
+                                stringValue: 'Road',
+                            }),
+                            expect.objectContaining({
+                                descriptor: 'color',
+                                stringValue: 'Red',
+                            }),
+                            expect.objectContaining({
+                                descriptor: 'wheel size (in.)',
+                                numberValue: 27,
+                            }),
+                            expect.objectContaining({
+                                descriptor: 'standover height (in.)',
+                                numberValue: 20,
+                            }),
+                        ]),
+                    },
                 }),
             }),
         );

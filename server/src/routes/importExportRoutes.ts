@@ -24,6 +24,13 @@ type ItemAttributeInput = {
 
 type PartialItemAttributeInput = ItemAttributeInput | null;
 
+type ExportAttribute = {
+    descriptor: string | null;
+    stringValue?: string | null;
+    numberValue?: number | null;
+    booleanValue?: boolean | null;
+};
+
 const normalizeCell = (value: unknown): string =>
     typeof value === 'string' ? value.trim() : '';
 
@@ -47,6 +54,35 @@ const getRowValue = (row: CsvRow, ...keys: string[]): string => {
     return '';
 };
 
+const stringifyCsvValue = (value: unknown): string => {
+    if (value === null || value === undefined) {
+        return '';
+    }
+
+    return String(value).replace(/"/g, '""');
+};
+
+const getAttributeExportValue = (attribute?: ExportAttribute): string => {
+    if (!attribute) {
+        return '';
+    }
+
+    if (attribute.stringValue !== null && attribute.stringValue !== undefined) {
+        return attribute.stringValue;
+    }
+    if (attribute.numberValue !== null && attribute.numberValue !== undefined) {
+        return String(attribute.numberValue);
+    }
+    if (
+        attribute.booleanValue !== null &&
+        attribute.booleanValue !== undefined
+    ) {
+        return String(attribute.booleanValue);
+    }
+
+    return '';
+};
+
 function parseCsvBuffer(buffer: Buffer): Promise<CsvRow[]> {
     return new Promise((resolve, reject) => {
         const rows: CsvRow[] = [];
@@ -63,10 +99,15 @@ function buildAttributesFromRow(row: CsvRow): ItemAttributeInput[] {
     const bikeType = getRowValue(row, 'Type', 'type');
     const color = getRowValue(row, 'Color', 'color');
     const standoverHeight = parseOptionalNumber(
-        getRowValue(row, 'Standover Height', 'standover height'),
+        getRowValue(
+            row,
+            'Standover Height',
+            'standover height',
+            'standover height (in.)',
+        ),
     );
     const wheelSize = parseOptionalNumber(
-        getRowValue(row, 'Wheel Size', 'wheel size'),
+        getRowValue(row, 'Wheel Size', 'wheel size', 'wheel size (in.)'),
     );
 
     const attributes: PartialItemAttributeInput[] = [
@@ -132,7 +173,9 @@ router.post(
             });
             if (!permGranted) return;
 
-            const csvFile = (req.files as Express.Multer.File[] | undefined)?.[0];
+            const csvFile = (
+                req.files as Express.Multer.File[] | undefined
+            )?.[0];
             if (!csvFile) {
                 return res
                     .status(400)
@@ -165,6 +208,10 @@ router.post(
                         row,
                         'Bike Name',
                         'bike name',
+                        'Item Name',
+                        'item name',
+                        'Category',
+                        'category',
                     );
                     const donorEmail = getRowValue(
                         row,
@@ -175,7 +222,9 @@ router.post(
                     ).toLowerCase();
 
                     if (!rawCsvId || !Number.isInteger(csvId) || csvId <= 0) {
-                        throw new Error('CSV row is missing a valid numeric id');
+                        throw new Error(
+                            'CSV row is missing a valid numeric id',
+                        );
                     }
                     if (!category) {
                         throw new Error(
@@ -183,9 +232,7 @@ router.post(
                         );
                     }
                     if (!donorEmail) {
-                        throw new Error(
-                            'CSV row is missing donor email',
-                        );
+                        throw new Error('CSV row is missing donor email');
                     }
 
                     const donor = await findOrCreateDonorByEmail(donorEmail);
@@ -265,9 +312,112 @@ router.post(
             if (error instanceof Error) {
                 return res.status(400).json({ error: error.message });
             }
-            return res.status(500).json({ message: 'Error importing CSV file' });
+            return res
+                .status(500)
+                .json({ message: 'Error importing CSV file' });
         }
     },
 );
+
+// GET /api/csv - Export donated items as a CSV download
+router.get('/api/csv', async (req: Request, res: Response) => {
+    try {
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 4,
+        });
+        if (!permGranted) return;
+
+        const attributes = await prisma.itemAttribute.groupBy({
+            by: ['descriptor'],
+            orderBy: {
+                descriptor: 'asc',
+            },
+        });
+
+        const attributeHeaders = Array.from(
+            new Set(
+                attributes
+                    .map(attribute => attribute.descriptor)
+                    .filter(
+                        (descriptor): descriptor is string =>
+                            typeof descriptor === 'string' &&
+                            descriptor.trim().length > 0,
+                    ),
+            ),
+        ).sort();
+
+        const headers = [
+            'ID',
+            'Item Type',
+            'Item Name',
+            'Quantity',
+            'Current Status',
+            'Date Donated',
+            'Donor Email',
+            'Program ID',
+            ...attributeHeaders,
+        ];
+
+        const items = await prisma.donatedItem.findMany({
+            include: {
+                donor: true,
+                attributes: true,
+            },
+        });
+
+        const rows = items.map(item => {
+            const attributeMap = new Map(
+                item.attributes.map(attribute => [
+                    attribute.descriptor,
+                    attribute as ExportAttribute,
+                ]),
+            );
+
+            return [
+                item.id,
+                item.itemType,
+                item.category,
+                item.quantity,
+                item.currentStatus,
+                item.dateDonated.toISOString(),
+                item.donor?.email ?? '',
+                item.programId ?? '',
+                ...attributeHeaders.map(header =>
+                    getAttributeExportValue(attributeMap.get(header)),
+                ),
+            ];
+        });
+
+        const csvContent = [headers, ...rows]
+            .map(row =>
+                row.map(value => `"${stringifyCsvValue(value)}"`).join(','),
+            )
+            .join('\n');
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader(
+            'Content-Disposition',
+            'attachment; filename="donated-items-export.csv"',
+        );
+        res.status(200).send(csvContent);
+    } catch (error) {
+        if (error instanceof Error) {
+            console.error('Error fetching donated item:', error.message);
+            res.status(
+                error.message.includes('must be an integer') ? 400 : 404,
+            ).json({ error: error.message });
+            console.error('Error exporting CSV file:', error.message);
+            return res.status(500).json({
+                error: 'Error exporting CSV file',
+                details: error.message,
+            });
+        } else {
+            console.error('Error fetching donated item:', 'Unknown error');
+            res.status(500).json({ error: 'Unknown error' });
+            console.error('Error exporting CSV file:', 'Unknown error');
+            return res.status(500).json({ error: 'Error exporting CSV file' });
+        }
+    }
+});
 
 export default router;

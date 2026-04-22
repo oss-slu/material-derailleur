@@ -47,7 +47,7 @@ const guessMimeFromName = (fileName: string): string => {
         case 'webp':
             return 'image/webp';
         case 'csv':
-            return 'text/csv'
+            return 'text/csv';
         default:
             return 'application/octet-stream';
     }
@@ -135,9 +135,7 @@ export async function uploadToStorage(
     return uploadAzureViaStorage(file, filename);
 }
 
-export const validateIndividualFileSize = (
-    files: Express.Multer.File[],
-) => {
+export const validateIndividualFileSize = (files: Express.Multer.File[]) => {
     for (const file of files) {
         if (file.size > MAX_FILE_SIZE) {
             throw new Error(
