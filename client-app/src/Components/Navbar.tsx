@@ -196,7 +196,6 @@ const Navbar: React.FC = () => {
                                                         Add New Donation
                                                     </Link>
                                                 </li>
-                                                {/* NEW: Admin Image Review */}
                                                 <li>
                                                     <Link
                                                         className="dropdown-item"
@@ -213,6 +212,16 @@ const Navbar: React.FC = () => {
                                                         Image Approval
                                                     </Link>
                                                 </li>
+                                                {userRole === 'ADMIN' && (
+                                                    <li>
+                                                        <Link
+                                                            className="dropdown-item"
+                                                            to="/admin/import-export"
+                                                        >
+                                                            Import/Export
+                                                        </Link>
+                                                    </li>
+                                                )}
                                             </ul>
                                         </li>
 
@@ -328,32 +337,34 @@ const Navbar: React.FC = () => {
                                                 </li>
                                             </ul>
                                         </li>
-                                        <li
-                                            className="nav-item"
-                                            style={{
-                                                fontSize: '20px',
-                                                paddingLeft: '10px',
-                                            }}
-                                        >
-                                            <Link
-                                                className="nav-link"
-                                                to="/admin/user-management"
+                                        {userRole === 'ADMIN' && (
+                                            <li
+                                                className="nav-item"
                                                 style={{
-                                                    fontWeight:
-                                                        location.pathname ===
-                                                        '/admin/user-management'
-                                                            ? 'bold'
-                                                            : 'normal',
-                                                    color:
-                                                        location.pathname ===
-                                                        '/admin/user-management'
-                                                            ? 'black'
-                                                            : 'inherit',
+                                                    fontSize: '20px',
+                                                    paddingLeft: '10px',
                                                 }}
                                             >
-                                                Users
-                                            </Link>
-                                        </li>
+                                                <Link
+                                                    className="nav-link"
+                                                    to="/admin/user-management"
+                                                    style={{
+                                                        fontWeight:
+                                                            location.pathname ===
+                                                            '/admin/user-management'
+                                                                ? 'bold'
+                                                                : 'normal',
+                                                        color:
+                                                            location.pathname ===
+                                                            '/admin/user-management'
+                                                                ? 'black'
+                                                                : 'inherit',
+                                                    }}
+                                                >
+                                                    Users
+                                                </Link>
+                                            </li>
+                                        )}
                                     </>
                                 )}
 

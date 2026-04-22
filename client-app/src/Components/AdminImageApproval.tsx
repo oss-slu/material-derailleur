@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import '../css/AdminImageApproval.css'; // Import the new CSS file
+import '../css/AdminImageApproval.css';
 
 import { DonatedItemStatus } from '../Modals/DonatedItemStatusModal';
 

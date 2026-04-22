@@ -15,7 +15,6 @@ import {
     type AttributeValueType,
     type SelectedAttribute,
     type AttributeOption,
-    formatAttributeTypeLabel,
     normalizeDescriptor,
     fetchAttributes,
     serializeAttributes,
