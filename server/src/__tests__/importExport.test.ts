@@ -286,4 +286,67 @@ describe('ImportExport API Tests', () => {
             }),
         );
     });
+
+    it('returns failed row details when import partially succeeds', async () => {
+        const csv = [
+            'ID,Bike Name,Type,Color,Wheel Size,Donor Email',
+            '301,Valid Bike,Road,Blue,27,valid@example.com',
+            '302,,Road,Green,26,missing-category@example.com',
+        ].join('\n');
+
+        (prisma.donor.findUnique as jest.Mock).mockResolvedValue({
+            id: 30,
+            email: 'valid@example.com',
+        });
+
+        (prisma.donatedItem.findUnique as jest.Mock).mockResolvedValue(null);
+        (prisma.donatedItem.create as jest.Mock).mockResolvedValue({ id: 301 });
+        (prisma.donatedItemStatus.create as jest.Mock).mockResolvedValue({});
+
+        const response = await request(app)
+            .post('/import-export/api/csv')
+            .attach('csvFile', Buffer.from(csv), 'partial-success.csv');
+
+        expect(response.status).toBe(207);
+        expect(response.body.message).toBe(
+            'CSV import completed with some errors',
+        );
+        expect(response.body.importedCount).toBe(1);
+        expect(response.body.failedCount).toBe(1);
+        expect(response.body.failedRows).toEqual([
+            {
+                rowNumber: 3,
+                error: 'CSV row is missing Bike Name for category',
+            },
+        ]);
+    });
+
+    it('returns failed row details with 207 when all import rows fail', async () => {
+        const csv = [
+            'ID,Bike Name,Type,Color,Wheel Size,Donor Email',
+            '401,,Road,Blue,27,missing-category@example.com',
+            '0,Invalid Id Bike,Road,Green,26,invalid-id@example.com',
+        ].join('\n');
+
+        const response = await request(app)
+            .post('/import-export/api/csv')
+            .attach('csvFile', Buffer.from(csv), 'all-failed.csv');
+
+        expect(response.status).toBe(207);
+        expect(response.body.message).toBe(
+            'CSV import completed with some errors',
+        );
+        expect(response.body.importedCount).toBe(0);
+        expect(response.body.failedCount).toBe(2);
+        expect(response.body.failedRows).toEqual([
+            {
+                rowNumber: 2,
+                error: 'CSV row is missing Bike Name for category',
+            },
+            {
+                rowNumber: 3,
+                error: 'CSV row is missing a valid numeric id',
+            },
+        ]);
+    });
 });

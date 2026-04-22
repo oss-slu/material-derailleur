@@ -1,10 +1,16 @@
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import { Readable } from 'stream';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import prisma from '../prismaClient';
 import csv from 'csv-parser';
 import { validateProgram } from '../services/programService';
 import { validateIndividualFileSize } from '../services/donatedItemService';
+import {
+    sendApprovalRequestEmail,
+    sendPasswordReset,
+} from '../services/emailService';
 import { authenticateUser } from './routeProtection';
 
 const router = Router();
@@ -88,7 +94,15 @@ function parseCsvBuffer(buffer: Buffer): Promise<CsvRow[]> {
         const rows: CsvRow[] = [];
 
         Readable.from(buffer)
-            .pipe(csv())
+            .pipe(
+                csv({
+                    mapHeaders: ({ header }) =>
+                        header
+                            .trim()
+                            .replace(/^\uFEFF/, '')
+                            .toLowerCase(),
+                }),
+            )
             .on('data', row => rows.push(row as CsvRow))
             .on('end', () => resolve(rows))
             .on('error', reject);
@@ -176,7 +190,10 @@ router.post(
             const csvFile = (
                 req.files as Express.Multer.File[] | undefined
             )?.[0];
-            if (!csvFile) {
+            if (
+                !csvFile ||
+                !csvFile.originalname.toLowerCase().endsWith('.csv')
+            ) {
                 return res
                     .status(400)
                     .json({ message: 'Missing required csv file' });
@@ -217,6 +234,7 @@ router.post(
                         row,
                         'Donor Email',
                         'donorEmail',
+                        'donor email',
                         'Email',
                         'email',
                     ).toLowerCase();
@@ -283,12 +301,7 @@ router.post(
                 }
             }
 
-            const responseStatus =
-                failedRows.length > 0
-                    ? importedItems.length > 0
-                        ? 207
-                        : 400
-                    : 201;
+            const responseStatus = failedRows.length > 0 ? 207 : 201;
 
             return res.status(responseStatus).json({
                 message:

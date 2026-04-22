@@ -1,11 +1,46 @@
 import React, { useState } from 'react';
 import '../css/AdminImportExport.css';
 
+type ImportFailure = {
+    rowNumber: number;
+    error: string;
+};
+
+const normalizeImportFailures = (value: unknown): ImportFailure[] => {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    return value.flatMap(entry => {
+        if (
+            !entry ||
+            typeof entry !== 'object' ||
+            typeof (entry as { error?: unknown }).error !== 'string'
+        ) {
+            return [];
+        }
+
+        const rawRowNumber = (entry as { rowNumber?: unknown }).rowNumber;
+        const rowNumber =
+            typeof rawRowNumber === 'number'
+                ? rawRowNumber
+                : Number(rawRowNumber);
+
+        return [
+            {
+                rowNumber: Number.isFinite(rowNumber) ? rowNumber : 0,
+                error: (entry as { error: string }).error,
+            },
+        ];
+    });
+};
+
 const AdminImportExport: React.FC = () => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [importFailures, setImportFailures] = useState<ImportFailure[]>([]);
 
     const token = localStorage.getItem('token');
     const base = process.env.REACT_APP_BACKEND_API_BASE_URL || '/';
@@ -15,6 +50,7 @@ const AdminImportExport: React.FC = () => {
         setSelectedFile(file);
         setMessage(null);
         setError(null);
+        setImportFailures([]);
     };
 
     const handleImport = async () => {
@@ -26,6 +62,7 @@ const AdminImportExport: React.FC = () => {
         setLoading(true);
         setMessage(null);
         setError(null);
+        setImportFailures([]);
 
         try {
             const formData = new FormData();
@@ -41,6 +78,15 @@ const AdminImportExport: React.FC = () => {
 
             const data = await response.json();
             if (!response.ok) {
+                const failedRows = normalizeImportFailures(data.failedRows);
+
+                if (failedRows.length > 0) {
+                    setMessage(data.message || 'Import completed with errors.');
+                    setImportFailures(failedRows);
+                    setSelectedFile(null);
+                    return;
+                }
+
                 throw new Error(data.error || data.message || 'Import failed');
             }
 
@@ -48,9 +94,11 @@ const AdminImportExport: React.FC = () => {
                 data.message ||
                     `Import completed. ${data.importedCount ?? 0} item(s) added.`,
             );
+            setImportFailures(normalizeImportFailures(data.failedRows));
             setSelectedFile(null);
         } catch (err: any) {
             setError(err.message || 'Failed to import CSV file.');
+            setImportFailures([]);
         } finally {
             setLoading(false);
         }
@@ -60,6 +108,7 @@ const AdminImportExport: React.FC = () => {
         setLoading(true);
         setMessage(null);
         setError(null);
+        setImportFailures([]);
 
         try {
             const response = await fetch(`${base}api/csv`, {
@@ -148,6 +197,22 @@ const AdminImportExport: React.FC = () => {
                 )}
                 {error && (
                     <div style={{ color: 'red', marginTop: 16 }}>{error}</div>
+                )}
+                {importFailures.length > 0 && (
+                    <div style={{ color: '#b45309', marginTop: 16 }}>
+                        <div>Import row errors:</div>
+                        <ul style={{ marginTop: 8, paddingLeft: 20 }}>
+                            {importFailures.map(
+                                ({ rowNumber, error: rowError }) => (
+                                    <li key={`${rowNumber}-${rowError}`}>
+                                        {rowNumber > 0
+                                            ? `Row ${rowNumber}: ${rowError}`
+                                            : rowError}
+                                    </li>
+                                ),
+                            )}
+                        </ul>
+                    </div>
                 )}
             </div>
         </div>
