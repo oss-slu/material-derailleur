@@ -46,6 +46,8 @@ const guessMimeFromName = (fileName: string): string => {
             return 'image/gif';
         case 'webp':
             return 'image/webp';
+        case 'csv':
+            return 'text/csv'
         default:
             return 'application/octet-stream';
     }
@@ -62,6 +64,8 @@ export function getFileExtension(mimeType: string) {
             return '.gif';
         case 'image/webp':
             return '.webp';
+        case 'text/csv':
+            return '.csv';
         default:
             return '.jpg';
     }
@@ -132,9 +136,9 @@ export async function uploadToStorage(
 }
 
 export const validateIndividualFileSize = (
-    imageFiles: Express.Multer.File[],
+    files: Express.Multer.File[],
 ) => {
-    for (const file of imageFiles) {
+    for (const file of files) {
         if (file.size > MAX_FILE_SIZE) {
             throw new Error(
                 `File size is too large. Max file size allowed is 5MB.`,
