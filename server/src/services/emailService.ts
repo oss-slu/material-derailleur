@@ -122,7 +122,7 @@ export const sendPasswordReset = async (
         subject: 'Material Derailleur Password Reset',
         html: `
             <h2>Hello there!</h2>
-            <<p>We received a request to reset your password. If this was you, click the link below:</p>
+            <p>We received a request to reset your password. If this was you, click the link below:</p>
             <p><a href="${resetUrl}" style="color: blue; text-decoration: underline;">${resetUrl}</a></p>
             <p><strong>This link will expire in 60 minutes.</strong></p>
             <p>If this wasn’t you, please ignore this email.</p>

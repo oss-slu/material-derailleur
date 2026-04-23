@@ -1,6 +1,10 @@
 process.env.JWT_SECRET = 'test-secret';
 process.env.NODE_ENV = 'test';
 
+jest.mock('bcryptjs', () => ({
+    hash: jest.fn().mockResolvedValue('hashed-import-password'),
+}));
+
 jest.mock('../routes/routeProtection', () => ({
     authenticateUser: jest.fn().mockResolvedValue(true),
 }));
@@ -11,6 +15,11 @@ jest.mock('../services/donatedItemService', () => ({
 
 jest.mock('../services/programService', () => ({
     validateProgram: jest.fn().mockResolvedValue(true),
+}));
+
+jest.mock('../services/emailService', () => ({
+    sendApprovalRequestEmail: jest.fn(),
+    sendPasswordReset: jest.fn(),
 }));
 
 jest.mock('../prismaClient', () => ({
@@ -25,6 +34,10 @@ jest.mock('../prismaClient', () => ({
             create: jest.fn(),
         },
         donor: {
+            findUnique: jest.fn(),
+            create: jest.fn(),
+        },
+        user: {
             findUnique: jest.fn(),
             create: jest.fn(),
         },
@@ -64,6 +77,11 @@ describe('ImportExport API Tests', () => {
 
         (prisma.donor.create as jest.Mock).mockResolvedValue({
             id: 11,
+            email: 'new@example.com',
+        });
+        (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+        (prisma.user.create as jest.Mock).mockResolvedValue({
+            id: 'user-1',
             email: 'new@example.com',
         });
 
@@ -240,6 +258,10 @@ describe('ImportExport API Tests', () => {
             id: 20,
             email: 'roundtrip@example.com',
         });
+        (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+            id: 'existing-user',
+            email: 'roundtrip@example.com',
+        });
 
         (prisma.donatedItem.findUnique as jest.Mock).mockResolvedValue(null);
         (prisma.donatedItem.create as jest.Mock).mockResolvedValue({ id: 201 });
@@ -296,6 +318,10 @@ describe('ImportExport API Tests', () => {
 
         (prisma.donor.findUnique as jest.Mock).mockResolvedValue({
             id: 30,
+            email: 'valid@example.com',
+        });
+        (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+            id: 'existing-valid-user',
             email: 'valid@example.com',
         });
 
