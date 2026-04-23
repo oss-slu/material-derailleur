@@ -11,6 +11,7 @@ import {
     sendApprovalRequestEmail,
     sendPasswordReset,
 } from '../services/emailService';
+import { getRandomPassword } from './donorRoutes';
 import { authenticateUser } from './routeProtection';
 
 const router = Router();
@@ -161,14 +162,49 @@ async function findOrCreateDonorByEmail(email: string) {
         where: { email },
     });
 
+    const existingUser = await prisma.user.findUnique({
+        where: { email },
+    });
+
+    // If no account exists for this donor:
+    if (!existingUser) {
+        const name = email.split('@')[0];
+        const donorPassword = getRandomPassword();
+        const hashedPassword = await bcrypt.hash(donorPassword, 10);
+
+        console.log('CSV Import creating account for', name, email);
+        const user = await prisma.user.create({
+            data: {
+                name,
+                email,
+                password: hashedPassword,
+                role: 'DONOR',
+                status: 'PENDING',
+                firstLogin: true,
+            },
+        });
+        /* Important Note: This will create a new account with a random password for the user but
+        it will never be sent to the user or ever used to login, and the new user will not receive
+        a password reset link. This is intentional.
+        If we were to send the password, that is highly insecure.
+        If we were to send a reset, expiration time would need to be high, which is also insecure.
+        In addition, there would be a high likelihood of email spam which causes other problems.
+        The only option here is to set a dummy password (but still secure) and then just let the
+        user do "forgot password" on their own time. 
+        This is done with the idea that there could be hundreds or thousands of users.
+        */
+    }
+
+    // If donor exists
     if (existingDonor) {
         return existingDonor;
     }
 
+    // If not, create a new one
     return prisma.donor.create({
         data: {
             firstName: '',
-            lastName: 'Imported',
+            lastName: '',
             email,
             zipcode: '',
             emailOptIn: false,

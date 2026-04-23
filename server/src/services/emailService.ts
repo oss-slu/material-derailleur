@@ -111,7 +111,6 @@ export const sendAccountUpdateEmail = async (
 };
 
 // Function to send a password reset
-
 export const sendPasswordReset = async (
     recipientEmail: string,
     resetToken: string,
@@ -142,7 +141,6 @@ export const sendPasswordReset = async (
 };
 
 // Function to send a donation confirmation email
-
 export const sendDonationEmail = async (
     recipientEmail: string,
     donorName: string,
