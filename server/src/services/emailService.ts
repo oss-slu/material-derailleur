@@ -92,7 +92,7 @@ export const sendAccountUpdateEmail = async (
     const mailOptions = {
         from: `Donation Team <${process.env.SMTP_USER}>`,
         to: recipientEmail,
-        subject: 'Material Donor Mutual Assist Account Update',
+        subject: 'Material Derailleur Account Update',
         html: `
             <h2>Dear ${userName},</h2>
             <p>Your account status has changed.</p>
@@ -119,7 +119,7 @@ export const sendPasswordReset = async (
     const mailOptions = {
         from: `Donation Team <${process.env.SMTP_USER}>`,
         to: recipientEmail,
-        subject: 'Material Donor Mutual Assist Password Reset',
+        subject: 'Material Derailleur Password Reset',
         html: `
             <h2>Hello there!</h2>
             <<p>We received a request to reset your password. If this was you, click the link below:</p>

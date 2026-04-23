@@ -15,7 +15,7 @@ const Home: React.FC = () => {
                         color: '#222',
                     }}
                 >
-                    MATERIAL DONOR MUTUAL ASSIST.
+                    MATERIAL DERAILLEUR.
                 </h1>
                 <p
                     style={{
