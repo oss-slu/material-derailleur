@@ -122,7 +122,11 @@ function App() {
                         />
                         <Route
                             path="/admin/import-export"
-                            element={<AdminImportExport />}
+                            element={
+                                <ProtectedRoute allowedRole="ADMIN">
+                                    <AdminImportExport />
+                                </ProtectedRoute>
+                            }
                         />
                         <Route
                             path="/admin/user-management"

@@ -295,8 +295,7 @@ router.post(
                         'Date',
                         'date',
                     );
-                    const parsedDateDonated =
-                        parseOptionalDate(rawDateDonated);
+                    const parsedDateDonated = parseOptionalDate(rawDateDonated);
                     const dateDonatedDateTime =
                         parsedDateDonated ?? defaultDateDonatedDateTime;
 
