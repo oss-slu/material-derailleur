@@ -74,6 +74,7 @@ const KNOWN_ATTRIBUTE_VALUE_TYPES: Record<string, AttributeValueType> = {
     'wheel size (in.)': 'number',
     condition: 'string',
     'needs repair': 'boolean',
+    location: 'string',
     note: 'string',
     cpu: 'string',
     'ram (GB)': 'number',
@@ -86,6 +87,7 @@ const COMMON_ATTRIBUTE_DEFINITIONS: AttributeDefinition[] = [
     { descriptor: 'condition', valueType: 'string' },
     { descriptor: 'type', valueType: 'string' },
     { descriptor: 'needs repair', valueType: 'boolean' },
+    { descriptor: 'location', valueType: 'string' },
     { descriptor: 'note', valueType: 'string' },
 ];
 

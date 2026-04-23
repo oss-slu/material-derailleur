@@ -38,6 +38,14 @@ type ExportAttribute = {
     booleanValue?: boolean | null;
 };
 
+const normalizeCsvHeader = (value: unknown): string =>
+    typeof value === 'string'
+        ? value
+              .trim()
+              .replace(/^\uFEFF/, '')
+              .toLowerCase()
+        : '';
+
 const normalizeCell = (value: unknown): string =>
     typeof value === 'string' ? value.trim() : '';
 
@@ -66,7 +74,7 @@ const parseOptionalDate = (value: string): Date | null => {
 
 const getRowValue = (row: CsvRow, ...keys: string[]): string => {
     for (const key of keys) {
-        const value = normalizeCell(row[key]);
+        const value = normalizeCell(row[normalizeCsvHeader(key)]);
         if (value) {
             return value;
         }
@@ -111,11 +119,7 @@ function parseCsvBuffer(buffer: Buffer): Promise<CsvRow[]> {
         Readable.from(buffer)
             .pipe(
                 csv({
-                    mapHeaders: ({ header }) =>
-                        header
-                            .trim()
-                            .replace(/^\uFEFF/, '')
-                            .toLowerCase(),
+                    mapHeaders: ({ header }) => normalizeCsvHeader(header),
                 }),
             )
             .on('data', row => rows.push(row as CsvRow))
@@ -125,18 +129,13 @@ function parseCsvBuffer(buffer: Buffer): Promise<CsvRow[]> {
 }
 
 function buildAttributesFromRow(row: CsvRow): ItemAttributeInput[] {
-    const bikeType = getRowValue(row, 'Type', 'type');
-    const color = getRowValue(row, 'Color', 'color');
+    const bikeType = getRowValue(row, 'type');
+    const color = getRowValue(row, 'color');
     const standoverHeight = parseOptionalNumber(
-        getRowValue(
-            row,
-            'Standover Height',
-            'standover height',
-            'standover height (in.)',
-        ),
+        getRowValue(row, 'standover height', 'standover height (in.)', 'size'),
     );
     const wheelSize = parseOptionalNumber(
-        getRowValue(row, 'Wheel Size', 'wheel size', 'wheel size (in.)'),
+        getRowValue(row, 'wheel size', 'wheel size (in.)'),
     );
 
     const attributes: PartialItemAttributeInput[] = [
@@ -180,8 +179,8 @@ async function findOrCreateDonorByEmail(email: string) {
         where: { email },
     });
 
-    // If no account exists for this donor:
     if (!existingUser) {
+        // If no account exists for this donor:
         const name = email.split('@')[0];
         const donorPassword = getRandomPassword();
         const hashedPassword = await bcrypt.hash(donorPassword, 10);
@@ -209,13 +208,11 @@ async function findOrCreateDonorByEmail(email: string) {
         */
     }
 
-    // If donor exists
     if (existingDonor) {
         return existingDonor;
     }
-
-    // If not, create a new one
-    return prisma.donor.create({
+    // No donor exists yet, so create one whether or not a user account already exists.
+    return await prisma.donor.create({
         data: {
             firstName: '',
             lastName: '',
@@ -269,30 +266,26 @@ router.post(
 
             for (const [index, row] of rows.entries()) {
                 try {
-                    const rawCsvId = getRowValue(row, 'ID', 'id');
+                    // Add new aliases here when we want to support more column names.
+                    const rawCsvId = getRowValue(row, 'id', 'cont #');
                     const csvId = Number(rawCsvId);
                     const category = getRowValue(
                         row,
-                        'Bike Name',
                         'bike name',
-                        'Item Name',
                         'item name',
-                        'Category',
                         'category',
+                        'bike make & model',
                     );
                     const donorEmail = getRowValue(
                         row,
-                        'Donor Email',
-                        'donorEmail',
                         'donor email',
-                        'Email',
+                        'donor',
                         'email',
                     ).toLowerCase();
                     const rawDateDonated = getRowValue(
                         row,
-                        'Date Donated',
                         'date donated',
-                        'Date',
+                        'donation date',
                         'date',
                     );
                     const parsedDateDonated = parseOptionalDate(rawDateDonated);
@@ -424,6 +417,7 @@ router.get('/api/csv', async (req: Request, res: Response) => {
             ),
         ).sort();
 
+        // If you want to add new supported columns, add them here (make sure not to duplicate with attributes)
         const headers = [
             'ID',
             'Item Type',

@@ -83,7 +83,6 @@ const AdminImportExport: React.FC = () => {
                 if (failedRows.length > 0) {
                     setMessage(data.message || 'Import completed with errors.');
                     setImportFailures(failedRows);
-                    setSelectedFile(null);
                     return;
                 }
 
@@ -95,7 +94,6 @@ const AdminImportExport: React.FC = () => {
                     `Import completed. ${data.importedCount ?? 0} item(s) added.`,
             );
             setImportFailures(normalizeImportFailures(data.failedRows));
-            setSelectedFile(null);
         } catch (err: any) {
             setError(err.message || 'Failed to import CSV file.');
             setImportFailures([]);
@@ -161,6 +159,15 @@ const AdminImportExport: React.FC = () => {
             >
                 <div style={{ marginBottom: 20 }}>
                     <h4>Import CSV</h4>
+                    <p>
+                        Please ensure your CSV columns contain at least an "item
+                        name", a numerical "id", and a valid "donor email".
+                        Ensure your IDs do not collide, or they will not import.
+                    </p>
+                    <p>
+                        Other optional fields: "standover height", "type",
+                        "color", "wheel size", and "donation date"
+                    </p>
                     <input
                         className="import-file-input"
                         type="file"
