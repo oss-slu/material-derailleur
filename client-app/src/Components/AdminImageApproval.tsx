@@ -143,7 +143,9 @@ const AdminImageApproval: React.FC = () => {
                             {approvingAll ? 'Approving...' : 'Approve all'}
                         </button>
                     </div>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <table
+                        style={{ width: '100%', borderCollapse: 'collapse' }}
+                    >
                         <thead>
                             <tr>
                                 <th>Donation ID</th>
@@ -160,7 +162,9 @@ const AdminImageApproval: React.FC = () => {
                         <tbody>
                             {donationStatuses.map(donationStatus => (
                                 <tr key={donationStatus.id}>
-                                    <td>{donationStatus.donatedItemId ?? '-'}</td>
+                                    <td>
+                                        {donationStatus.donatedItemId ?? '-'}
+                                    </td>
                                     <td>{donationStatus.id ?? '-'}</td>
                                     <td>{donationStatus.statusType ?? '-'}</td>
                                     <td>{donationStatus.submitter ?? '-'}</td>
@@ -181,7 +185,8 @@ const AdminImageApproval: React.FC = () => {
                                         <div className="image-scroll-container">
                                             {donationStatus.images.length > 0
                                                 ? (
-                                                      donationStatus.images || []
+                                                      donationStatus.images ||
+                                                      []
                                                   ).map((image, idx) => (
                                                       <img
                                                           key={idx}
