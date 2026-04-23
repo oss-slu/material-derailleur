@@ -63,9 +63,9 @@ describe('ImportExport API Tests', () => {
 
     it('imports multiple donated items from a CSV file', async () => {
         const csv = [
-            'ID,Bike Name,Type,Color,Wheel Size,Donor Email',
-            '101,Trek 820,MTB,Blue,26,existing@example.com',
-            '102,Giant Kids,Kid,Green,20,new@example.com',
+            'ID,Bike Name,Type,Color,Wheel Size,Donor Email,Date',
+            '101,Trek 820,MTB,Blue,26,existing@example.com,2025-01-15',
+            '102,Giant Kids,Kid,Green,20,new@example.com,',
         ].join('\n');
 
         (prisma.donor.findUnique as jest.Mock)
@@ -111,6 +111,7 @@ describe('ImportExport API Tests', () => {
                     itemType: 'bicycle',
                     category: 'Trek 820',
                     donorId: 10,
+                    dateDonated: new Date('2025-01-15T00:00:00.000Z'),
                     attributes: {
                         create: expect.arrayContaining([
                             expect.objectContaining({
@@ -127,6 +128,16 @@ describe('ImportExport API Tests', () => {
                             }),
                         ]),
                     },
+                }),
+            }),
+        );
+
+        expect(prisma.donatedItemStatus.create).toHaveBeenNthCalledWith(
+            1,
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    dateModified: new Date('2025-01-15T00:00:00.000Z'),
+                    donatedItemId: 101,
                 }),
             }),
         );
@@ -284,6 +295,7 @@ describe('ImportExport API Tests', () => {
                     id: 201,
                     category: 'Round Trip Bike',
                     donorId: 20,
+                    dateDonated: new Date('2026-04-22T00:00:00.000Z'),
                     attributes: {
                         create: expect.arrayContaining([
                             expect.objectContaining({
@@ -307,6 +319,29 @@ describe('ImportExport API Tests', () => {
                 }),
             }),
         );
+    });
+
+    it('returns a failed row when the optional donated date is invalid', async () => {
+        const csv = [
+            'ID,Bike Name,Type,Color,Wheel Size,Donor Email,Date',
+            '501,Date Trouble,Road,Blue,27,dated@example.com,not-a-date',
+        ].join('\n');
+
+        const response = await request(app)
+            .post('/import-export/api/csv')
+            .attach('csvFile', Buffer.from(csv), 'invalid-date.csv');
+
+        expect(response.status).toBe(207);
+        expect(response.body.importedCount).toBe(0);
+        expect(response.body.failedCount).toBe(1);
+        expect(response.body.failedRows).toEqual([
+            {
+                rowNumber: 2,
+                error: 'CSV row has an invalid donated item date',
+            },
+        ]);
+        expect(prisma.donatedItem.create).not.toHaveBeenCalled();
+        expect(prisma.donatedItemStatus.create).not.toHaveBeenCalled();
     });
 
     it('returns failed row details when import partially succeeds', async () => {

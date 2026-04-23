@@ -50,6 +50,20 @@ const parseOptionalNumber = (value: string): number | null => {
     return Number.isFinite(parsed) ? parsed : null;
 };
 
+const parseOptionalDate = (value: string): Date | null => {
+    if (!value) {
+        return null;
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+        return null;
+    }
+
+    parsed.setUTCHours(0, 0, 0, 0);
+    return parsed;
+};
+
 const getRowValue = (row: CsvRow, ...keys: string[]): string => {
     for (const key of keys) {
         const value = normalizeCell(row[key]);
@@ -242,8 +256,8 @@ router.post(
             const quantity = 1;
             const currentStatus = 'Received';
 
-            const dateDonatedDateTime = new Date();
-            dateDonatedDateTime.setUTCHours(0, 0, 0, 0);
+            const defaultDateDonatedDateTime = new Date();
+            defaultDateDonatedDateTime.setUTCHours(0, 0, 0, 0);
 
             const rows = await parseCsvBuffer(csvFile.buffer);
             if (rows.length === 0) {
@@ -274,6 +288,17 @@ router.post(
                         'Email',
                         'email',
                     ).toLowerCase();
+                    const rawDateDonated = getRowValue(
+                        row,
+                        'Date Donated',
+                        'date donated',
+                        'Date',
+                        'date',
+                    );
+                    const parsedDateDonated =
+                        parseOptionalDate(rawDateDonated);
+                    const dateDonatedDateTime =
+                        parsedDateDonated ?? defaultDateDonatedDateTime;
 
                     if (!rawCsvId || !Number.isInteger(csvId) || csvId <= 0) {
                         throw new Error(
@@ -287,6 +312,11 @@ router.post(
                     }
                     if (!donorEmail) {
                         throw new Error('CSV row is missing donor email');
+                    }
+                    if (rawDateDonated && !parsedDateDonated) {
+                        throw new Error(
+                            'CSV row has an invalid donated item date',
+                        );
                     }
 
                     const donor = await findOrCreateDonorByEmail(donorEmail);
