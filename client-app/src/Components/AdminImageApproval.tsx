@@ -10,6 +10,7 @@ const AdminImageApproval: React.FC = () => {
         DonatedItemStatus[]
     >([]);
     const [loading, setLoading] = useState<boolean>(true);
+    const [approvingAll, setApprovingAll] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
@@ -62,6 +63,39 @@ const AdminImageApproval: React.FC = () => {
         }
     };
 
+    const handleApproveAll = async () => {
+        if (donationStatuses.length === 0 || approvingAll) return;
+
+        setApprovingAll(true);
+        setError(null);
+
+        try {
+            for (const donationStatus of donationStatuses) {
+                const res = await fetch(
+                    `${base}donatedItem/status/review/${donationStatus.id}`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            Authorization: token ? `Bearer ${token}` : '',
+                            'Content-Type': 'application/json',
+                        },
+                    },
+                );
+
+                if (!res.ok) {
+                    const txt = await res.text();
+                    throw new Error(txt || res.statusText);
+                }
+            }
+
+            setDonationStatuses([]);
+        } catch (err: any) {
+            setError(err.message || 'Approve all failed');
+        } finally {
+            setApprovingAll(false);
+        }
+    };
+
     // If the admin denies the status update, delete it
     const handleDeny = async (id: number) => {
         try {
@@ -100,91 +134,104 @@ const AdminImageApproval: React.FC = () => {
             {donationStatuses.length === 0 ? (
                 <div>No statuses needing approval</div>
             ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                        <tr>
-                            <th>Donation ID</th>
-                            <th>Status ID</th>
-                            <th>Status</th>
-                            <th>Submitter</th>
-                            <th>Date Modified</th>
-                            <th>Donor Informed</th>
-                            <th>Images</th>
-                            <th>Action</th>
-                            <th>Visit Item</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {donationStatuses.map(donationStatus => (
-                            <tr key={donationStatus.id}>
-                                <td>{donationStatus.donatedItemId ?? '—'}</td>
-                                <td>{donationStatus.id ?? '—'}</td>
-                                <td>{donationStatus.statusType ?? '—'}</td>
-                                <td>{donationStatus.submitter ?? '—'}</td>
-                                <td>
-                                    {donationStatus.dateModified
-                                        ? formatDate(
-                                              donationStatus.dateModified,
-                                              false,
-                                          ).toString()
-                                        : '—'}
-                                </td>
-                                <td>
-                                    {donationStatus.donorInformed
-                                        ? 'Yes'
-                                        : 'No'}
-                                </td>
-                                <td>
-                                    <div className="image-scroll-container">
-                                        {donationStatus.images.length > 0
-                                            ? (donationStatus.images || []).map(
-                                                  (image, idx) => (
+                <>
+                    <div style={{ marginBottom: 16 }}>
+                        <button
+                            onClick={handleApproveAll}
+                            disabled={approvingAll}
+                        >
+                            {approvingAll ? 'Approving...' : 'Approve all'}
+                        </button>
+                    </div>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr>
+                                <th>Donation ID</th>
+                                <th>Status ID</th>
+                                <th>Status</th>
+                                <th>Submitter</th>
+                                <th>Date Modified</th>
+                                <th>Donor Informed</th>
+                                <th>Images</th>
+                                <th>Action</th>
+                                <th>Visit Item</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {donationStatuses.map(donationStatus => (
+                                <tr key={donationStatus.id}>
+                                    <td>{donationStatus.donatedItemId ?? '-'}</td>
+                                    <td>{donationStatus.id ?? '-'}</td>
+                                    <td>{donationStatus.statusType ?? '-'}</td>
+                                    <td>{donationStatus.submitter ?? '-'}</td>
+                                    <td>
+                                        {donationStatus.dateModified
+                                            ? formatDate(
+                                                  donationStatus.dateModified,
+                                                  false,
+                                              ).toString()
+                                            : '-'}
+                                    </td>
+                                    <td>
+                                        {donationStatus.donorInformed
+                                            ? 'Yes'
+                                            : 'No'}
+                                    </td>
+                                    <td>
+                                        <div className="image-scroll-container">
+                                            {donationStatus.images.length > 0
+                                                ? (
+                                                      donationStatus.images || []
+                                                  ).map((image, idx) => (
                                                       <img
                                                           key={idx}
                                                           src={image}
                                                           alt={`Status ${idx}`}
                                                           className="status-image"
                                                       />
-                                                  ),
-                                              )
-                                            : 'No images were provided'}
-                                    </div>
-                                </td>
-                                <td>
-                                    <button
-                                        onClick={() =>
-                                            handleApprove(donationStatus.id)
-                                        }
-                                    >
-                                        Approve
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            handleDeny(donationStatus.id)
-                                        }
-                                    >
-                                        Deny
-                                    </button>
-                                </td>
-                                <td>
-                                    {donationStatus.donatedItemId ? (
+                                                  ))
+                                                : 'No images were provided'}
+                                        </div>
+                                    </td>
+                                    <td>
                                         <button
                                             onClick={() =>
-                                                navigate(
-                                                    `/donations/${donationStatus.donatedItemId}`,
-                                                )
+                                                handleApprove(donationStatus.id)
                                             }
+                                            disabled={approvingAll}
                                         >
-                                            Visit
+                                            Approve
                                         </button>
-                                    ) : (
-                                        <div>Unavailable</div>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                                        <button
+                                            onClick={() =>
+                                                handleDeny(donationStatus.id)
+                                            }
+                                            disabled={approvingAll}
+                                        >
+                                            Deny
+                                        </button>
+                                    </td>
+                                    <td>
+                                        {donationStatus.donatedItemId ? (
+                                            <button
+                                                onClick={() =>
+                                                    navigate(
+                                                        `/donations/${donationStatus.donatedItemId}`,
+                                                    )
+                                                }
+                                                disabled={approvingAll}
+                                            >
+                                                Visit
+                                            </button>
+                                        ) : (
+                                            <div>Unavailable</div>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </>
             )}
         </div>
     );
