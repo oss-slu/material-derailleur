@@ -2,22 +2,23 @@ import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import { Readable } from 'stream';
 import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
 import prisma from '../prismaClient';
 import csv from 'csv-parser';
-import { validateProgram } from '../services/programService';
 import { validateIndividualFileSize } from '../services/donatedItemService';
-import {
-    sendApprovalRequestEmail,
-    sendPasswordReset,
-} from '../services/emailService';
 import { getRandomPassword } from './donorRoutes';
 import { authenticateUser } from './routeProtection';
+
+const MAX_CSV_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_CSV_IMPORT_ROWS = 25000;
+const CSV_FORMULA_PREFIX = /^[=+\-@]/;
 
 const router = Router();
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { files: 1 },
+    limits: {
+        files: 1,
+        fileSize: MAX_CSV_FILE_SIZE_BYTES,
+    },
 });
 
 type CsvRow = Record<string, string>;
@@ -47,7 +48,7 @@ const normalizeCsvHeader = (value: unknown): string =>
         : '';
 
 const normalizeCell = (value: unknown): string =>
-    typeof value === 'string' ? value.trim() : '';
+    typeof value === 'string' ? value.replace(/\u0000/g, '').trim() : '';
 
 const parseOptionalNumber = (value: string): number | null => {
     if (!value) {
@@ -88,7 +89,14 @@ const stringifyCsvValue = (value: unknown): string => {
         return '';
     }
 
-    return String(value).replace(/"/g, '""');
+    const normalized = String(value).replace(/\u0000/g, '');
+    const leftTrimmed = normalized.trimStart();
+    const sanitizedForFormula =
+        leftTrimmed && CSV_FORMULA_PREFIX.test(leftTrimmed)
+            ? `'${normalized}`
+            : normalized;
+
+    return sanitizedForFormula.replace(/"/g, '""');
 };
 
 const getAttributeExportValue = (attribute?: ExportAttribute): string => {
@@ -115,16 +123,26 @@ const getAttributeExportValue = (attribute?: ExportAttribute): string => {
 function parseCsvBuffer(buffer: Buffer): Promise<CsvRow[]> {
     return new Promise((resolve, reject) => {
         const rows: CsvRow[] = [];
+        const parser = csv({
+            mapHeaders: ({ header }) => normalizeCsvHeader(header),
+        });
 
-        Readable.from(buffer)
-            .pipe(
-                csv({
-                    mapHeaders: ({ header }) => normalizeCsvHeader(header),
-                }),
-            )
-            .on('data', row => rows.push(row as CsvRow))
-            .on('end', () => resolve(rows))
-            .on('error', reject);
+        parser.on('data', row => {
+            if (rows.length >= MAX_CSV_IMPORT_ROWS) {
+                parser.destroy(
+                    new Error(
+                        `CSV file exceeds the row limit of ${MAX_CSV_IMPORT_ROWS}.`,
+                    ),
+                );
+                return;
+            }
+
+            rows.push(row as CsvRow);
+        });
+        parser.on('end', () => resolve(rows));
+        parser.on('error', reject);
+
+        Readable.from(buffer).pipe(parser);
     });
 }
 
@@ -376,9 +394,10 @@ router.post(
                 error instanceof multer.MulterError &&
                 error.code === 'LIMIT_FILE_SIZE'
             ) {
-                return res
-                    .status(400)
-                    .json({ message: 'Attached file should not exceed 5MB.' });
+                const sizeInMb = MAX_CSV_FILE_SIZE_BYTES / 1024 / 1024;
+                return res.status(400).json({
+                    message: `Attached file should not exceed ${sizeInMb}MB.`,
+                });
             }
             if (error instanceof Error) {
                 return res.status(400).json({ error: error.message });

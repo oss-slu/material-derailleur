@@ -6,6 +6,15 @@ type ImportFailure = {
     error: string;
 };
 
+const VALIDATION_RULES = {
+    MAX_FILE_SIZE: 2 * 1024 * 1024,
+} as const;
+
+interface CSVValidationResult {
+    isValid: boolean;
+    error?: string;
+}
+
 const normalizeImportFailures = (value: unknown): ImportFailure[] => {
     if (!Array.isArray(value)) {
         return [];
@@ -35,6 +44,28 @@ const normalizeImportFailures = (value: unknown): ImportFailure[] => {
     });
 };
 
+export const validateCSV = (csv: File): CSVValidationResult => {
+    const lowerName = csv.name.toLowerCase();
+    const isCsvMime =
+        csv.type === 'text/csv' || csv.type === 'application/vnd.ms-excel';
+
+    if (!lowerName.endsWith('.csv') && !isCsvMime) {
+        return {
+            isValid: false,
+            error: 'Please upload a valid CSV file.',
+        };
+    }
+
+    if (csv.size > VALIDATION_RULES.MAX_FILE_SIZE) {
+        return {
+            isValid: false,
+            error: `File exceeds the ${VALIDATION_RULES.MAX_FILE_SIZE / 1024 / 1024}MB size limit.`,
+        };
+    }
+
+    return { isValid: true };
+};
+
 const AdminImportExport: React.FC = () => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
@@ -56,6 +87,11 @@ const AdminImportExport: React.FC = () => {
     const handleImport = async () => {
         if (!selectedFile) {
             setError('Please select a CSV file to import.');
+            return;
+        }
+        const validation = validateCSV(selectedFile);
+        if (!validation.isValid) {
+            setError(validation.error || 'Invalid CSV file.');
             return;
         }
 

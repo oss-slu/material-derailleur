@@ -70,22 +70,20 @@ const AdminImageApproval: React.FC = () => {
         setError(null);
 
         try {
-            for (const donationStatus of donationStatuses) {
-                const res = await fetch(
-                    `${base}donatedItem/status/review/${donationStatus.id}`,
-                    {
-                        method: 'PUT',
-                        headers: {
-                            Authorization: token ? `Bearer ${token}` : '',
-                            'Content-Type': 'application/json',
-                        },
+            const res = await fetch(
+                `${base}donatedItem/status/review/approve-all`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        Authorization: token ? `Bearer ${token}` : '',
+                        'Content-Type': 'application/json',
                     },
-                );
+                },
+            );
 
-                if (!res.ok) {
-                    const txt = await res.text();
-                    throw new Error(txt || res.statusText);
-                }
+            if (!res.ok) {
+                const txt = await res.text();
+                throw new Error(txt || res.statusText);
             }
 
             setDonationStatuses([]);
