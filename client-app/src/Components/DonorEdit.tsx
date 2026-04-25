@@ -4,20 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import '../css/DonorForm.css';
 import LoadingSpinner from './LoadingSpinner';
 
-interface Donor {
-    id: number;
-    firstName: string;
-    lastName: string;
-    contact: string;
-    email: string;
-    addressLine1: string;
-    addressLine2: string;
-    city: string;
-    state: string;
-    zipcode: string;
-    emailOptIn: boolean;
-}
-
 interface FormData {
     firstName: string;
     lastName: string;

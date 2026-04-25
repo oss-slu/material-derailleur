@@ -87,19 +87,19 @@ const DonorList: React.FC = () => {
             : currentDonors;
 
     return (
-        <div className="page">
-            <header className="page-header">
-                <h1 className="page-title">Donors</h1>
+        <div className="donor-list-page">
+            <header className="donor-list-header">
+                <h1 className="donor-list-title">Donors</h1>
                 <button
-                    className="btn btn-primary header-action"
+                    className="btn btn-primary donor-header-action"
                     onClick={handleAddNewDonorClick}
                 >
                     + Add Donor
                 </button>
             </header>
 
-            <div className="search-row">
-                <div className="search-bar">
+            <div className="donor-search-row">
+                <div className="donor-search-bar">
                     <input
                         type="text"
                         placeholder="Search for donor"
@@ -108,7 +108,7 @@ const DonorList: React.FC = () => {
                         onKeyDown={e => e.key === 'Enter' && handleSearch()}
                     />
                     <button
-                        className="btn btn-primary search-button"
+                        className="btn btn-primary donor-search-button"
                         onClick={handleSearch}
                     >
                         🔍
@@ -116,13 +116,13 @@ const DonorList: React.FC = () => {
                 </div>
             </div>
 
-            {error && <p className="error-message">{error}</p>}
+            {error && <p className="donor-error-message">{error}</p>}
 
             {donorsToShow.length === 0 ? (
-                <div className="empty-state">No donors available.</div>
+                <div className="donor-empty-state">No donors available.</div>
             ) : (
-                <div className="card">
-                    <div className="table-wrapper">
+                <div className="donor-card">
+                    <div className="donor-table-wrapper">
                         <table className="donor-table">
                             <thead>
                                 <tr>

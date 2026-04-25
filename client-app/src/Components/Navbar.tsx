@@ -52,7 +52,7 @@ const Navbar: React.FC = () => {
 
         // Ensure UI updates by reloading the page or using event dispatch
         window.dispatchEvent(new Event('storage'));
-        window.location.href = '/';
+        window.location.href = (process.env.PUBLIC_URL || '') + '/';
     };
 
     return (
@@ -205,6 +205,14 @@ const Navbar: React.FC = () => {
                                                         Image Review
                                                     </Link>
                                                 </li>
+                                                <li>
+                                                    <Link
+                                                        className="dropdown-item"
+                                                        to="/admin/image-approval"
+                                                    >
+                                                        Image Approval
+                                                    </Link>
+                                                </li>
                                             </ul>
                                         </li>
 
@@ -333,16 +341,12 @@ const Navbar: React.FC = () => {
                                                 style={{
                                                     fontWeight:
                                                         location.pathname ===
-                                                            '/about' ||
-                                                        location.pathname ===
-                                                            '/'
-                                                            ? 'normal'
-                                                            : 'bold',
+                                                        '/admin/user-management'
+                                                            ? 'bold'
+                                                            : 'normal',
                                                     color:
                                                         location.pathname ===
-                                                            '/about' ||
-                                                        location.pathname ===
-                                                            '/'
+                                                        '/admin/user-management'
                                                             ? 'black'
                                                             : 'inherit',
                                                 }}

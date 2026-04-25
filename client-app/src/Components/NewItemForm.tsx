@@ -3,6 +3,16 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from './LoadingSpinner';
 import '../css/DonorForm.css';
+import {
+    type AttributeValueType,
+    type SelectedAttribute,
+    type AttributeOption,
+    formatAttributeTypeLabel,
+    normalizeDescriptor,
+    fetchAttributes,
+    serializeAttributes,
+} from '../constants/attributeDefinitions';
+import AttributeEditor from './AttributeEditor';
 
 interface FormData {
     itemType: string;
@@ -13,16 +23,11 @@ interface FormData {
     imageFiles: File[];
     category: string;
     quantity: number;
+    selectedItemAttributes: SelectedAttribute[];
 }
 
 interface FormErrors {
     [key: string]: string;
-}
-
-interface Option {
-    value: string; // keep as string for <select>, store numeric id separately in id
-    label: string;
-    id?: number;
 }
 
 const NewItemForm: React.FC = () => {
@@ -35,18 +40,28 @@ const NewItemForm: React.FC = () => {
         donorId: null,
         programId: null,
         imageFiles: [],
-        dateDonated: '',
+        dateDonated: new Date().toISOString().split('T')[0] || '',
         category: '',
         quantity: 1,
+        selectedItemAttributes: [],
     });
 
-    const itemTypeOptions: Option[] = [
+    const itemTypeOptions: AttributeOption[] = [
         { value: 'bicycle', label: 'Bicycle' },
         { value: 'computer', label: 'Computer' },
     ];
 
-    const [donorEmailOptions, setDonorEmailOptions] = useState<Option[]>([]);
-    const [programOptions, setProgramOptions] = useState<Option[]>([]);
+    const [donorEmailOptions, setDonorEmailOptions] = useState<
+        AttributeOption[]
+    >([]);
+    const [programOptions, setProgramOptions] = useState<AttributeOption[]>([]);
+    const [attributeOptions, setAttributeOptions] = useState<AttributeOption[]>(
+        [],
+    );
+    const [selectedDescriptor, setSelectedDescriptor] = useState('');
+    const [customDescriptor, setCustomDescriptor] = useState('');
+    const [customAttributeType, setCustomAttributeType] =
+        useState<AttributeValueType>('string');
     const [previews, setPreviews] = useState<string[]>([]);
     const [errors, setErrors] = useState<FormErrors>({});
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -98,7 +113,10 @@ const NewItemForm: React.FC = () => {
 
         fetchDonorEmails();
         fetchPrograms();
-    }, []);
+        fetchAttributes(formData.itemType).then(options =>
+            setAttributeOptions(options),
+        );
+    }, [formData.itemType]);
 
     const convertToBase64 = (file: File): Promise<string> =>
         new Promise((resolve, reject) => {
@@ -237,6 +255,88 @@ const NewItemForm: React.FC = () => {
         return Object.keys(newErrors).length === 0;
     };
 
+    const addAttribute = (descriptorInput?: string) => {
+        const descriptor = (descriptorInput ?? selectedDescriptor).trim();
+        if (!descriptor) {
+            return;
+        }
+
+        const alreadySelected = formData.selectedItemAttributes.some(
+            attr =>
+                normalizeDescriptor(attr.descriptor) ===
+                normalizeDescriptor(descriptor),
+        );
+        if (alreadySelected) {
+            setSelectedDescriptor('');
+            setCustomDescriptor('');
+            return;
+        }
+
+        const existingOption = attributeOptions.find(
+            option =>
+                normalizeDescriptor(option.value) ===
+                normalizeDescriptor(descriptor),
+        );
+        const valueType = existingOption?.valueType ?? customAttributeType;
+
+        setFormData(prev => ({
+            ...prev,
+            selectedItemAttributes: [
+                {
+                    descriptor,
+                    valueType,
+                    value: '',
+                    booleanValue: null,
+                },
+                ...prev.selectedItemAttributes,
+            ],
+        }));
+
+        if (
+            !attributeOptions.some(
+                option =>
+                    normalizeDescriptor(option.value) ===
+                    normalizeDescriptor(descriptor),
+            )
+        ) {
+            setAttributeOptions(prev =>
+                [
+                    ...prev,
+                    {
+                        value: descriptor,
+                        label: descriptor,
+                        valueType,
+                    },
+                ].sort((a, b) => a.label.localeCompare(b.label)),
+            );
+        }
+
+        setSelectedDescriptor('');
+        setCustomDescriptor('');
+        setCustomAttributeType('string');
+    };
+
+    const removeAttribute = (descriptor: string) => {
+        setFormData(prev => ({
+            ...prev,
+            selectedItemAttributes: prev.selectedItemAttributes.filter(
+                attr => attr.descriptor !== descriptor,
+            ),
+        }));
+    };
+
+    const updateAttribute = (
+        descriptor: string,
+        updates: Partial<SelectedAttribute>,
+    ) => {
+        setFormData(prev => ({
+            ...prev,
+            selectedItemAttributes: prev.selectedItemAttributes.map(attr =>
+                attr.descriptor === descriptor ? { ...attr, ...updates } : attr,
+            ),
+        }));
+    };
+
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         setIsLoading(true);
         event.preventDefault();
@@ -262,6 +362,10 @@ const NewItemForm: React.FC = () => {
             fd.append('dateDonated', formData.dateDonated);
             fd.append('category', formData.category);
             fd.append('quantity', String(formData.quantity));
+            fd.append(
+                'itemAttributes',
+                serializeAttributes(formData.selectedItemAttributes || []),
+            );
 
             // run analysis by default; change to 'true' to opt-out
             fd.append('optOutAnalysis', 'false');
@@ -299,10 +403,14 @@ const NewItemForm: React.FC = () => {
             donorId: null,
             programId: null,
             imageFiles: [],
-            dateDonated: '',
+            dateDonated: new Date().toISOString().split('T')[0] || '',
             category: '',
             quantity: 1,
+            selectedItemAttributes: [],
         });
+        setSelectedDescriptor('');
+        setCustomDescriptor('');
+        setCustomAttributeType('string');
         setPreviews([]);
         setErrors({});
         setErrorMessage(null);
@@ -321,7 +429,7 @@ const NewItemForm: React.FC = () => {
         name: keyof FormData,
         type = 'text',
         required = true,
-        options?: Option[],
+        options?: AttributeOption[],
     ) => (
         <div className="form-field">
             <label htmlFor={name} className="block text-sm font-semibold mb-1">
@@ -360,6 +468,20 @@ const NewItemForm: React.FC = () => {
                         ))}
                     </div>
                 </div>
+            ) : name === 'selectedItemAttributes' ? (
+                <AttributeEditor
+                    selectedItemAttributes={formData.selectedItemAttributes}
+                    attributeOptions={attributeOptions}
+                    selectedDescriptor={selectedDescriptor}
+                    customDescriptor={customDescriptor}
+                    customAttributeType={customAttributeType}
+                    onSelectedDescriptorChange={setSelectedDescriptor}
+                    onCustomDescriptorChange={setCustomDescriptor}
+                    onCustomAttributeTypeChange={setCustomAttributeType}
+                    onAddAttribute={addAttribute}
+                    onRemoveAttribute={removeAttribute}
+                    onUpdateAttribute={updateAttribute}
+                />
             ) : options ? (
                 <select
                     id={name}
@@ -383,7 +505,7 @@ const NewItemForm: React.FC = () => {
                     value={String(formData[name] ?? '')}
                     onChange={handleChange}
                     className={`w-full px-3 py-2 rounded border ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
-                    disabled={name === 'currentStatus'}
+                    disabled={name === 'currentStatus' || name === 'quantity'}
                     min={name === 'quantity' ? 1 : undefined}
                 />
             )}
@@ -432,10 +554,17 @@ const NewItemForm: React.FC = () => {
                     false,
                     programOptions,
                 )}
-                {renderFormField('Category', 'category')}
+                {renderFormField('Item Name', 'category')}
                 {renderFormField('Quantity', 'quantity', 'number')}
                 {renderFormField('Date Donated', 'dateDonated', 'date')}
                 {renderFormField('Images (Max 5)', 'imageFiles', 'file', false)}
+                {renderFormField(
+                    'Attributes',
+                    'selectedItemAttributes',
+                    'select',
+                    false,
+                    attributeOptions,
+                )}
 
                 <div className="form-field full-width button-container">
                     <button

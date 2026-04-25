@@ -8,18 +8,16 @@ import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
 
 import donorRouter from './routes/donorRoutes';
 import programRouter from './routes/programRoutes';
 import donatedItemRouter from './routes/donatedItemRoutes';
 import donatedItemStatusRouter from './routes/donatedItemStatusRoutes';
 import passwordResetRouter from './routes/passwordResetRoutes';
-import barcodeRouter from './routes/barcode'; // barcode routes
+import barcodeRouter from './routes/barcode';
+import prisma from './prismaClient';
 
 dotenv.config(); // Load environment variables
-
-const prisma = new PrismaClient(); // Initialize Prisma Client
 const app = express();
 
 // CORS – allow frontend dev server for remote access
@@ -40,9 +38,9 @@ app.use(
     }),
 );
 
-// View engine (if you actually use Jade views)
+// View engine (if you actually use Pug views)
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.set('view engine', 'pug');
 
 // Standard middlewares
 app.use(logger('dev'));
@@ -62,7 +60,7 @@ app.use('/', barcodeRouter); // mount barcode routes at root (e.g. /api/barcode/
 
 // Health check
 app.get('/health', (_req: Request, res: Response) => {
-    res.json({ status: 'ok' });
+    res.status(200).json({ status: 'ok' });
 });
 
 // 404 handler

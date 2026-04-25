@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import '../css/AdminUserManagement.css';
 
 type PendingUser = {
     id: string;

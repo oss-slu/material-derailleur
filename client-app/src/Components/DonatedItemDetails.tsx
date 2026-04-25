@@ -1,22 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Stepper, Step, StepLabel, StepContent, Button } from '@mui/material';
+import { Stepper, Step, StepLabel, StepContent } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import PersonIcon from '@mui/icons-material/Person';
 import CategoryIcon from '@mui/icons-material/Category';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import '../css/DonatedItemDetails.css';
-import { Donor } from '../Modals/DonorModal';
-import { Program } from '../Modals/ProgramModal';
-import { DonatedItemStatus } from '../Modals/DonatedItemStatusModal';
 import { DonatedItem } from '../Modals/DonatedItemModal';
-import BarcodeDisplay from './BarcodeDisplay';
 import Barcode from 'react-barcode';
 
 const PRINT_STYLE_ID = 'donated-item-print-style';
 const PRINT_CONTAINER_ID = 'donated-item-print-container';
+
+export const formatDate = (dateString: string, isUTC: boolean) => {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Invalid date';
+    if (!isUTC)
+        date.setTime(date.getTime() + date.getTimezoneOffset() * 60 * 1000);
+    return date.toDateString();
+};
 
 const DonatedItemDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -24,10 +28,6 @@ const DonatedItemDetails: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>('');
     const navigate = useNavigate();
-
-    const handleAddNewDonationClick = (): void => {
-        navigate(`/donatedItem/status/${id}`);
-    };
 
     useEffect(() => {
         const fetchDonatedItemDetails = async () => {
@@ -62,14 +62,6 @@ const DonatedItemDetails: React.FC = () => {
 
         fetchDonatedItemDetails();
     }, [id]);
-
-    const formatDate = (dateString: string, isUTC: boolean) => {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return 'Invalid date';
-        if (!isUTC)
-            date.setTime(date.getTime() + date.getTimezoneOffset() * 60 * 1000);
-        return date.toDateString();
-    };
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
@@ -120,36 +112,36 @@ const DonatedItemDetails: React.FC = () => {
             const style = document.createElement('style');
             style.id = PRINT_STYLE_ID;
             style.textContent = `
-/* Hidden on screen */
-#${PRINT_CONTAINER_ID} { display: none; }
+                /* Hidden on screen */
+                #${PRINT_CONTAINER_ID} { display: none; }
 
-@media print {
-  body * { visibility: hidden !important; }
+                @media print {
+                body * { visibility: hidden !important; }
 
-  #${PRINT_CONTAINER_ID},
-  #${PRINT_CONTAINER_ID} * { visibility: visible !important; }
+                #${PRINT_CONTAINER_ID},
+                #${PRINT_CONTAINER_ID} * { visibility: visible !important; }
 
-  #${PRINT_CONTAINER_ID} {
-    display: flex !important;
-    position: fixed !important;
-    left: 0 !important;
-    top: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    padding: 12mm !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background: white !important;
-  }
+                #${PRINT_CONTAINER_ID} {
+                    display: flex !important;
+                    position: fixed !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    padding: 12mm !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    background: white !important;
+                }
 
-  #${PRINT_CONTAINER_ID} svg {
-    max-width: 95% !important;
-    height: auto !important;
-    display: block !important;
-  }
-}
+                #${PRINT_CONTAINER_ID} svg {
+                    max-width: 95% !important;
+                    height: auto !important;
+                    display: block !important;
+                }
+            }
             `;
             document.head.appendChild(style);
         }
@@ -226,31 +218,45 @@ const DonatedItemDetails: React.FC = () => {
                             </button>
                         </div>
                         <Stepper orientation="vertical">
-                            {donatedItem.statuses.map(status => (
-                                <Step
-                                    key={status.id}
-                                    active={true}
-                                    completed={false}
-                                >
-                                    <StepLabel>{`${status.statusType} (${formatDate(
-                                        status.dateModified,
-                                        false,
-                                    )})`}</StepLabel>
+                            {donatedItem.statuses.map(status =>
+                                status.approval ? (
+                                    // If approved
+                                    <Step
+                                        key={status.id}
+                                        active={true}
+                                        completed={false}
+                                    >
+                                        <StepLabel>{`${status.statusType} (${formatDate(
+                                            status.dateModified,
+                                            false,
+                                        )})`}</StepLabel>
 
-                                    <StepContent>
-                                        <div className="image-scroll-container">
-                                            {status.images.map((image, idx) => (
-                                                <img
-                                                    key={idx}
-                                                    src={image}
-                                                    alt={`Status Image ${idx}`}
-                                                    className="status-image"
-                                                />
-                                            ))}
-                                        </div>
-                                    </StepContent>
-                                </Step>
-                            ))}
+                                        <StepContent>
+                                            <div className="image-scroll-container">
+                                                {status.images.map(
+                                                    (image, idx) => (
+                                                        <img
+                                                            key={idx}
+                                                            src={image}
+                                                            alt={`Status ${idx}`}
+                                                            className="status-image"
+                                                        />
+                                                    ),
+                                                )}
+                                            </div>
+                                        </StepContent>
+                                    </Step>
+                                ) : (
+                                    // If not approved
+                                    <Step
+                                        key={status.id}
+                                        active={true}
+                                        completed={false}
+                                    >
+                                        <StepLabel>{`${status.statusType} (${formatDate(status.dateModified, false)}) (Pending)`}</StepLabel>
+                                    </Step>
+                                ),
+                            )}
                         </Stepper>
                     </section>
                 </div>
@@ -276,6 +282,14 @@ const DonatedItemDetails: React.FC = () => {
                             <strong>Last Updated:</strong>{' '}
                             {formatDate(donatedItem.lastUpdated, true)}
                         </p>
+                        {donatedItem.attributes.map(attr => (
+                            <p key={attr.id}>
+                                <strong>{attr.descriptor}:</strong>{' '}
+                                {attr.stringValue ??
+                                    attr.numberValue ??
+                                    (attr.booleanValue ? 'Yes' : 'No')}
+                            </p>
+                        ))}
                     </section>
 
                     <section
@@ -353,28 +367,33 @@ const DonatedItemDetails: React.FC = () => {
                             {donatedItem.donor.zipcode}
                         </p>
                     </section>
-
-                    <section className="program-details-section">
-                        <div className="section-header">
-                            <EventNoteIcon className="icon" />
-                            <h2>Program Details</h2>
-                        </div>
-                        <p>
-                            <strong>Name:</strong> {donatedItem.program?.name}
-                        </p>
-                        <p>
-                            <strong>Description:</strong>{' '}
-                            {donatedItem.program?.description}
-                        </p>
-                        <p>
-                            <strong>Start Date:</strong>{' '}
-                            {formatDate(donatedItem.program?.startDate, false)}
-                        </p>
-                        <p>
-                            <strong>Aim and Cause:</strong>{' '}
-                            {donatedItem.program?.aimAndCause}
-                        </p>
-                    </section>
+                    {donatedItem.program && (
+                        <section className="program-details-section">
+                            <div className="section-header">
+                                <EventNoteIcon className="icon" />
+                                <h2>Program Details</h2>
+                            </div>
+                            <p>
+                                <strong>Name:</strong>{' '}
+                                {donatedItem.program?.name}
+                            </p>
+                            <p>
+                                <strong>Description:</strong>{' '}
+                                {donatedItem.program?.description}
+                            </p>
+                            <p>
+                                <strong>Start Date:</strong>{' '}
+                                {formatDate(
+                                    donatedItem.program?.startDate,
+                                    false,
+                                )}
+                            </p>
+                            <p>
+                                <strong>Aim and Cause:</strong>{' '}
+                                {donatedItem.program?.aimAndCause}
+                            </p>
+                        </section>
+                    )}
                 </div>
             </div>
         </div>

@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
-import prisma from '../prismaClient'; // Import Prisma client
+import prisma from '../prismaClient';
 import { donorValidator } from '../validators/donorValidator';
+import { fetchImagesFromCloud } from '../services/donatedItemService';
+import { DonatedItemStatus } from '../modals/DonatedItemStatusModal';
 import {
     sendWelcomeEmail,
     sendPasswordReset,
@@ -10,7 +12,7 @@ import {
 import express from 'express';
 import { authenticateUser } from './routeProtection';
 import bcrypt from 'bcryptjs';
-import crypto from 'crypto'; // Make sure this is imported
+import crypto from 'crypto';
 
 import jwt from 'jsonwebtoken';
 
@@ -19,6 +21,10 @@ const router = Router();
 interface Donor {
     email: string;
     name?: string;
+}
+
+interface DonorDonation {
+    statuses: DonatedItemStatus[];
 }
 
 router.post('/', donorValidator, async (req: Request, res: Response) => {
@@ -54,11 +60,11 @@ router.post('/', donorValidator, async (req: Request, res: Response) => {
 router.get('/', async (req: Request, res: Response) => {
     try {
         const permGranted = await authenticateUser(req, res, {
-            requiredRank: 2,
+            requiredRank: 1,
         });
         if (permGranted) {
             const donors = await prisma.donor.findMany();
-            res.json(donors);
+            res.status(200).json(donors);
         }
     } catch (error) {
         console.log('Error fetching donor:', error);
@@ -81,7 +87,7 @@ router.get('/emails', async (req: Request, res: Response) => {
         const donorEmails = donors.map(({ email }: { email: string }) => email);
         // const donorEmails = donors.map(({ email}) => email);
 
-        res.json(donorEmails);
+        res.status(200).json(donorEmails);
     } catch (error) {
         console.error('Error fetching donor emails:', error);
         res.status(500).json({ message: 'Error fetching donor emails' });
@@ -207,7 +213,7 @@ router.get('/pending', async (req: Request, res: Response) => {
             },
         });
 
-        res.json(pendingUsers);
+        res.status(200).json(pendingUsers);
     } catch (error) {
         console.error('Error fetching pending users:', error);
         res.status(500).json({ message: 'Error fetching pending users' });
@@ -234,7 +240,7 @@ router.get('/users', async (req: Request, res: Response) => {
             orderBy: { createdAt: 'desc' },
         });
 
-        res.json(users);
+        res.status(200).json(users);
     } catch (error) {
         console.error('Error fetching users:', error);
         res.status(500).json({ message: 'Error fetching users' });
@@ -351,37 +357,41 @@ router.post('/edit', async (req: Request, res: Response) => {
 });
 
 router.get('/me', async (req: Request, res: Response) => {
-    const permitted = await authenticateUser(req, res, { requiredRank: 0 }); // Donor or Admin
+    const permitted = await authenticateUser(req, res, { requiredRank: 0 });
     if (!permitted) return;
 
     const user = (req as any).user;
 
     try {
-        const profile = await prisma.donor.findFirst({
-            // Would not let me run it with unique
-
-            // FUTURE ME, REVERT BACK TO findUnique!!!!
+        const profile = await prisma.donor.findUnique({
             where: { email: user.email },
-            select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                contact: true,
-                addressLine1: true,
-                addressLine2: true,
-                city: true,
-                state: true,
-                zipcode: true,
-                emailOptIn: true,
+        });
+
+        console.log('Fetched donor profile:', profile);
+        const donations = await prisma.donatedItem.findMany({
+            where: { donorId: profile?.id },
+            include: {
+                statuses: {
+                    orderBy: { dateModified: 'desc' },
+                },
             },
         });
 
-        const donations = await prisma.donatedItem.findMany({
-            where: { donorId: profile?.id },
-        });
+        // hydrate images from cloud for each donation status
+        await Promise.all(
+            donations.map(async (donation: DonorDonation) => {
+                await Promise.all(
+                    donation.statuses.map(async (status: DonatedItemStatus) => {
+                        const filenames = status.imageUrls || [];
+                        const encodedImages =
+                            await fetchImagesFromCloud(filenames);
+                        status.images = encodedImages;
+                    }),
+                );
+            }),
+        );
 
-        res.json({ profile, donations });
+        res.status(200).json({ profile, donations });
     } catch (error) {
         console.error('Error fetching donor data:', error);
         res.status(500).json({ message: 'Internal server error' });

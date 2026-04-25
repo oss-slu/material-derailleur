@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
     const footerStyle: React.CSSProperties = {
@@ -30,9 +31,9 @@ const Footer = () => {
                 </span>{' '}
                 &nbsp;|&nbsp; 2414 Menard Street, St. Louis, MO 63104
                 &nbsp;|&nbsp; (314) 664-0828
-                <a href="/contact" style={linkStyle}>
+                <Link to="/contact" style={linkStyle}>
                     Contact Page
-                </a>
+                </Link>
             </div>
         </footer>
     );

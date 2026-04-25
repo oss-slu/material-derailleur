@@ -12,27 +12,27 @@
     --shadow: 0 10px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.page {
+.donor-list-page {
     min-height: 100vh;
     background: var(--bg-soft);
     padding-bottom: 40px;
     color: var(--text);
 }
 
-.page-header {
+.donor-list-header {
     position: relative;
     padding: 40px 24px 20px;
     text-align: center;
 }
 
-.page-title {
+.donor-list-title {
     margin: 0;
     font-size: 36px;
     font-weight: 800;
     letter-spacing: 0.3px;
 }
 
-.header-action {
+.donor-header-action {
     position: fixed;
     right: 24px;
     top: 80px;
@@ -47,20 +47,20 @@
         filter 0.12s ease;
 }
 
-.search-row {
+.donor-search-row {
     display: flex;
     justify-content: center;
     margin: 12px 0 24px;
 }
 
 /* make search-bar centered and keep input/button together */
-.search-bar {
+.donor-search-bar {
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.search-bar input {
+.donor-search-bar input {
     width: min(790px, 80vw);
     padding: 12px 14px;
     border: 1px solid var(--border);
@@ -73,7 +73,7 @@
     box-sizing: border-box;
 }
 
-.search-button {
+.donor-search-button {
     padding: 0 20px;
     display: inline-flex;
     align-items: center;
@@ -88,14 +88,14 @@
     font-size: 16px;
 }
 
-.search-bar input:focus,
-.search-button:focus {
+.donor-search-bar input:focus,
+.donor-search-button:focus {
     outline: none;
     box-shadow: 0 6px 18px rgba(28, 126, 214, 0.08);
 }
 
 /* Card container for table (white on blue bg) */
-.card {
+.donor-card {
     width: min(1100px, 94vw);
     margin: 0 auto;
     background: var(--card);
@@ -105,7 +105,7 @@
     overflow: hidden;
 }
 
-.table-wrapper {
+.donor-table-wrapper {
     width: 100%;
     overflow-x: auto;
 }
@@ -177,7 +177,7 @@
 }
 
 /* Empty state to mirror “No programs available.” look */
-.empty-state {
+.donor-empty-state {
     text-align: center;
     color: var(--muted);
     font-size: 16px;
@@ -185,7 +185,7 @@
 }
 
 /* Error */
-.error-message {
+.donor-error-message {
     width: min(800px, 90vw);
     margin: 0 auto 16px;
     color: #b00020;
@@ -271,11 +271,11 @@
 
 /* Responsive */
 @media (max-width: 640px) {
-    .header-action {
+    .donor-header-action {
         top: 64px;
         right: 16px;
     }
-    .page-title {
+    .donor-list-title {
         font-size: 28px;
     }
     .btn {
@@ -286,7 +286,7 @@
 
 /* restore small gap on very small screens so button doesn't overlap */
 @media (max-width: 360px) {
-    .search-bar {
+    .donor-search-bar {
         gap: 6px;
     }
 }
