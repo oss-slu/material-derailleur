@@ -15,6 +15,7 @@ import donatedItemRouter from './routes/donatedItemRoutes';
 import donatedItemStatusRouter from './routes/donatedItemStatusRoutes';
 import passwordResetRouter from './routes/passwordResetRoutes';
 import barcodeRouter from './routes/barcode';
+import importExportRouter from './routes/importExportRoutes';
 import prisma from './prismaClient';
 
 dotenv.config(); // Load environment variables
@@ -57,6 +58,7 @@ app.use('/passwordReset', passwordResetRouter);
 app.use('/donatedItem', donatedItemRouter);
 app.use('/donatedItem/status', donatedItemStatusRouter);
 app.use('/', barcodeRouter); // mount barcode routes at root (e.g. /api/barcode/... inside router)
+app.use('/', importExportRouter);
 
 // Health check
 app.get('/health', (_req: Request, res: Response) => {

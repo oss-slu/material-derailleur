@@ -92,7 +92,7 @@ export const sendAccountUpdateEmail = async (
     const mailOptions = {
         from: `Donation Team <${process.env.SMTP_USER}>`,
         to: recipientEmail,
-        subject: 'Material Donor Mutual Assist Account Update',
+        subject: 'Material Derailleur Account Update',
         html: `
             <h2>Dear ${userName},</h2>
             <p>Your account status has changed.</p>
@@ -111,7 +111,6 @@ export const sendAccountUpdateEmail = async (
 };
 
 // Function to send a password reset
-
 export const sendPasswordReset = async (
     recipientEmail: string,
     resetToken: string,
@@ -120,10 +119,10 @@ export const sendPasswordReset = async (
     const mailOptions = {
         from: `Donation Team <${process.env.SMTP_USER}>`,
         to: recipientEmail,
-        subject: 'Material Donor Mutual Assist Password Reset',
+        subject: 'Material Derailleur Password Reset',
         html: `
             <h2>Hello there!</h2>
-            <<p>We received a request to reset your password. If this was you, click the link below:</p>
+            <p>We received a request to reset your password. If this was you, click the link below:</p>
             <p><a href="${resetUrl}" style="color: blue; text-decoration: underline;">${resetUrl}</a></p>
             <p><strong>This link will expire in 60 minutes.</strong></p>
             <p>If this wasn’t you, please ignore this email.</p>
@@ -142,7 +141,6 @@ export const sendPasswordReset = async (
 };
 
 // Function to send a donation confirmation email
-
 export const sendDonationEmail = async (
     recipientEmail: string,
     donorName: string,

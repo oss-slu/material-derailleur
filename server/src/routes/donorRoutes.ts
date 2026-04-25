@@ -94,7 +94,7 @@ router.get('/emails', async (req: Request, res: Response) => {
     }
 });
 
-function getRandomPassword() {
+export function getRandomPassword() {
     const charset =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890$&+,:;=?@#|'<>.^*()%!-";
     let valid = false;

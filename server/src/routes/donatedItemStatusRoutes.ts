@@ -225,6 +225,78 @@ router.get(
     },
 );
 
+// PUT /donatedItem/status/review/approve-all - Approve all pending statuses
+router.put('/review/approve-all', async (req: Request, res: Response) => {
+    try {
+        const permGranted = await authenticateUser(req, res, {
+            requiredRank: 3,
+        });
+        if (!permGranted) return;
+
+        const pendingStatuses = await prisma.donatedItemStatus.findMany({
+            where: { approval: false },
+        });
+
+        if (pendingStatuses.length === 0) {
+            return res.status(200).json({
+                message: 'No pending statuses to approve.',
+                approvedCount: 0,
+                emailFailureCount: 0,
+            });
+        }
+
+        await prisma.donatedItemStatus.updateMany({
+            where: { approval: false },
+            data: { approval: true },
+        });
+
+        const emailFailures: string[] = [];
+        for (const statusItem of pendingStatuses) {
+            if (!statusItem.donorInformed) {
+                continue;
+            }
+
+            try {
+                const donatedItem = await prisma.donatedItem.findUnique({
+                    where: { id: statusItem.donatedItemId },
+                    include: { donor: true },
+                });
+
+                if (!donatedItem?.donor.email) {
+                    continue;
+                }
+
+                await sendDonationUpdateEmail(
+                    donatedItem.donor.email,
+                    `${donatedItem.donor.firstName} ${donatedItem.donor.lastName}`,
+                    donatedItem.id.toString(),
+                    statusItem.statusType,
+                    statusItem.dateModified,
+                    statusItem.imageUrls,
+                );
+            } catch (error) {
+                console.error(
+                    `Error sending donor email for status ${statusItem.id}:`,
+                    error,
+                );
+                emailFailures.push(String(statusItem.id));
+            }
+        }
+
+        return res.status(200).json({
+            message: 'All pending statuses approved.',
+            approvedCount: pendingStatuses.length,
+            emailFailureCount: emailFailures.length,
+            emailFailureStatusIds: emailFailures,
+        });
+    } catch (error) {
+        console.error('Error approving all donation statuses:', error);
+        return res
+            .status(500)
+            .json({ message: 'Error approving all donation statuses' });
+    }
+});
+
 // PUT /donatedItem/status/review/:id - Approve status
 router.put('/review/:id', async (req: Request, res: Response) => {
     try {

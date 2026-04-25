@@ -24,6 +24,7 @@ import Contact from './Components/Contact.tsx';
 import Footer from './Components/Footer.tsx';
 import AdminImageReview from './Components/AdminImageReview';
 import AdminImageApproval from './Components/AdminImageApproval';
+import AdminImportExport from './Components/AdminImportExport';
 import BarcodeDisplay from './Components/BarcodeDisplay'; // added import
 import AdminUserManagement from './Components/AdminUserManagement';
 
@@ -111,7 +112,6 @@ function App() {
                                 </ProtectedRoute>
                             }
                         />
-                        {/* New admin review route */}
                         <Route
                             path="/admin/image-review"
                             element={<AdminImageReview />}
@@ -119,6 +119,14 @@ function App() {
                         <Route
                             path="/admin/image-approval"
                             element={<AdminImageApproval />}
+                        />
+                        <Route
+                            path="/admin/import-export"
+                            element={
+                                <ProtectedRoute allowedRole="ADMIN">
+                                    <AdminImportExport />
+                                </ProtectedRoute>
+                            }
                         />
                         <Route
                             path="/admin/user-management"

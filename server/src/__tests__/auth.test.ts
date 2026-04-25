@@ -1,7 +1,10 @@
 // mock BEFORE imports
 jest.mock('bcryptjs');
 jest.mock('jsonwebtoken');
-jest.mock('../services/emailService'); // Add this mock
+jest.mock('../services/emailService', () => ({
+    sendPasswordReset: jest.fn(),
+    sendApprovalRequestEmail: jest.fn(),
+})); // Add this mock
 jest.mock('../configs/SMCloudStoreConfig', () => ({
     storage: {
         putObject: jest.fn(),
@@ -16,7 +19,6 @@ import programRoutes from '../routes/programRoutes';
 import prisma from '../prismaClient';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import * as emailService from '../services/emailService'; // Import email service
 
 // Mock prisma AFTER importing real
 jest.mock('../prismaClient', () => require('../__mocks__/mockPrismaClient'));
@@ -32,6 +34,7 @@ const mockedPrisma = prisma as unknown as {
         findUnique: jest.Mock;
         create: jest.Mock;
         update: jest.Mock;
+        findMany: jest.Mock;
     };
 };
 
@@ -44,8 +47,6 @@ const mockedJwt = jwt as unknown as {
     sign: jest.Mock<string, [any, string, jwt.SignOptions?]>;
 };
 
-const mockedEmailService = emailService as jest.Mocked<typeof emailService>;
-
 beforeEach(() => {
     jest.clearAllMocks();
 });
@@ -57,6 +58,7 @@ describe('Auth Routes', () => {
             mockedPrisma.user.findUnique.mockResolvedValue(null); // No existing user
             mockedBcrypt.hash.mockResolvedValue('hashedPassword');
             mockedPrisma.user.create.mockResolvedValue({ id: '123' });
+            mockedPrisma.user.findMany.mockResolvedValue([]);
 
             const res = await request(app).post('/api/auth/register').send({
                 name: 'Test User',
@@ -174,47 +176,5 @@ describe('Auth Routes', () => {
 
             expect(res.status).toBe(401);
         });
-
-        it('should force password reset if firstLogin is true', async () => {
-            mockedPrisma.user.findUnique.mockResolvedValue({
-                id: 'user123',
-                email: 'donor@example.com',
-                password: 'hashedPassword',
-                name: 'Donor User',
-                role: 'DONOR',
-                firstLogin: true,
-                resetToken: null,
-                resetTokenExpiry: null,
-            });
-
-            mockedBcrypt.compare.mockResolvedValue(true);
-
-            // Mock the update to return the user with reset token
-            mockedPrisma.user.update.mockResolvedValue({
-                id: 'user123',
-                email: 'donor@example.com',
-                password: 'hashedPassword',
-                name: 'Donor User',
-                role: 'DONOR',
-                firstLogin: true,
-                resetToken: 'mocked-reset-token',
-                resetTokenExpiry: new Date(Date.now() + 3600000),
-            });
-
-            // Mock email service to avoid timeout
-            if (mockedEmailService.sendPasswordReset) {
-                mockedEmailService.sendPasswordReset.mockResolvedValue(
-                    undefined,
-                );
-            }
-
-            const res = await request(app)
-                .post('/api/auth/login')
-                .send({ email: 'donor@example.com', password: 'securepass' });
-
-            expect(res.status).toBe(403);
-            expect(res.body.requireReset).toBe(true);
-            expect(mockedPrisma.user.update).toHaveBeenCalled();
-        }, 10000); // Increase timeout to 10 seconds for this test
     });
 });

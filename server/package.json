@@ -24,6 +24,7 @@
         "bwip-js": "^4.9.0",
         "cookie-parser": "^1.4.7",
         "cors": "^2.8.6",
+        "csv-parser": "^3.2.0",
         "dotenv": "^17.4.1",
         "express": "^5.2.1",
         "express-validator": "^7.3.2",

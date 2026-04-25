@@ -1,0 +1,31 @@
+.import-file-input {
+    color: #222;
+    background: #fff;
+    border: 1px solid #cfcfcf;
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.import-file-input::file-selector-button {
+    background: #f3f4f6;
+    color: #111;
+    border: 1px solid #c7c7c7;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-right: 12px;
+    cursor: pointer;
+}
+
+.import-file-input::file-selector-button:hover {
+    background: #e5e7eb;
+}
+
+.import-file-input::-webkit-file-upload-button {
+    background: #f3f4f6;
+    color: #111;
+    border: 1px solid #c7c7c7;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-right: 12px;
+    cursor: pointer;
+}

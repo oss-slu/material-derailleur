@@ -30,6 +30,7 @@ export const DEFAULT_ATTRIBUTE_DEFINITIONS_BICYCLE: AttributeDefinition[] = [
     { descriptor: 'wheel size (in.)', valueType: 'number' },
     { descriptor: 'condition', valueType: 'string' },
     { descriptor: 'needs repair', valueType: 'boolean' },
+    { descriptor: 'location', valueType: 'string' },
     { descriptor: 'note', valueType: 'string' },
 ];
 
@@ -42,6 +43,7 @@ export const DEFAULT_ATTRIBUTE_DEFINITIONS_COMPUTER: AttributeDefinition[] = [
     { descriptor: 'cpu', valueType: 'string' },
     { descriptor: 'ram (GB)', valueType: 'number' },
     { descriptor: 'storage (GB)', valueType: 'number' },
+    { descriptor: 'location', valueType: 'string' },
     { descriptor: 'note', valueType: 'string' },
 ];
 
