@@ -42,7 +42,7 @@
         "react-dom": "^19.2.5",
         "react-icons": "^5.6.0",
         "react-modal": "^3.16.3",
-        "react-router-dom": "^7.14.0",
+        "react-router-dom": "^7.14.2",
         "react-zxing": "^2.1.0",
         "tldts": "^7.0.28",
         "ts-jest": "^29.4.9",
