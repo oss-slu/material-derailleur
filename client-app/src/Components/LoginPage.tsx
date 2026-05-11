@@ -54,6 +54,7 @@ const LoginPage: React.FC = () => {
 
                 ctx.font = '20px Arial';
                 ctx.fillStyle = 'black';
+
                 // ctx.fillText(text, 10, 28);
 
                 const metrics = ctx.measureText(text);

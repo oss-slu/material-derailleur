@@ -75,6 +75,8 @@ const DonatedItemsList: React.FC = () => {
     >(getAllDefaultAttributeDefinitions());
     const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
     const [itemTypes, setItemTypes] = useState<Set<string>>(new Set());
+    const [showCheckboxes, setShowCheckboxes] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
     const navigate = useNavigate();
 
@@ -524,6 +526,53 @@ const DonatedItemsList: React.FC = () => {
         navigate('/adddonation');
     };
 
+    const printSelectedBarcodes = () => {
+        const printContents = selectedIds
+            .map(id => {
+                const el = document.getElementById(`barcode-${id}`);
+                return el
+                    ? `
+          <div style="
+            page-break-after: always;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+          ">
+            ${el.innerHTML}
+          </div>
+        `
+                    : '';
+            })
+            .join('');
+
+        const printWindow = window.open('', '', 'width=800,height=600');
+
+        if (!printWindow) {
+            alert('Popup blocked — please allow popups to print barcodes.');
+            return;
+        }
+
+        printWindow.document.open();
+        printWindow.document.write(`
+    <html>
+      <head>
+        <title>Print Barcodes</title>
+      </head>
+      <body style="margin: 0; padding: 0;">
+        ${printContents}
+      </body>
+    </html>
+  `);
+        printWindow.document.close();
+
+        setTimeout(() => {
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        }, 300);
+    };
+
     const downloadBarcode = (id: number) => {
         // find the svg element rendered by react-barcode
         const svgEl = document.querySelector<SVGElement>(`#barcode-${id} svg`);
@@ -821,6 +870,46 @@ ${svgString}
                 >
                     Clear Filters
                 </button>
+
+                <button
+                    className="btn"
+                    type="button"
+                    onClick={() => setShowCheckboxes(true)}
+                    disabled={showCheckboxes}
+                    style={{
+                        background: '#fff',
+                        border: '1px solid #e5eaf0',
+                    }}
+                >
+                    Print Barcodes
+                </button>
+                {showCheckboxes && (
+                    <button
+                        className="btn btn-primary"
+                        onClick={e => {
+                            e.stopPropagation();
+                            printSelectedBarcodes();
+                        }}
+                        disabled={selectedIds.length === 0}
+                        type="button"
+                        style={{ marginLeft: 12 }}
+                    >
+                        Print Selected Barcodes
+                    </button>
+                )}
+                {showCheckboxes && (
+                    <button
+                        className="btn btn-primary"
+                        type="button"
+                        onClick={() => {
+                            setShowCheckboxes(false);
+                            setSelectedIds([]);
+                        }}
+                        style={{ marginLeft: 12 }}
+                    >
+                        Close
+                    </button>
+                )}
             </div>
 
             {advancedSearchOpen && (
@@ -1153,62 +1242,128 @@ ${svgString}
                     </tr>
                 </thead>
                 <tbody>
-                    {filteredItems.length > 0 ? (
-                        filteredItems.map((item, index) => (
-                            <tr
-                                key={item.id}
-                                className="clickable-row"
-                                onClick={() =>
-                                    navigate(`/donations/${item.id}`)
-                                }
-                            >
-                                <td>{index + 1}</td>
-                                <td>{item.id}</td>
-                                <td>{item.itemType}</td>
-                                <td>{item.category}</td>
-                                <td>{item.currentStatus}</td>
-                                <td>
-                                    {new Date(
-                                        item.dateDonated,
-                                    ).toLocaleDateString(undefined, {
-                                        timeZone: 'UTC',
-                                    })}
-                                </td>
-                                <td>
-                                    <div>
-                                        <div id={`barcode-${item.id}`}>
-                                            <Barcode
-                                                value={item.id.toString()}
-                                                format="CODE128"
-                                            />
+                    {donatedItems.length > 0 ? (
+                        donatedItems.map((item, index) => {
+                            const isVisible = filteredItems.some(
+                                f => f.id === item.id,
+                            );
+
+                            return (
+                                <tr
+                                    key={item.id}
+                                    className="clickable-row"
+                                    onClick={() =>
+                                        navigate(`/donations/${item.id}`)
+                                    }
+                                    style={{
+                                        display: isVisible
+                                            ? 'table-row'
+                                            : 'none',
+                                    }}
+                                >
+                                    <td>{index + 1}</td>
+                                    <td>{item.id}</td>
+                                    <td>{item.itemType}</td>
+                                    <td>{item.category}</td>
+                                    <td>{item.currentStatus}</td>
+                                    <td>
+                                        {new Date(
+                                            item.dateDonated,
+                                        ).toLocaleDateString(undefined, {
+                                            timeZone: 'UTC',
+                                        })}
+                                    </td>
+
+                                    <td>
+                                        <div
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '30px',
+                                            }}
+                                        >
+                                            {showCheckboxes && (
+                                                <div
+                                                    onClick={e =>
+                                                        e.stopPropagation()
+                                                    }
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedIds.includes(
+                                                            item.id,
+                                                        )}
+                                                        onChange={e => {
+                                                            e.stopPropagation();
+                                                            setSelectedIds(
+                                                                prev =>
+                                                                    prev.includes(
+                                                                        item.id,
+                                                                    )
+                                                                        ? prev.filter(
+                                                                              id =>
+                                                                                  id !==
+                                                                                  item.id,
+                                                                          )
+                                                                        : [
+                                                                              ...prev,
+                                                                              item.id,
+                                                                          ],
+                                                            );
+                                                        }}
+                                                        style={{
+                                                            transform:
+                                                                'scale(1.5)',
+                                                            marginRight: 8,
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            <div>
+                                                <div id={`barcode-${item.id}`}>
+                                                    <Barcode
+                                                        value={item.id.toString()}
+                                                        format="CODE128"
+                                                    />
+                                                </div>
+
+                                                <div style={{ marginTop: 6 }}>
+                                                    <button
+                                                        className="btn btn-link"
+                                                        onClick={e => {
+                                                            e.stopPropagation();
+                                                            downloadBarcode(
+                                                                item.id,
+                                                            );
+                                                        }}
+                                                        type="button"
+                                                    >
+                                                        Download SVG
+                                                    </button>
+
+                                                    <button
+                                                        className="btn btn-link"
+                                                        onClick={e => {
+                                                            e.stopPropagation();
+                                                            printBarcode(
+                                                                item.id,
+                                                            );
+                                                        }}
+                                                        type="button"
+                                                        style={{
+                                                            marginLeft: 8,
+                                                        }}
+                                                    >
+                                                        Print
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div style={{ marginTop: 6 }}>
-                                            <button
-                                                className="btn btn-link"
-                                                onClick={e => {
-                                                    e.stopPropagation();
-                                                    downloadBarcode(item.id);
-                                                }}
-                                                type="button"
-                                            >
-                                                Download SVG
-                                            </button>
-                                            <button
-                                                className="btn btn-link"
-                                                onClick={e => {
-                                                    e.stopPropagation();
-                                                    printBarcode(item.id);
-                                                }}
-                                                type="button"
-                                                style={{ marginLeft: 8 }}
-                                            >
-                                                Print
-                                            </button>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))
+                                    </td>
+                                </tr>
+                            );
+                        })
                     ) : (
                         <tr>
                             <td colSpan={7} style={{ padding: 24 }}>
