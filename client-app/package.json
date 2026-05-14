@@ -44,7 +44,7 @@
         "react-modal": "^3.16.3",
         "react-router-dom": "^7.14.0",
         "react-zxing": "^2.1.0",
-        "tldts": "^7.0.28",
+        "tldts": "^7.0.29",
         "ts-jest": "^29.4.9",
         "ts-node": "^10.9.2",
         "url": "^0.11.4",
