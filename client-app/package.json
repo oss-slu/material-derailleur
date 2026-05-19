@@ -36,7 +36,7 @@
         "nodemailer": "^8.0.5",
         "npx": "^10.2.2",
         "path-browserify": "^1.0.1",
-        "postcss": "^8.5.13",
+        "postcss": "^8.5.14",
         "react": "^19.2.5",
         "react-barcode": "^1.6.1",
         "react-dom": "^19.2.5",
