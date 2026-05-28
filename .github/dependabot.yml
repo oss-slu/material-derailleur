@@ -10,6 +10,13 @@ updates:
       include: "scope"
     allow:
       - dependency-type: "all"
+      - dependency-type: "direct"
+      - dependency-type: "production"
+    commit-message:
+      prefix: "deps"
+    # Auto Merge Rules
+    automerge: true
+    automerge-type: "pr"
 
   # Frontend (React)
   - package-ecosystem: "npm"
