@@ -22,7 +22,7 @@
     "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\""
   },
   "dependencies": {
-    "bwip-js": "^4.10.1",
+    "bwip-js": "^4.11.0",
     "cors": "^2.8.6",
     "express": "^5.2.1"
   }
