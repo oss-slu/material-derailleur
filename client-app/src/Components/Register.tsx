@@ -125,6 +125,7 @@ const Register: React.FC = () => {
         const { name, value } = e.target;
         const next = { ...credentials, [name]: value } as Credentials;
         setCredentials(next);
+        setErrorMessage('');
 
         if (name === 'password') {
             setPasswordStrength(computeStrength(value));
@@ -182,6 +183,30 @@ const Register: React.FC = () => {
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsLoading(true);
+
+        if (!credentials.name.trim()) {
+            setErrorMessage('Name is required');
+            setIsLoading(false);
+            return;
+        }
+
+        if (!credentials.email.trim()) {
+            setErrorMessage('Email is required');
+            setIsLoading(false);
+            return;
+        }
+
+        if (!credentials.password) {
+            setErrorMessage('Password is required');
+            setIsLoading(false);
+            return;
+        }
+
+        if (!credentials.confirm_password) {
+            setErrorMessage('Please confirm your password');
+            setIsLoading(false);
+            return;
+        }
 
         if (captchaValue !== captcha) {
             setErrorMessage('Incorrect CAPTCHA. Please try again.');
