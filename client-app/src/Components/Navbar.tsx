@@ -17,6 +17,13 @@ const Navbar: React.FC = () => {
             if (token) {
                 try {
                     const decoded = JSON.parse(atob(token.split('.')[1]));
+
+                    //Checks if the token is expired
+                    if (decoded.exp * 1000 < Date.now()) {
+                        handleLogout();
+                        return;
+                    }
+
                     setUserRole(decoded.role); // Save role from JWT
                     setUserStatus(decoded.status); // Save status from JWT
                 } catch (err) {
