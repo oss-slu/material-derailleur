@@ -18,7 +18,7 @@ const Navbar: React.FC = () => {
                 try {
                     const decoded = JSON.parse(atob(token.split('.')[1]));
 
-                    //Checks if the token is expired
+                    // Checks if the token is expired
                     if (decoded.exp * 1000 < Date.now()) {
                         handleLogout();
                         return;
