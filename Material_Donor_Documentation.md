@@ -22,7 +22,7 @@ Tori Willis — Developer
 
 Spring Semester 2026
 
-GitHub: https://github.com/oss-slu/material-donor-mutual-assist
+GitHub: https://github.com/oss-slu/material-derailleur
 
 # Table of Contents
 
