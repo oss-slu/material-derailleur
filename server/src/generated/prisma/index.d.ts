@@ -636,9 +636,8 @@ export namespace Prisma {
     // this type assumes the passed object is entirely optional
     type AtLeast<O extends object, K extends string> = NoExpand<
         O extends unknown
-            ?
-                  | (K extends keyof O ? { [P in K]: O[P] } & O : O)
-                  | ({ [P in keyof O as P extends K ? P : never]-?: O[P] } & O)
+            ? | (K extends keyof O ? { [P in K]: O[P] } & O : O)
+              | ({ [P in keyof O as P extends K ? P : never]-?: O[P] } & O)
             : never
     >;
 
@@ -1709,8 +1708,7 @@ export namespace Prisma {
          * Determine the order of Donors to fetch.
          */
         orderBy?:
-            | DonorOrderByWithRelationInput
-            | DonorOrderByWithRelationInput[];
+            DonorOrderByWithRelationInput | DonorOrderByWithRelationInput[];
         /**
          * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
          *
@@ -1810,8 +1808,9 @@ export namespace Prisma {
         Prisma.PrismaPromise<
             Array<
                 PickEnumerable<DonorGroupByOutputType, T['by']> & {
-                    [P in keyof T &
-                        keyof DonorGroupByOutputType]: P extends '_count'
+                    [
+                        P in keyof T & keyof DonorGroupByOutputType
+                    ]: P extends '_count'
                         ? T[P] extends boolean
                             ? number
                             : GetScalarType<T[P], DonorGroupByOutputType[P]>
@@ -2411,9 +2410,9 @@ export namespace Prisma {
                 Extends<'skip', Keys<T>>,
                 Extends<'take', Keys<T>>
             >,
-            OrderByArg extends True extends HasSelectOrTake
+            OrderByArg extends (True extends HasSelectOrTake
                 ? { orderBy: DonorGroupByArgs['orderBy'] }
-                : { orderBy?: DonorGroupByArgs['orderBy'] },
+                : { orderBy?: DonorGroupByArgs['orderBy'] }),
             OrderFields extends ExcludeUnderscoreKeys<
                 Keys<MaybeTupleToUnion<T['orderBy']>>
             >,
@@ -2421,8 +2420,8 @@ export namespace Prisma {
             ByValid extends Has<ByFields, OrderFields>,
             HavingFields extends GetHavingFields<T['having']>,
             HavingValid extends Has<ByFields, HavingFields>,
-            ByEmpty extends T['by'] extends never[] ? True : False,
-            InputErrors extends ByEmpty extends True
+            ByEmpty extends (T['by'] extends never[] ? True : False),
+            InputErrors extends (ByEmpty extends True
                 ? `Error: "by" must not be empty.`
                 : HavingValid extends False
                   ? {
@@ -2463,7 +2462,7 @@ export namespace Prisma {
                               [P in OrderFields]: P extends ByFields
                                   ? never
                                   : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
-                          }[OrderFields],
+                          }[OrderFields]),
         >(
             args: SubsetIntersection<T, DonorGroupByArgs, OrderByArg> &
                 InputErrors,
@@ -2632,8 +2631,7 @@ export namespace Prisma {
          * Determine the order of Donors to fetch.
          */
         orderBy?:
-            | DonorOrderByWithRelationInput
-            | DonorOrderByWithRelationInput[];
+            DonorOrderByWithRelationInput | DonorOrderByWithRelationInput[];
         /**
          * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
          *
@@ -2688,8 +2686,7 @@ export namespace Prisma {
          * Determine the order of Donors to fetch.
          */
         orderBy?:
-            | DonorOrderByWithRelationInput
-            | DonorOrderByWithRelationInput[];
+            DonorOrderByWithRelationInput | DonorOrderByWithRelationInput[];
         /**
          * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
          *
@@ -2744,8 +2741,7 @@ export namespace Prisma {
          * Determine the order of Donors to fetch.
          */
         orderBy?:
-            | DonorOrderByWithRelationInput
-            | DonorOrderByWithRelationInput[];
+            DonorOrderByWithRelationInput | DonorOrderByWithRelationInput[];
         /**
          * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
          *
@@ -3117,8 +3113,7 @@ export namespace Prisma {
          * Determine the order of Programs to fetch.
          */
         orderBy?:
-            | ProgramOrderByWithRelationInput
-            | ProgramOrderByWithRelationInput[];
+            ProgramOrderByWithRelationInput | ProgramOrderByWithRelationInput[];
         /**
          * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
          *
@@ -3212,8 +3207,9 @@ export namespace Prisma {
         Prisma.PrismaPromise<
             Array<
                 PickEnumerable<ProgramGroupByOutputType, T['by']> & {
-                    [P in keyof T &
-                        keyof ProgramGroupByOutputType]: P extends '_count'
+                    [
+                        P in keyof T & keyof ProgramGroupByOutputType
+                    ]: P extends '_count'
                         ? T[P] extends boolean
                             ? number
                             : GetScalarType<T[P], ProgramGroupByOutputType[P]>
@@ -3779,9 +3775,9 @@ export namespace Prisma {
                 Extends<'skip', Keys<T>>,
                 Extends<'take', Keys<T>>
             >,
-            OrderByArg extends True extends HasSelectOrTake
+            OrderByArg extends (True extends HasSelectOrTake
                 ? { orderBy: ProgramGroupByArgs['orderBy'] }
-                : { orderBy?: ProgramGroupByArgs['orderBy'] },
+                : { orderBy?: ProgramGroupByArgs['orderBy'] }),
             OrderFields extends ExcludeUnderscoreKeys<
                 Keys<MaybeTupleToUnion<T['orderBy']>>
             >,
@@ -3789,8 +3785,8 @@ export namespace Prisma {
             ByValid extends Has<ByFields, OrderFields>,
             HavingFields extends GetHavingFields<T['having']>,
             HavingValid extends Has<ByFields, HavingFields>,
-            ByEmpty extends T['by'] extends never[] ? True : False,
-            InputErrors extends ByEmpty extends True
+            ByEmpty extends (T['by'] extends never[] ? True : False),
+            InputErrors extends (ByEmpty extends True
                 ? `Error: "by" must not be empty.`
                 : HavingValid extends False
                   ? {
@@ -3831,7 +3827,7 @@ export namespace Prisma {
                               [P in OrderFields]: P extends ByFields
                                   ? never
                                   : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
-                          }[OrderFields],
+                          }[OrderFields]),
         >(
             args: SubsetIntersection<T, ProgramGroupByArgs, OrderByArg> &
                 InputErrors,
@@ -3994,8 +3990,7 @@ export namespace Prisma {
          * Determine the order of Programs to fetch.
          */
         orderBy?:
-            | ProgramOrderByWithRelationInput
-            | ProgramOrderByWithRelationInput[];
+            ProgramOrderByWithRelationInput | ProgramOrderByWithRelationInput[];
         /**
          * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
          *
@@ -4050,8 +4045,7 @@ export namespace Prisma {
          * Determine the order of Programs to fetch.
          */
         orderBy?:
-            | ProgramOrderByWithRelationInput
-            | ProgramOrderByWithRelationInput[];
+            ProgramOrderByWithRelationInput | ProgramOrderByWithRelationInput[];
         /**
          * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
          *
@@ -4106,8 +4100,7 @@ export namespace Prisma {
          * Determine the order of Programs to fetch.
          */
         orderBy?:
-            | ProgramOrderByWithRelationInput
-            | ProgramOrderByWithRelationInput[];
+            ProgramOrderByWithRelationInput | ProgramOrderByWithRelationInput[];
         /**
          * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
          *
@@ -4585,8 +4578,7 @@ export namespace Prisma {
         T extends DonatedItemAggregateArgs,
     > = {
         [P in keyof T & keyof AggregateDonatedItem]: P extends
-            | '_count'
-            | 'count'
+            '_count' | 'count'
             ? T[P] extends true
                 ? number
                 : GetScalarType<T[P], AggregateDonatedItem[P]>
@@ -4634,8 +4626,9 @@ export namespace Prisma {
         Prisma.PrismaPromise<
             Array<
                 PickEnumerable<DonatedItemGroupByOutputType, T['by']> & {
-                    [P in keyof T &
-                        keyof DonatedItemGroupByOutputType]: P extends '_count'
+                    [
+                        P in keyof T & keyof DonatedItemGroupByOutputType
+                    ]: P extends '_count'
                         ? T[P] extends boolean
                             ? number
                             : GetScalarType<
@@ -5263,9 +5256,9 @@ export namespace Prisma {
                 Extends<'skip', Keys<T>>,
                 Extends<'take', Keys<T>>
             >,
-            OrderByArg extends True extends HasSelectOrTake
+            OrderByArg extends (True extends HasSelectOrTake
                 ? { orderBy: DonatedItemGroupByArgs['orderBy'] }
-                : { orderBy?: DonatedItemGroupByArgs['orderBy'] },
+                : { orderBy?: DonatedItemGroupByArgs['orderBy'] }),
             OrderFields extends ExcludeUnderscoreKeys<
                 Keys<MaybeTupleToUnion<T['orderBy']>>
             >,
@@ -5273,8 +5266,8 @@ export namespace Prisma {
             ByValid extends Has<ByFields, OrderFields>,
             HavingFields extends GetHavingFields<T['having']>,
             HavingValid extends Has<ByFields, HavingFields>,
-            ByEmpty extends T['by'] extends never[] ? True : False,
-            InputErrors extends ByEmpty extends True
+            ByEmpty extends (T['by'] extends never[] ? True : False),
+            InputErrors extends (ByEmpty extends True
                 ? `Error: "by" must not be empty.`
                 : HavingValid extends False
                   ? {
@@ -5315,7 +5308,7 @@ export namespace Prisma {
                               [P in OrderFields]: P extends ByFields
                                   ? never
                                   : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
-                          }[OrderFields],
+                          }[OrderFields]),
         >(
             args: SubsetIntersection<T, DonatedItemGroupByArgs, OrderByArg> &
                 InputErrors,
@@ -5908,8 +5901,7 @@ export namespace Prisma {
         take?: number;
         skip?: number;
         distinct?:
-            | ItemAttributeScalarFieldEnum
-            | ItemAttributeScalarFieldEnum[];
+            ItemAttributeScalarFieldEnum | ItemAttributeScalarFieldEnum[];
     };
 
     /**
@@ -6012,6 +6004,8 @@ export namespace Prisma {
         donatedItemId: number | null;
         donorInformed: boolean | null;
         approval: boolean | null;
+        scheduledSendAt: Date | null;
+        emailSent: boolean | null;
         submitter: string | null;
     };
 
@@ -6022,6 +6016,8 @@ export namespace Prisma {
         donatedItemId: number | null;
         donorInformed: boolean | null;
         approval: boolean | null;
+        scheduledSendAt: Date | null;
+        emailSent: boolean | null;
         submitter: string | null;
     };
 
@@ -6033,6 +6029,8 @@ export namespace Prisma {
         imageUrls: number;
         donorInformed: number;
         approval: number;
+        scheduledSendAt: number;
+        emailSent: number;
         submitter: number;
         _all: number;
     };
@@ -6054,6 +6052,8 @@ export namespace Prisma {
         donatedItemId?: true;
         donorInformed?: true;
         approval?: true;
+        scheduledSendAt?: true;
+        emailSent?: true;
         submitter?: true;
     };
 
@@ -6064,6 +6064,8 @@ export namespace Prisma {
         donatedItemId?: true;
         donorInformed?: true;
         approval?: true;
+        scheduledSendAt?: true;
+        emailSent?: true;
         submitter?: true;
     };
 
@@ -6075,6 +6077,8 @@ export namespace Prisma {
         imageUrls?: true;
         donorInformed?: true;
         approval?: true;
+        scheduledSendAt?: true;
+        emailSent?: true;
         submitter?: true;
         _all?: true;
     };
@@ -6148,8 +6152,7 @@ export namespace Prisma {
         T extends DonatedItemStatusAggregateArgs,
     > = {
         [P in keyof T & keyof AggregateDonatedItemStatus]: P extends
-            | '_count'
-            | 'count'
+            '_count' | 'count'
             ? T[P] extends true
                 ? number
                 : GetScalarType<T[P], AggregateDonatedItemStatus[P]>
@@ -6184,6 +6187,8 @@ export namespace Prisma {
         imageUrls: string[];
         donorInformed: boolean;
         approval: boolean;
+        scheduledSendAt: Date | null;
+        emailSent: boolean;
         submitter: string;
         _count: DonatedItemStatusCountAggregateOutputType | null;
         _avg: DonatedItemStatusAvgAggregateOutputType | null;
@@ -6197,8 +6202,9 @@ export namespace Prisma {
     > = Prisma.PrismaPromise<
         Array<
             PickEnumerable<DonatedItemStatusGroupByOutputType, T['by']> & {
-                [P in keyof T &
-                    keyof DonatedItemStatusGroupByOutputType]: P extends '_count'
+                [
+                    P in keyof T & keyof DonatedItemStatusGroupByOutputType
+                ]: P extends '_count'
                     ? T[P] extends boolean
                         ? number
                         : GetScalarType<
@@ -6224,6 +6230,8 @@ export namespace Prisma {
             imageUrls?: boolean;
             donorInformed?: boolean;
             approval?: boolean;
+            scheduledSendAt?: boolean;
+            emailSent?: boolean;
             submitter?: boolean;
             donatedItem?: boolean | DonatedItemDefaultArgs<ExtArgs>;
         },
@@ -6241,6 +6249,8 @@ export namespace Prisma {
             imageUrls?: boolean;
             donorInformed?: boolean;
             approval?: boolean;
+            scheduledSendAt?: boolean;
+            emailSent?: boolean;
             submitter?: boolean;
             donatedItem?: boolean | DonatedItemDefaultArgs<ExtArgs>;
         },
@@ -6258,6 +6268,8 @@ export namespace Prisma {
             imageUrls?: boolean;
             donorInformed?: boolean;
             approval?: boolean;
+            scheduledSendAt?: boolean;
+            emailSent?: boolean;
             submitter?: boolean;
             donatedItem?: boolean | DonatedItemDefaultArgs<ExtArgs>;
         },
@@ -6272,6 +6284,8 @@ export namespace Prisma {
         imageUrls?: boolean;
         donorInformed?: boolean;
         approval?: boolean;
+        scheduledSendAt?: boolean;
+        emailSent?: boolean;
         submitter?: boolean;
     };
 
@@ -6285,6 +6299,8 @@ export namespace Prisma {
         | 'imageUrls'
         | 'donorInformed'
         | 'approval'
+        | 'scheduledSendAt'
+        | 'emailSent'
         | 'submitter',
         ExtArgs['result']['donatedItemStatus']
     >;
@@ -6320,6 +6336,8 @@ export namespace Prisma {
                 imageUrls: string[];
                 donorInformed: boolean;
                 approval: boolean;
+                scheduledSendAt: Date | null;
+                emailSent: boolean;
                 submitter: string;
             },
             ExtArgs['result']['donatedItemStatus']
@@ -6808,9 +6826,9 @@ export namespace Prisma {
                 Extends<'skip', Keys<T>>,
                 Extends<'take', Keys<T>>
             >,
-            OrderByArg extends True extends HasSelectOrTake
+            OrderByArg extends (True extends HasSelectOrTake
                 ? { orderBy: DonatedItemStatusGroupByArgs['orderBy'] }
-                : { orderBy?: DonatedItemStatusGroupByArgs['orderBy'] },
+                : { orderBy?: DonatedItemStatusGroupByArgs['orderBy'] }),
             OrderFields extends ExcludeUnderscoreKeys<
                 Keys<MaybeTupleToUnion<T['orderBy']>>
             >,
@@ -6818,8 +6836,8 @@ export namespace Prisma {
             ByValid extends Has<ByFields, OrderFields>,
             HavingFields extends GetHavingFields<T['having']>,
             HavingValid extends Has<ByFields, HavingFields>,
-            ByEmpty extends T['by'] extends never[] ? True : False,
-            InputErrors extends ByEmpty extends True
+            ByEmpty extends (T['by'] extends never[] ? True : False),
+            InputErrors extends (ByEmpty extends True
                 ? `Error: "by" must not be empty.`
                 : HavingValid extends False
                   ? {
@@ -6860,7 +6878,7 @@ export namespace Prisma {
                               [P in OrderFields]: P extends ByFields
                                   ? never
                                   : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
-                          }[OrderFields],
+                          }[OrderFields]),
         >(
             args: SubsetIntersection<
                 T,
@@ -6953,6 +6971,8 @@ export namespace Prisma {
         readonly imageUrls: FieldRef<'DonatedItemStatus', 'String[]'>;
         readonly donorInformed: FieldRef<'DonatedItemStatus', 'Boolean'>;
         readonly approval: FieldRef<'DonatedItemStatus', 'Boolean'>;
+        readonly scheduledSendAt: FieldRef<'DonatedItemStatus', 'DateTime'>;
+        readonly emailSent: FieldRef<'DonatedItemStatus', 'Boolean'>;
         readonly submitter: FieldRef<'DonatedItemStatus', 'String'>;
     }
 
@@ -7589,8 +7609,7 @@ export namespace Prisma {
     > = {
         where?: UserWhereInput;
         orderBy?:
-            | UserOrderByWithAggregationInput
-            | UserOrderByWithAggregationInput[];
+            UserOrderByWithAggregationInput | UserOrderByWithAggregationInput[];
         by: UserScalarFieldEnum[] | UserScalarFieldEnum;
         having?: UserScalarWhereWithAggregatesInput;
         take?: number;
@@ -7620,8 +7639,9 @@ export namespace Prisma {
         Prisma.PrismaPromise<
             Array<
                 PickEnumerable<UserGroupByOutputType, T['by']> & {
-                    [P in keyof T &
-                        keyof UserGroupByOutputType]: P extends '_count'
+                    [
+                        P in keyof T & keyof UserGroupByOutputType
+                    ]: P extends '_count'
                         ? T[P] extends boolean
                             ? number
                             : GetScalarType<T[P], UserGroupByOutputType[P]>
@@ -8199,9 +8219,9 @@ export namespace Prisma {
                 Extends<'skip', Keys<T>>,
                 Extends<'take', Keys<T>>
             >,
-            OrderByArg extends True extends HasSelectOrTake
+            OrderByArg extends (True extends HasSelectOrTake
                 ? { orderBy: UserGroupByArgs['orderBy'] }
-                : { orderBy?: UserGroupByArgs['orderBy'] },
+                : { orderBy?: UserGroupByArgs['orderBy'] }),
             OrderFields extends ExcludeUnderscoreKeys<
                 Keys<MaybeTupleToUnion<T['orderBy']>>
             >,
@@ -8209,8 +8229,8 @@ export namespace Prisma {
             ByValid extends Has<ByFields, OrderFields>,
             HavingFields extends GetHavingFields<T['having']>,
             HavingValid extends Has<ByFields, HavingFields>,
-            ByEmpty extends T['by'] extends never[] ? True : False,
-            InputErrors extends ByEmpty extends True
+            ByEmpty extends (T['by'] extends never[] ? True : False),
+            InputErrors extends (ByEmpty extends True
                 ? `Error: "by" must not be empty.`
                 : HavingValid extends False
                   ? {
@@ -8251,7 +8271,7 @@ export namespace Prisma {
                               [P in OrderFields]: P extends ByFields
                                   ? never
                                   : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
-                          }[OrderFields],
+                          }[OrderFields]),
         >(
             args: SubsetIntersection<T, UserGroupByArgs, OrderByArg> &
                 InputErrors,
@@ -8889,8 +8909,7 @@ export namespace Prisma {
         T extends ItemAttributeAggregateArgs,
     > = {
         [P in keyof T & keyof AggregateItemAttribute]: P extends
-            | '_count'
-            | 'count'
+            '_count' | 'count'
             ? T[P] extends true
                 ? number
                 : GetScalarType<T[P], AggregateItemAttribute[P]>
@@ -8933,8 +8952,9 @@ export namespace Prisma {
         Prisma.PrismaPromise<
             Array<
                 PickEnumerable<ItemAttributeGroupByOutputType, T['by']> & {
-                    [P in keyof T &
-                        keyof ItemAttributeGroupByOutputType]: P extends '_count'
+                    [
+                        P in keyof T & keyof ItemAttributeGroupByOutputType
+                    ]: P extends '_count'
                         ? T[P] extends boolean
                             ? number
                             : GetScalarType<
@@ -9526,9 +9546,9 @@ export namespace Prisma {
                 Extends<'skip', Keys<T>>,
                 Extends<'take', Keys<T>>
             >,
-            OrderByArg extends True extends HasSelectOrTake
+            OrderByArg extends (True extends HasSelectOrTake
                 ? { orderBy: ItemAttributeGroupByArgs['orderBy'] }
-                : { orderBy?: ItemAttributeGroupByArgs['orderBy'] },
+                : { orderBy?: ItemAttributeGroupByArgs['orderBy'] }),
             OrderFields extends ExcludeUnderscoreKeys<
                 Keys<MaybeTupleToUnion<T['orderBy']>>
             >,
@@ -9536,8 +9556,8 @@ export namespace Prisma {
             ByValid extends Has<ByFields, OrderFields>,
             HavingFields extends GetHavingFields<T['having']>,
             HavingValid extends Has<ByFields, HavingFields>,
-            ByEmpty extends T['by'] extends never[] ? True : False,
-            InputErrors extends ByEmpty extends True
+            ByEmpty extends (T['by'] extends never[] ? True : False),
+            InputErrors extends (ByEmpty extends True
                 ? `Error: "by" must not be empty.`
                 : HavingValid extends False
                   ? {
@@ -9578,7 +9598,7 @@ export namespace Prisma {
                               [P in OrderFields]: P extends ByFields
                                   ? never
                                   : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
-                          }[OrderFields],
+                          }[OrderFields]),
         >(
             args: SubsetIntersection<T, ItemAttributeGroupByArgs, OrderByArg> &
                 InputErrors,
@@ -9771,8 +9791,7 @@ export namespace Prisma {
          * Filter by unique combinations of ItemAttributes.
          */
         distinct?:
-            | ItemAttributeScalarFieldEnum
-            | ItemAttributeScalarFieldEnum[];
+            ItemAttributeScalarFieldEnum | ItemAttributeScalarFieldEnum[];
     };
 
     /**
@@ -9829,8 +9848,7 @@ export namespace Prisma {
          * Filter by unique combinations of ItemAttributes.
          */
         distinct?:
-            | ItemAttributeScalarFieldEnum
-            | ItemAttributeScalarFieldEnum[];
+            ItemAttributeScalarFieldEnum | ItemAttributeScalarFieldEnum[];
     };
 
     /**
@@ -9887,8 +9905,7 @@ export namespace Prisma {
          * Filter by unique combinations of ItemAttributes.
          */
         distinct?:
-            | ItemAttributeScalarFieldEnum
-            | ItemAttributeScalarFieldEnum[];
+            ItemAttributeScalarFieldEnum | ItemAttributeScalarFieldEnum[];
     };
 
     /**
@@ -10204,6 +10221,8 @@ export namespace Prisma {
         imageUrls: 'imageUrls';
         donorInformed: 'donorInformed';
         approval: 'approval';
+        scheduledSendAt: 'scheduledSendAt';
+        emailSent: 'emailSent';
         submitter: 'submitter';
     };
 
@@ -10489,13 +10508,9 @@ export namespace Prisma {
         contact?: StringNullableWithAggregatesFilter<'Donor'> | string | null;
         email?: StringWithAggregatesFilter<'Donor'> | string;
         addressLine1?:
-            | StringNullableWithAggregatesFilter<'Donor'>
-            | string
-            | null;
+            StringNullableWithAggregatesFilter<'Donor'> | string | null;
         addressLine2?:
-            | StringNullableWithAggregatesFilter<'Donor'>
-            | string
-            | null;
+            StringNullableWithAggregatesFilter<'Donor'> | string | null;
         state?: StringNullableWithAggregatesFilter<'Donor'> | string | null;
         city?: StringNullableWithAggregatesFilter<'Donor'> | string | null;
         zipcode?: StringWithAggregatesFilter<'Donor'> | string;
@@ -10668,23 +10683,15 @@ export namespace Prisma {
         quantity?: IntWithAggregatesFilter<'DonatedItem'> | number;
         currentStatus?: StringWithAggregatesFilter<'DonatedItem'> | string;
         dateDonated?:
-            | DateTimeWithAggregatesFilter<'DonatedItem'>
-            | Date
-            | string;
+            DateTimeWithAggregatesFilter<'DonatedItem'> | Date | string;
         lastUpdated?:
-            | DateTimeWithAggregatesFilter<'DonatedItem'>
-            | Date
-            | string;
+            DateTimeWithAggregatesFilter<'DonatedItem'> | Date | string;
         imagePath?:
-            | StringNullableWithAggregatesFilter<'DonatedItem'>
-            | string
-            | null;
+            StringNullableWithAggregatesFilter<'DonatedItem'> | string | null;
         analysisMetadata?: JsonNullableWithAggregatesFilter<'DonatedItem'>;
         donorId?: IntWithAggregatesFilter<'DonatedItem'> | number;
         programId?:
-            | IntNullableWithAggregatesFilter<'DonatedItem'>
-            | number
-            | null;
+            IntNullableWithAggregatesFilter<'DonatedItem'> | number | null;
     };
 
     export type DonatedItemStatusWhereInput = {
@@ -10698,6 +10705,9 @@ export namespace Prisma {
         imageUrls?: StringNullableListFilter<'DonatedItemStatus'>;
         donorInformed?: BoolFilter<'DonatedItemStatus'> | boolean;
         approval?: BoolFilter<'DonatedItemStatus'> | boolean;
+        scheduledSendAt?:
+            DateTimeNullableFilter<'DonatedItemStatus'> | Date | string | null;
+        emailSent?: BoolFilter<'DonatedItemStatus'> | boolean;
         submitter?: StringFilter<'DonatedItemStatus'> | string;
         donatedItem?: XOR<
             DonatedItemScalarRelationFilter,
@@ -10713,6 +10723,8 @@ export namespace Prisma {
         imageUrls?: SortOrder;
         donorInformed?: SortOrder;
         approval?: SortOrder;
+        scheduledSendAt?: SortOrderInput | SortOrder;
+        emailSent?: SortOrder;
         submitter?: SortOrder;
         donatedItem?: DonatedItemOrderByWithRelationInput;
     };
@@ -10729,6 +10741,12 @@ export namespace Prisma {
             imageUrls?: StringNullableListFilter<'DonatedItemStatus'>;
             donorInformed?: BoolFilter<'DonatedItemStatus'> | boolean;
             approval?: BoolFilter<'DonatedItemStatus'> | boolean;
+            scheduledSendAt?:
+                | DateTimeNullableFilter<'DonatedItemStatus'>
+                | Date
+                | string
+                | null;
+            emailSent?: BoolFilter<'DonatedItemStatus'> | boolean;
             submitter?: StringFilter<'DonatedItemStatus'> | string;
             donatedItem?: XOR<
                 DonatedItemScalarRelationFilter,
@@ -10746,6 +10764,8 @@ export namespace Prisma {
         imageUrls?: SortOrder;
         donorInformed?: SortOrder;
         approval?: SortOrder;
+        scheduledSendAt?: SortOrderInput | SortOrder;
+        emailSent?: SortOrder;
         submitter?: SortOrder;
         _count?: DonatedItemStatusCountOrderByAggregateInput;
         _avg?: DonatedItemStatusAvgOrderByAggregateInput;
@@ -10764,14 +10784,18 @@ export namespace Prisma {
             | DonatedItemStatusScalarWhereWithAggregatesInput[];
         id?: IntWithAggregatesFilter<'DonatedItemStatus'> | number;
         dateModified?:
-            | DateTimeWithAggregatesFilter<'DonatedItemStatus'>
-            | Date
-            | string;
+            DateTimeWithAggregatesFilter<'DonatedItemStatus'> | Date | string;
         statusType?: StringWithAggregatesFilter<'DonatedItemStatus'> | string;
         donatedItemId?: IntWithAggregatesFilter<'DonatedItemStatus'> | number;
         imageUrls?: StringNullableListFilter<'DonatedItemStatus'>;
         donorInformed?: BoolWithAggregatesFilter<'DonatedItemStatus'> | boolean;
         approval?: BoolWithAggregatesFilter<'DonatedItemStatus'> | boolean;
+        scheduledSendAt?:
+            | DateTimeNullableWithAggregatesFilter<'DonatedItemStatus'>
+            | Date
+            | string
+            | null;
+        emailSent?: BoolWithAggregatesFilter<'DonatedItemStatus'> | boolean;
         submitter?: StringWithAggregatesFilter<'DonatedItemStatus'> | string;
     };
 
@@ -10789,10 +10813,7 @@ export namespace Prisma {
         firstLogin?: BoolFilter<'User'> | boolean;
         resetToken?: StringNullableFilter<'User'> | string | null;
         resetTokenExpiry?:
-            | DateTimeNullableFilter<'User'>
-            | Date
-            | string
-            | null;
+            DateTimeNullableFilter<'User'> | Date | string | null;
     };
 
     export type UserOrderByWithRelationInput = {
@@ -10823,10 +10844,7 @@ export namespace Prisma {
             firstLogin?: BoolFilter<'User'> | boolean;
             resetToken?: StringNullableFilter<'User'> | string | null;
             resetTokenExpiry?:
-                | DateTimeNullableFilter<'User'>
-                | Date
-                | string
-                | null;
+                DateTimeNullableFilter<'User'> | Date | string | null;
         },
         'id' | 'email'
     >;
@@ -10860,18 +10878,13 @@ export namespace Prisma {
         email?: StringWithAggregatesFilter<'User'> | string;
         password?: StringWithAggregatesFilter<'User'> | string;
         role?:
-            | EnumRoleNullableWithAggregatesFilter<'User'>
-            | $Enums.Role
-            | null;
+            EnumRoleNullableWithAggregatesFilter<'User'> | $Enums.Role | null;
         status?: EnumUserStatusWithAggregatesFilter<'User'> | $Enums.UserStatus;
         createdAt?: DateTimeWithAggregatesFilter<'User'> | Date | string;
         firstLogin?: BoolWithAggregatesFilter<'User'> | boolean;
         resetToken?: StringNullableWithAggregatesFilter<'User'> | string | null;
         resetTokenExpiry?:
-            | DateTimeNullableWithAggregatesFilter<'User'>
-            | Date
-            | string
-            | null;
+            DateTimeNullableWithAggregatesFilter<'User'> | Date | string | null;
     };
 
     export type ItemAttributeWhereInput = {
@@ -10944,17 +10957,11 @@ export namespace Prisma {
         id?: IntWithAggregatesFilter<'ItemAttribute'> | number;
         descriptor?: StringWithAggregatesFilter<'ItemAttribute'> | string;
         stringValue?:
-            | StringNullableWithAggregatesFilter<'ItemAttribute'>
-            | string
-            | null;
+            StringNullableWithAggregatesFilter<'ItemAttribute'> | string | null;
         numberValue?:
-            | FloatNullableWithAggregatesFilter<'ItemAttribute'>
-            | number
-            | null;
+            FloatNullableWithAggregatesFilter<'ItemAttribute'> | number | null;
         booleanValue?:
-            | BoolNullableWithAggregatesFilter<'ItemAttribute'>
-            | boolean
-            | null;
+            BoolNullableWithAggregatesFilter<'ItemAttribute'> | boolean | null;
         donatedItemId?: IntWithAggregatesFilter<'ItemAttribute'> | number;
     };
 
@@ -11221,6 +11228,8 @@ export namespace Prisma {
         imageUrls?: DonatedItemStatusCreateimageUrlsInput | string[];
         donorInformed?: boolean;
         approval?: boolean;
+        scheduledSendAt?: Date | string | null;
+        emailSent?: boolean;
         submitter?: string;
         donatedItem: DonatedItemCreateNestedOneWithoutStatusesInput;
     };
@@ -11233,6 +11242,8 @@ export namespace Prisma {
         imageUrls?: DonatedItemStatusCreateimageUrlsInput | string[];
         donorInformed?: boolean;
         approval?: boolean;
+        scheduledSendAt?: Date | string | null;
+        emailSent?: boolean;
         submitter?: string;
     };
 
@@ -11242,6 +11253,9 @@ export namespace Prisma {
         imageUrls?: DonatedItemStatusUpdateimageUrlsInput | string[];
         donorInformed?: BoolFieldUpdateOperationsInput | boolean;
         approval?: BoolFieldUpdateOperationsInput | boolean;
+        scheduledSendAt?:
+            NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+        emailSent?: BoolFieldUpdateOperationsInput | boolean;
         submitter?: StringFieldUpdateOperationsInput | string;
         donatedItem?: DonatedItemUpdateOneRequiredWithoutStatusesNestedInput;
     };
@@ -11254,6 +11268,9 @@ export namespace Prisma {
         imageUrls?: DonatedItemStatusUpdateimageUrlsInput | string[];
         donorInformed?: BoolFieldUpdateOperationsInput | boolean;
         approval?: BoolFieldUpdateOperationsInput | boolean;
+        scheduledSendAt?:
+            NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+        emailSent?: BoolFieldUpdateOperationsInput | boolean;
         submitter?: StringFieldUpdateOperationsInput | string;
     };
 
@@ -11265,6 +11282,8 @@ export namespace Prisma {
         imageUrls?: DonatedItemStatusCreateimageUrlsInput | string[];
         donorInformed?: boolean;
         approval?: boolean;
+        scheduledSendAt?: Date | string | null;
+        emailSent?: boolean;
         submitter?: string;
     };
 
@@ -11274,6 +11293,9 @@ export namespace Prisma {
         imageUrls?: DonatedItemStatusUpdateimageUrlsInput | string[];
         donorInformed?: BoolFieldUpdateOperationsInput | boolean;
         approval?: BoolFieldUpdateOperationsInput | boolean;
+        scheduledSendAt?:
+            NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+        emailSent?: BoolFieldUpdateOperationsInput | boolean;
         submitter?: StringFieldUpdateOperationsInput | string;
     };
 
@@ -11285,6 +11307,9 @@ export namespace Prisma {
         imageUrls?: DonatedItemStatusUpdateimageUrlsInput | string[];
         donorInformed?: BoolFieldUpdateOperationsInput | boolean;
         approval?: BoolFieldUpdateOperationsInput | boolean;
+        scheduledSendAt?:
+            NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+        emailSent?: BoolFieldUpdateOperationsInput | boolean;
         submitter?: StringFieldUpdateOperationsInput | string;
     };
 
@@ -11325,10 +11350,7 @@ export namespace Prisma {
         firstLogin?: BoolFieldUpdateOperationsInput | boolean;
         resetToken?: NullableStringFieldUpdateOperationsInput | string | null;
         resetTokenExpiry?:
-            | NullableDateTimeFieldUpdateOperationsInput
-            | Date
-            | string
-            | null;
+            NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     };
 
     export type UserUncheckedUpdateInput = {
@@ -11342,10 +11364,7 @@ export namespace Prisma {
         firstLogin?: BoolFieldUpdateOperationsInput | boolean;
         resetToken?: NullableStringFieldUpdateOperationsInput | string | null;
         resetTokenExpiry?:
-            | NullableDateTimeFieldUpdateOperationsInput
-            | Date
-            | string
-            | null;
+            NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     };
 
     export type UserCreateManyInput = {
@@ -11372,10 +11391,7 @@ export namespace Prisma {
         firstLogin?: BoolFieldUpdateOperationsInput | boolean;
         resetToken?: NullableStringFieldUpdateOperationsInput | string | null;
         resetTokenExpiry?:
-            | NullableDateTimeFieldUpdateOperationsInput
-            | Date
-            | string
-            | null;
+            NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     };
 
     export type UserUncheckedUpdateManyInput = {
@@ -11389,10 +11405,7 @@ export namespace Prisma {
         firstLogin?: BoolFieldUpdateOperationsInput | boolean;
         resetToken?: NullableStringFieldUpdateOperationsInput | string | null;
         resetTokenExpiry?:
-            | NullableDateTimeFieldUpdateOperationsInput
-            | Date
-            | string
-            | null;
+            NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     };
 
     export type ItemAttributeCreateInput = {
@@ -11710,17 +11723,11 @@ export namespace Prisma {
         string_starts_with?: string | StringFieldRefInput<$PrismaModel>;
         string_ends_with?: string | StringFieldRefInput<$PrismaModel>;
         array_starts_with?:
-            | InputJsonValue
-            | JsonFieldRefInput<$PrismaModel>
-            | null;
+            InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
         array_ends_with?:
-            | InputJsonValue
-            | JsonFieldRefInput<$PrismaModel>
-            | null;
+            InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
         array_contains?:
-            | InputJsonValue
-            | JsonFieldRefInput<$PrismaModel>
-            | null;
+            InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
         lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
         lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
         gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
@@ -11856,17 +11863,11 @@ export namespace Prisma {
         string_starts_with?: string | StringFieldRefInput<$PrismaModel>;
         string_ends_with?: string | StringFieldRefInput<$PrismaModel>;
         array_starts_with?:
-            | InputJsonValue
-            | JsonFieldRefInput<$PrismaModel>
-            | null;
+            InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
         array_ends_with?:
-            | InputJsonValue
-            | JsonFieldRefInput<$PrismaModel>
-            | null;
+            InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
         array_contains?:
-            | InputJsonValue
-            | JsonFieldRefInput<$PrismaModel>
-            | null;
+            InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
         lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
         lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
         gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
@@ -11889,9 +11890,7 @@ export namespace Prisma {
         gt?: number | IntFieldRefInput<$PrismaModel>;
         gte?: number | IntFieldRefInput<$PrismaModel>;
         not?:
-            | NestedIntNullableWithAggregatesFilter<$PrismaModel>
-            | number
-            | null;
+            NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null;
         _count?: NestedIntNullableFilter<$PrismaModel>;
         _avg?: NestedFloatNullableFilter<$PrismaModel>;
         _sum?: NestedIntNullableFilter<$PrismaModel>;
@@ -11907,6 +11906,18 @@ export namespace Prisma {
         isEmpty?: boolean;
     };
 
+    export type DateTimeNullableFilter<$PrismaModel = never> = {
+        equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null;
+        in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
+        notIn?:
+            Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
+        lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null;
+    };
+
     export type DonatedItemScalarRelationFilter = {
         is?: DonatedItemWhereInput;
         isNot?: DonatedItemWhereInput;
@@ -11920,6 +11931,8 @@ export namespace Prisma {
         imageUrls?: SortOrder;
         donorInformed?: SortOrder;
         approval?: SortOrder;
+        scheduledSendAt?: SortOrder;
+        emailSent?: SortOrder;
         submitter?: SortOrder;
     };
 
@@ -11935,6 +11948,8 @@ export namespace Prisma {
         donatedItemId?: SortOrder;
         donorInformed?: SortOrder;
         approval?: SortOrder;
+        scheduledSendAt?: SortOrder;
+        emailSent?: SortOrder;
         submitter?: SortOrder;
     };
 
@@ -11945,12 +11960,33 @@ export namespace Prisma {
         donatedItemId?: SortOrder;
         donorInformed?: SortOrder;
         approval?: SortOrder;
+        scheduledSendAt?: SortOrder;
+        emailSent?: SortOrder;
         submitter?: SortOrder;
     };
 
     export type DonatedItemStatusSumOrderByAggregateInput = {
         id?: SortOrder;
         donatedItemId?: SortOrder;
+    };
+
+    export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+        equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null;
+        in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
+        notIn?:
+            Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
+        lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        not?:
+            | NestedDateTimeNullableWithAggregatesFilter<$PrismaModel>
+            | Date
+            | string
+            | null;
+        _count?: NestedIntNullableFilter<$PrismaModel>;
+        _min?: NestedDateTimeNullableFilter<$PrismaModel>;
+        _max?: NestedDateTimeNullableFilter<$PrismaModel>;
     };
 
     export type EnumRoleNullableFilter<$PrismaModel = never> = {
@@ -11963,27 +11999,10 @@ export namespace Prisma {
     export type EnumUserStatusFilter<$PrismaModel = never> = {
         equals?: $Enums.UserStatus | EnumUserStatusFieldRefInput<$PrismaModel>;
         in?:
-            | $Enums.UserStatus[]
-            | ListEnumUserStatusFieldRefInput<$PrismaModel>;
+            $Enums.UserStatus[] | ListEnumUserStatusFieldRefInput<$PrismaModel>;
         notIn?:
-            | $Enums.UserStatus[]
-            | ListEnumUserStatusFieldRefInput<$PrismaModel>;
+            $Enums.UserStatus[] | ListEnumUserStatusFieldRefInput<$PrismaModel>;
         not?: NestedEnumUserStatusFilter<$PrismaModel> | $Enums.UserStatus;
-    };
-
-    export type DateTimeNullableFilter<$PrismaModel = never> = {
-        equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null;
-        in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
-        notIn?:
-            | Date[]
-            | string[]
-            | ListDateTimeFieldRefInput<$PrismaModel>
-            | null;
-        lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null;
     };
 
     export type UserCountOrderByAggregateInput = {
@@ -12041,39 +12060,15 @@ export namespace Prisma {
     export type EnumUserStatusWithAggregatesFilter<$PrismaModel = never> = {
         equals?: $Enums.UserStatus | EnumUserStatusFieldRefInput<$PrismaModel>;
         in?:
-            | $Enums.UserStatus[]
-            | ListEnumUserStatusFieldRefInput<$PrismaModel>;
+            $Enums.UserStatus[] | ListEnumUserStatusFieldRefInput<$PrismaModel>;
         notIn?:
-            | $Enums.UserStatus[]
-            | ListEnumUserStatusFieldRefInput<$PrismaModel>;
+            $Enums.UserStatus[] | ListEnumUserStatusFieldRefInput<$PrismaModel>;
         not?:
             | NestedEnumUserStatusWithAggregatesFilter<$PrismaModel>
             | $Enums.UserStatus;
         _count?: NestedIntFilter<$PrismaModel>;
         _min?: NestedEnumUserStatusFilter<$PrismaModel>;
         _max?: NestedEnumUserStatusFilter<$PrismaModel>;
-    };
-
-    export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
-        equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null;
-        in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
-        notIn?:
-            | Date[]
-            | string[]
-            | ListDateTimeFieldRefInput<$PrismaModel>
-            | null;
-        lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        not?:
-            | NestedDateTimeNullableWithAggregatesFilter<$PrismaModel>
-            | Date
-            | string
-            | null;
-        _count?: NestedIntNullableFilter<$PrismaModel>;
-        _min?: NestedDateTimeNullableFilter<$PrismaModel>;
-        _max?: NestedDateTimeNullableFilter<$PrismaModel>;
     };
 
     export type FloatNullableFilter<$PrismaModel = never> = {
@@ -12220,8 +12215,7 @@ export namespace Prisma {
         createMany?: DonatedItemCreateManyDonorInputEnvelope;
         set?: DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         disconnect?:
-            | DonatedItemWhereUniqueInput
-            | DonatedItemWhereUniqueInput[];
+            DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         delete?: DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         connect?: DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         update?:
@@ -12231,8 +12225,7 @@ export namespace Prisma {
             | DonatedItemUpdateManyWithWhereWithoutDonorInput
             | DonatedItemUpdateManyWithWhereWithoutDonorInput[];
         deleteMany?:
-            | DonatedItemScalarWhereInput
-            | DonatedItemScalarWhereInput[];
+            DonatedItemScalarWhereInput | DonatedItemScalarWhereInput[];
     };
 
     export type IntFieldUpdateOperationsInput = {
@@ -12260,8 +12253,7 @@ export namespace Prisma {
         createMany?: DonatedItemCreateManyDonorInputEnvelope;
         set?: DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         disconnect?:
-            | DonatedItemWhereUniqueInput
-            | DonatedItemWhereUniqueInput[];
+            DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         delete?: DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         connect?: DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         update?:
@@ -12271,8 +12263,7 @@ export namespace Prisma {
             | DonatedItemUpdateManyWithWhereWithoutDonorInput
             | DonatedItemUpdateManyWithWhereWithoutDonorInput[];
         deleteMany?:
-            | DonatedItemScalarWhereInput
-            | DonatedItemScalarWhereInput[];
+            DonatedItemScalarWhereInput | DonatedItemScalarWhereInput[];
     };
 
     export type DonatedItemCreateNestedManyWithoutProgramInput = {
@@ -12326,8 +12317,7 @@ export namespace Prisma {
         createMany?: DonatedItemCreateManyProgramInputEnvelope;
         set?: DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         disconnect?:
-            | DonatedItemWhereUniqueInput
-            | DonatedItemWhereUniqueInput[];
+            DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         delete?: DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         connect?: DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         update?:
@@ -12337,8 +12327,7 @@ export namespace Prisma {
             | DonatedItemUpdateManyWithWhereWithoutProgramInput
             | DonatedItemUpdateManyWithWhereWithoutProgramInput[];
         deleteMany?:
-            | DonatedItemScalarWhereInput
-            | DonatedItemScalarWhereInput[];
+            DonatedItemScalarWhereInput | DonatedItemScalarWhereInput[];
     };
 
     export type DonatedItemUncheckedUpdateManyWithoutProgramNestedInput = {
@@ -12358,8 +12347,7 @@ export namespace Prisma {
         createMany?: DonatedItemCreateManyProgramInputEnvelope;
         set?: DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         disconnect?:
-            | DonatedItemWhereUniqueInput
-            | DonatedItemWhereUniqueInput[];
+            DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         delete?: DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         connect?: DonatedItemWhereUniqueInput | DonatedItemWhereUniqueInput[];
         update?:
@@ -12369,8 +12357,7 @@ export namespace Prisma {
             | DonatedItemUpdateManyWithWhereWithoutProgramInput
             | DonatedItemUpdateManyWithWhereWithoutProgramInput[];
         deleteMany?:
-            | DonatedItemScalarWhereInput
-            | DonatedItemScalarWhereInput[];
+            DonatedItemScalarWhereInput | DonatedItemScalarWhereInput[];
     };
 
     export type ItemAttributeCreateNestedManyWithoutDonatedItemInput = {
@@ -12386,8 +12373,7 @@ export namespace Prisma {
             | ItemAttributeCreateOrConnectWithoutDonatedItemInput[];
         createMany?: ItemAttributeCreateManyDonatedItemInputEnvelope;
         connect?:
-            | ItemAttributeWhereUniqueInput
-            | ItemAttributeWhereUniqueInput[];
+            ItemAttributeWhereUniqueInput | ItemAttributeWhereUniqueInput[];
     };
 
     export type DonorCreateNestedOneWithoutDonatedItemsInput = {
@@ -12439,8 +12425,7 @@ export namespace Prisma {
                 | ItemAttributeCreateOrConnectWithoutDonatedItemInput[];
             createMany?: ItemAttributeCreateManyDonatedItemInputEnvelope;
             connect?:
-                | ItemAttributeWhereUniqueInput
-                | ItemAttributeWhereUniqueInput[];
+                ItemAttributeWhereUniqueInput | ItemAttributeWhereUniqueInput[];
         };
 
     export type DonatedItemStatusUncheckedCreateNestedManyWithoutDonatedItemInput =
@@ -12478,14 +12463,11 @@ export namespace Prisma {
         createMany?: ItemAttributeCreateManyDonatedItemInputEnvelope;
         set?: ItemAttributeWhereUniqueInput | ItemAttributeWhereUniqueInput[];
         disconnect?:
-            | ItemAttributeWhereUniqueInput
-            | ItemAttributeWhereUniqueInput[];
+            ItemAttributeWhereUniqueInput | ItemAttributeWhereUniqueInput[];
         delete?:
-            | ItemAttributeWhereUniqueInput
-            | ItemAttributeWhereUniqueInput[];
+            ItemAttributeWhereUniqueInput | ItemAttributeWhereUniqueInput[];
         connect?:
-            | ItemAttributeWhereUniqueInput
-            | ItemAttributeWhereUniqueInput[];
+            ItemAttributeWhereUniqueInput | ItemAttributeWhereUniqueInput[];
         update?:
             | ItemAttributeUpdateWithWhereUniqueWithoutDonatedItemInput
             | ItemAttributeUpdateWithWhereUniqueWithoutDonatedItemInput[];
@@ -12493,8 +12475,7 @@ export namespace Prisma {
             | ItemAttributeUpdateManyWithWhereWithoutDonatedItemInput
             | ItemAttributeUpdateManyWithWhereWithoutDonatedItemInput[];
         deleteMany?:
-            | ItemAttributeScalarWhereInput
-            | ItemAttributeScalarWhereInput[];
+            ItemAttributeScalarWhereInput | ItemAttributeScalarWhereInput[];
     };
 
     export type DonorUpdateOneRequiredWithoutDonatedItemsNestedInput = {
@@ -12596,17 +12577,13 @@ export namespace Prisma {
                 | ItemAttributeUpsertWithWhereUniqueWithoutDonatedItemInput[];
             createMany?: ItemAttributeCreateManyDonatedItemInputEnvelope;
             set?:
-                | ItemAttributeWhereUniqueInput
-                | ItemAttributeWhereUniqueInput[];
+                ItemAttributeWhereUniqueInput | ItemAttributeWhereUniqueInput[];
             disconnect?:
-                | ItemAttributeWhereUniqueInput
-                | ItemAttributeWhereUniqueInput[];
+                ItemAttributeWhereUniqueInput | ItemAttributeWhereUniqueInput[];
             delete?:
-                | ItemAttributeWhereUniqueInput
-                | ItemAttributeWhereUniqueInput[];
+                ItemAttributeWhereUniqueInput | ItemAttributeWhereUniqueInput[];
             connect?:
-                | ItemAttributeWhereUniqueInput
-                | ItemAttributeWhereUniqueInput[];
+                ItemAttributeWhereUniqueInput | ItemAttributeWhereUniqueInput[];
             update?:
                 | ItemAttributeUpdateWithWhereUniqueWithoutDonatedItemInput
                 | ItemAttributeUpdateWithWhereUniqueWithoutDonatedItemInput[];
@@ -12614,8 +12591,7 @@ export namespace Prisma {
                 | ItemAttributeUpdateManyWithWhereWithoutDonatedItemInput
                 | ItemAttributeUpdateManyWithWhereWithoutDonatedItemInput[];
             deleteMany?:
-                | ItemAttributeScalarWhereInput
-                | ItemAttributeScalarWhereInput[];
+                ItemAttributeScalarWhereInput | ItemAttributeScalarWhereInput[];
         };
 
     export type DonatedItemStatusUncheckedUpdateManyWithoutDonatedItemNestedInput =
@@ -12675,6 +12651,10 @@ export namespace Prisma {
         push?: string | string[];
     };
 
+    export type NullableDateTimeFieldUpdateOperationsInput = {
+        set?: Date | string | null;
+    };
+
     export type DonatedItemUpdateOneRequiredWithoutStatusesNestedInput = {
         create?: XOR<
             DonatedItemCreateWithoutStatusesInput,
@@ -12698,10 +12678,6 @@ export namespace Prisma {
 
     export type EnumUserStatusFieldUpdateOperationsInput = {
         set?: $Enums.UserStatus;
-    };
-
-    export type NullableDateTimeFieldUpdateOperationsInput = {
-        set?: Date | string | null;
     };
 
     export type DonatedItemCreateNestedOneWithoutAttributesInput = {
@@ -12922,17 +12898,11 @@ export namespace Prisma {
         string_starts_with?: string | StringFieldRefInput<$PrismaModel>;
         string_ends_with?: string | StringFieldRefInput<$PrismaModel>;
         array_starts_with?:
-            | InputJsonValue
-            | JsonFieldRefInput<$PrismaModel>
-            | null;
+            InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
         array_ends_with?:
-            | InputJsonValue
-            | JsonFieldRefInput<$PrismaModel>
-            | null;
+            InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
         array_contains?:
-            | InputJsonValue
-            | JsonFieldRefInput<$PrismaModel>
-            | null;
+            InputJsonValue | JsonFieldRefInput<$PrismaModel> | null;
         lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
         lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
         gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>;
@@ -12952,9 +12922,7 @@ export namespace Prisma {
         gt?: number | IntFieldRefInput<$PrismaModel>;
         gte?: number | IntFieldRefInput<$PrismaModel>;
         not?:
-            | NestedIntNullableWithAggregatesFilter<$PrismaModel>
-            | number
-            | null;
+            NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null;
         _count?: NestedIntNullableFilter<$PrismaModel>;
         _avg?: NestedFloatNullableFilter<$PrismaModel>;
         _sum?: NestedIntNullableFilter<$PrismaModel>;
@@ -12973,6 +12941,39 @@ export namespace Prisma {
         not?: NestedFloatNullableFilter<$PrismaModel> | number | null;
     };
 
+    export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+        equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null;
+        in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
+        notIn?:
+            Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
+        lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null;
+    };
+
+    export type NestedDateTimeNullableWithAggregatesFilter<
+        $PrismaModel = never,
+    > = {
+        equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null;
+        in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
+        notIn?:
+            Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
+        lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+        not?:
+            | NestedDateTimeNullableWithAggregatesFilter<$PrismaModel>
+            | Date
+            | string
+            | null;
+        _count?: NestedIntNullableFilter<$PrismaModel>;
+        _min?: NestedDateTimeNullableFilter<$PrismaModel>;
+        _max?: NestedDateTimeNullableFilter<$PrismaModel>;
+    };
+
     export type NestedEnumRoleNullableFilter<$PrismaModel = never> = {
         equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel> | null;
         in?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel> | null;
@@ -12983,27 +12984,10 @@ export namespace Prisma {
     export type NestedEnumUserStatusFilter<$PrismaModel = never> = {
         equals?: $Enums.UserStatus | EnumUserStatusFieldRefInput<$PrismaModel>;
         in?:
-            | $Enums.UserStatus[]
-            | ListEnumUserStatusFieldRefInput<$PrismaModel>;
+            $Enums.UserStatus[] | ListEnumUserStatusFieldRefInput<$PrismaModel>;
         notIn?:
-            | $Enums.UserStatus[]
-            | ListEnumUserStatusFieldRefInput<$PrismaModel>;
+            $Enums.UserStatus[] | ListEnumUserStatusFieldRefInput<$PrismaModel>;
         not?: NestedEnumUserStatusFilter<$PrismaModel> | $Enums.UserStatus;
-    };
-
-    export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
-        equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null;
-        in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
-        notIn?:
-            | Date[]
-            | string[]
-            | ListDateTimeFieldRefInput<$PrismaModel>
-            | null;
-        lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null;
     };
 
     export type NestedEnumRoleNullableWithAggregatesFilter<
@@ -13024,8 +13008,7 @@ export namespace Prisma {
     export type NestedEnumUserStatusWithAggregatesFilter<$PrismaModel = never> =
         {
             equals?:
-                | $Enums.UserStatus
-                | EnumUserStatusFieldRefInput<$PrismaModel>;
+                $Enums.UserStatus | EnumUserStatusFieldRefInput<$PrismaModel>;
             in?:
                 | $Enums.UserStatus[]
                 | ListEnumUserStatusFieldRefInput<$PrismaModel>;
@@ -13039,30 +13022,6 @@ export namespace Prisma {
             _min?: NestedEnumUserStatusFilter<$PrismaModel>;
             _max?: NestedEnumUserStatusFilter<$PrismaModel>;
         };
-
-    export type NestedDateTimeNullableWithAggregatesFilter<
-        $PrismaModel = never,
-    > = {
-        equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null;
-        in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null;
-        notIn?:
-            | Date[]
-            | string[]
-            | ListDateTimeFieldRefInput<$PrismaModel>
-            | null;
-        lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-        not?:
-            | NestedDateTimeNullableWithAggregatesFilter<$PrismaModel>
-            | Date
-            | string
-            | null;
-        _count?: NestedIntNullableFilter<$PrismaModel>;
-        _min?: NestedDateTimeNullableFilter<$PrismaModel>;
-        _max?: NestedDateTimeNullableFilter<$PrismaModel>;
-    };
 
     export type NestedBoolNullableFilter<$PrismaModel = never> = {
         equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null;
@@ -13139,8 +13098,7 @@ export namespace Prisma {
 
     export type DonatedItemCreateManyDonorInputEnvelope = {
         data:
-            | DonatedItemCreateManyDonorInput
-            | DonatedItemCreateManyDonorInput[];
+            DonatedItemCreateManyDonorInput | DonatedItemCreateManyDonorInput[];
         skipDuplicates?: boolean;
     };
 
@@ -13355,6 +13313,8 @@ export namespace Prisma {
         imageUrls?: DonatedItemStatusCreateimageUrlsInput | string[];
         donorInformed?: boolean;
         approval?: boolean;
+        scheduledSendAt?: Date | string | null;
+        emailSent?: boolean;
         submitter?: string;
     };
 
@@ -13365,6 +13325,8 @@ export namespace Prisma {
         imageUrls?: DonatedItemStatusCreateimageUrlsInput | string[];
         donorInformed?: boolean;
         approval?: boolean;
+        scheduledSendAt?: Date | string | null;
+        emailSent?: boolean;
         submitter?: string;
     };
 
@@ -13550,6 +13512,9 @@ export namespace Prisma {
         imageUrls?: StringNullableListFilter<'DonatedItemStatus'>;
         donorInformed?: BoolFilter<'DonatedItemStatus'> | boolean;
         approval?: BoolFilter<'DonatedItemStatus'> | boolean;
+        scheduledSendAt?:
+            DateTimeNullableFilter<'DonatedItemStatus'> | Date | string | null;
+        emailSent?: BoolFilter<'DonatedItemStatus'> | boolean;
         submitter?: StringFilter<'DonatedItemStatus'> | string;
     };
 
@@ -13850,6 +13815,8 @@ export namespace Prisma {
         imageUrls?: DonatedItemStatusCreateimageUrlsInput | string[];
         donorInformed?: boolean;
         approval?: boolean;
+        scheduledSendAt?: Date | string | null;
+        emailSent?: boolean;
         submitter?: string;
     };
 
@@ -13882,6 +13849,9 @@ export namespace Prisma {
         imageUrls?: DonatedItemStatusUpdateimageUrlsInput | string[];
         donorInformed?: BoolFieldUpdateOperationsInput | boolean;
         approval?: BoolFieldUpdateOperationsInput | boolean;
+        scheduledSendAt?:
+            NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+        emailSent?: BoolFieldUpdateOperationsInput | boolean;
         submitter?: StringFieldUpdateOperationsInput | string;
     };
 
@@ -13892,6 +13862,9 @@ export namespace Prisma {
         imageUrls?: DonatedItemStatusUpdateimageUrlsInput | string[];
         donorInformed?: BoolFieldUpdateOperationsInput | boolean;
         approval?: BoolFieldUpdateOperationsInput | boolean;
+        scheduledSendAt?:
+            NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+        emailSent?: BoolFieldUpdateOperationsInput | boolean;
         submitter?: StringFieldUpdateOperationsInput | string;
     };
 
@@ -13902,6 +13875,9 @@ export namespace Prisma {
         imageUrls?: DonatedItemStatusUpdateimageUrlsInput | string[];
         donorInformed?: BoolFieldUpdateOperationsInput | boolean;
         approval?: BoolFieldUpdateOperationsInput | boolean;
+        scheduledSendAt?:
+            NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+        emailSent?: BoolFieldUpdateOperationsInput | boolean;
         submitter?: StringFieldUpdateOperationsInput | string;
     };
 

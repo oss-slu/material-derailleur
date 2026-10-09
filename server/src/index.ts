@@ -17,6 +17,7 @@ import passwordResetRouter from './routes/passwordResetRoutes';
 import barcodeRouter from './routes/barcode';
 import importExportRouter from './routes/importExportRoutes';
 import prisma from './prismaClient';
+import { processScheduledDonationEmails } from './services/emailService';
 
 dotenv.config(); // Load environment variables
 const app = express();
@@ -137,6 +138,20 @@ const startServer = async () => {
             console.log(
                 `[${timestamp}] Server running on http://localhost:${port}`,
             );
+
+            const checkScheduledEmails = async () => {
+                try {
+                    await processScheduledDonationEmails();
+                } catch (error) {
+                    console.error('Error processing scheduled emails:', error);
+                }
+            };
+
+            void checkScheduledEmails();
+
+            setInterval(() => {
+                void checkScheduledEmails();
+            }, 60_000);
         });
     } catch (error) {
         console.error('Error connecting to the database:', error);

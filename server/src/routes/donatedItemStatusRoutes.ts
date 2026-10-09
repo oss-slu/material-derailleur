@@ -231,7 +231,20 @@ router.put('/review/approve-all', async (req: Request, res: Response) => {
         const permGranted = await authenticateUser(req, res, {
             requiredRank: 3,
         });
+
         if (!permGranted) return;
+
+        const { scheduledSendTime } = req.body;
+
+        const scheduledSendAt = scheduledSendTime
+            ? new Date(scheduledSendTime)
+            : null;
+
+        if (scheduledSendAt && isNaN(scheduledSendAt.getTime())) {
+            return res.status(400).json({
+                message: 'Invalid scheduled send time.',
+            });
+        }
 
         const pendingStatuses = await prisma.donatedItemStatus.findMany({
             where: { approval: false },
@@ -247,39 +260,51 @@ router.put('/review/approve-all', async (req: Request, res: Response) => {
 
         await prisma.donatedItemStatus.updateMany({
             where: { approval: false },
-            data: { approval: true },
+            data: {
+                approval: true,
+                scheduledSendAt,
+                emailSent: false,
+            },
         });
 
         const emailFailures: string[] = [];
-        for (const statusItem of pendingStatuses) {
-            if (!statusItem.donorInformed) {
-                continue;
-            }
 
-            try {
-                const donatedItem = await prisma.donatedItem.findUnique({
-                    where: { id: statusItem.donatedItemId },
-                    include: { donor: true },
-                });
-
-                if (!donatedItem?.donor.email) {
+        if (!scheduledSendAt) {
+            for (const statusItem of pendingStatuses) {
+                if (!statusItem.donorInformed) {
                     continue;
                 }
 
-                await sendDonationUpdateEmail(
-                    donatedItem.donor.email,
-                    `${donatedItem.donor.firstName} ${donatedItem.donor.lastName}`,
-                    donatedItem.id.toString(),
-                    statusItem.statusType,
-                    statusItem.dateModified,
-                    statusItem.imageUrls,
-                );
-            } catch (error) {
-                console.error(
-                    `Error sending donor email for status ${statusItem.id}:`,
-                    error,
-                );
-                emailFailures.push(String(statusItem.id));
+                try {
+                    const donatedItem = await prisma.donatedItem.findUnique({
+                        where: { id: statusItem.donatedItemId },
+                        include: { donor: true },
+                    });
+
+                    if (!donatedItem?.donor.email) {
+                        continue;
+                    }
+
+                    await sendDonationUpdateEmail(
+                        donatedItem.donor.email,
+                        `${donatedItem.donor.firstName} ${donatedItem.donor.lastName}`,
+                        donatedItem.id.toString(),
+                        statusItem.statusType,
+                        statusItem.dateModified,
+                        statusItem.imageUrls,
+                    );
+
+                    await prisma.donatedItemStatus.update({
+                        where: { id: statusItem.id },
+                        data: { emailSent: true },
+                    });
+                } catch (error) {
+                    console.error(
+                        `Error sending donor email for status ${statusItem.id}:`,
+                        error,
+                    );
+                    emailFailures.push(String(statusItem.id));
+                }
             }
         }
 

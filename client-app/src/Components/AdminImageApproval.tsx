@@ -13,6 +13,7 @@ const AdminImageApproval: React.FC = () => {
     const [approvingAll, setApprovingAll] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    const [scheduledSendTime, setScheduledSendTime] = useState('');
 
     const token = localStorage.getItem('token');
     const base = process.env.REACT_APP_BACKEND_API_BASE_URL || '/';
@@ -78,6 +79,11 @@ const AdminImageApproval: React.FC = () => {
                         Authorization: token ? `Bearer ${token}` : '',
                         'Content-Type': 'application/json',
                     },
+                    body: JSON.stringify({
+                        scheduledSendTime: scheduledSendTime
+                            ? new Date(scheduledSendTime).toISOString()
+                            : null,
+                    }),
                 },
             );
 
@@ -134,9 +140,24 @@ const AdminImageApproval: React.FC = () => {
             ) : (
                 <>
                     <div style={{ marginBottom: 16 }}>
+                        <label>
+                            Send approved emails at:
+                            <input
+                                type="datetime-local"
+                                value={scheduledSendTime}
+                                style={{
+                                    width: 185,
+                                    marginLeft: 6,
+                                }}
+                                onChange={e =>
+                                    setScheduledSendTime(e.target.value)
+                                }
+                            />
+                        </label>
                         <button
                             onClick={handleApproveAll}
                             disabled={approvingAll}
+                            style={{ marginLeft: 24 }}
                         >
                             {approvingAll ? 'Approving...' : 'Approve all'}
                         </button>
