@@ -195,6 +195,53 @@ export const sendDonationEmail = async (
     }
 };
 
+export const processScheduledDonationEmails = async (): Promise<void> => {
+    const dueStatuses = await prisma.donatedItemStatus.findMany({
+        where: {
+            approval: true,
+            donorInformed: true,
+            emailSent: false,
+            scheduledSendAt: {
+                not: null,
+                lte: new Date(),
+            },
+        },
+    });
+
+    for (const statusItem of dueStatuses) {
+        try {
+            const donatedItem = await prisma.donatedItem.findUnique({
+                where: { id: statusItem.donatedItemId },
+                include: { donor: true },
+            });
+
+            if (!donatedItem?.donor.email) {
+                continue;
+            }
+
+            await sendDonationUpdateEmail(
+                donatedItem.donor.email,
+                `${donatedItem.donor.firstName} ${donatedItem.donor.lastName}`,
+                donatedItem.id.toString(),
+                statusItem.statusType,
+                statusItem.dateModified,
+                statusItem.imageUrls,
+                true,
+            );
+
+            await prisma.donatedItemStatus.update({
+                where: { id: statusItem.id },
+                data: { emailSent: true },
+            });
+        } catch (error) {
+            console.error(
+                `Error sending scheduled email for status ${statusItem.id}:`,
+                error,
+            );
+        }
+    }
+};
+
 export const sendDonationUpdateEmail = async (
     recipientEmail: string,
     donorName: string,
@@ -202,6 +249,7 @@ export const sendDonationUpdateEmail = async (
     statusType: string,
     dateUpdated: Date,
     imageUrls: string[],
+    throwOnError = false,
 ) => {
     const SASUrls = await fetchSASUrls(imageUrls);
 
@@ -247,5 +295,9 @@ export const sendDonationUpdateEmail = async (
         console.log('✅ Donation status update email sent:', result);
     } catch (error) {
         console.log('❌ Error sending donation status update email:', error);
+
+        if (throwOnError) {
+            throw error;
+        }
     }
 };

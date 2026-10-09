@@ -101,9 +101,11 @@ model DonatedItemStatus {
 
   imageUrls String[]
 
-  donorInformed Boolean @default(false)
-  approval      Boolean @default(false)
-  submitter     String  @default("Unknown") @db.VarChar(100)
+  donorInformed   Boolean   @default(false)
+  approval        Boolean   @default(false)
+  scheduledSendAt DateTime?
+  emailSent       Boolean   @default(false)
+  submitter       String    @default("Unknown") @db.VarChar(100)
 
   @@index([donatedItemId])
 }

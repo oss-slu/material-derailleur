@@ -160,6 +160,8 @@ exports.Prisma.DonatedItemStatusScalarFieldEnum = {
     imageUrls: 'imageUrls',
     donorInformed: 'donorInformed',
     approval: 'approval',
+    scheduledSendAt: 'scheduledSendAt',
+    emailSent: 'emailSent',
     submitter: 'submitter',
 };
 
