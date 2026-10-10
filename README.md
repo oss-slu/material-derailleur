@@ -205,7 +205,7 @@ Open a run of the [build-and-push workflow](https://github.com/oss-slu/material-
 
 ### Verify an Image
 
-The run summary also lists each attested image digest. To check that an image was built by this repository's workflow, run this with the [GitHub CLI](https://cli.github.com/):
+The run summary also links to each image's attestation, which shows the image digest. To check that an image was built by this repository's workflow, run this with the [GitHub CLI](https://cli.github.com/):
 
 ```bash
 gh attestation verify oci://ghcr.io/oss-slu/material-derailleur/server@sha256:<digest> --repo oss-slu/material-derailleur
