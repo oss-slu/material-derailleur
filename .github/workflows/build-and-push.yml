@@ -5,6 +5,9 @@ on:
 permissions:
   contents: write
   packages: write
+  id-token: write
+  attestations: write
+  artifact-metadata: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,6 +21,8 @@ jobs:
           - name: client
             context: ./client-app
             dockerfile: ./client-app/Dockerfile
+    env:
+      IMAGE_NAME: ghcr.io/${{ github.repository }}/${{ matrix.name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -33,12 +38,13 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}/${{ matrix.name }}
+          images: ${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=dev,enable={{is_default_branch}}
             type=sha,prefix=sha-,format=short
             type=ref,event=tag
       - name: Build and push
+        id: build_push
         uses: docker/build-push-action@v5
         with:
           context: ${{ matrix.context }}
@@ -48,6 +54,33 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.IMAGE_NAME }}@${{ steps.build_push.outputs.digest }}
+          format: spdx-json
+          output-file: material-derailleur-${{ matrix.name }}-sbom.spdx.json
+          upload-artifact: false
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v7
+        with:
+          name: sbom-${{ matrix.name }}
+          path: material-derailleur-${{ matrix.name }}-sbom.spdx.json
+          if-no-files-found: error
+      - name: Attest build provenance
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build_push.outputs.digest }}
+          push-to-registry: true
+      - name: Verify build provenance
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_REF: ${{ env.IMAGE_NAME }}@${{ steps.build_push.outputs.digest }}
+        run: |
+          gh attestation verify "oci://$IMAGE_REF" --repo "$GITHUB_REPOSITORY" \
+            --format json \
+            --jq '.[].verificationResult.signature.certificate | "Verified: built by \(.buildSignerURI) from commit \(.sourceRepositoryDigest)"'
 
   update-manifests:
     needs: build
