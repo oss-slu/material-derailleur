@@ -191,3 +191,24 @@ We use Prettier to ensure consistent code formatting across the project. Before 
     ```
 
    Only push the code to the repository once all formatting issues have been resolved.
+
+## Container Images, SBOMs, and Provenance
+
+Every push to `main` runs the [build-and-push workflow](.github/workflows/build-and-push.yml), which publishes the `server` and `client` images to `ghcr.io/oss-slu/material-derailleur/server` and `ghcr.io/oss-slu/material-derailleur/client`. For each image, the workflow also:
+
+- Generates a Software Bill of Materials (SBOM) in SPDX JSON format with [Syft](https://github.com/anchore/syft). The SBOM lists the packages inside the published image.
+- Creates a signed build provenance attestation for the image digest. The attestation records the repository, commit, and workflow that built the image.
+
+### Download an SBOM
+
+Open a run of the [build-and-push workflow](https://github.com/oss-slu/material-derailleur/actions/workflows/build-and-push.yml) and download `sbom-server` or `sbom-client` from the **Artifacts** section of the run summary.
+
+### Verify an Image
+
+The run summary also lists each attested image digest. To check that an image was built by this repository's workflow, run this with the [GitHub CLI](https://cli.github.com/):
+
+```bash
+gh attestation verify oci://ghcr.io/oss-slu/material-derailleur/server@sha256:<digest> --repo oss-slu/material-derailleur
+```
+
+The images are private, so log in to GHCR with `docker login ghcr.io` first. Verification proves where and how an image was built. It does not mean the image is free of vulnerabilities.
