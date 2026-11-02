@@ -33,7 +33,7 @@
         "lucide-react": "^1.42.0",
         "mongoose": "^9.7.2",
         "my-tailwind-app": "^0.1.12",
-        "nodemailer": "^10.0.10",
+        "nodemailer": "^10.3.1",
         "npx": "^10.2.2",
         "path-browserify": "^1.0.1",
         "postcss": "^8.5.31",
