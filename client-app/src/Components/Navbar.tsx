@@ -95,7 +95,7 @@ const Navbar: React.FC = () => {
             <div className="container-fluid">
                 <Link className="navbar-brand" to="/">
                     <img
-                        src="/bworks.png"
+                        src={(process.env.PUBLIC_URL || '') + '/bworks.png'}
                         alt="Logo"
                         style={{ width: '100px', height: '50px' }}
                     />

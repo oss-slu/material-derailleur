@@ -44,10 +44,10 @@ const Contact: React.FC = () => {
                 {/* Right images */}
                 <div className="contact-photos">
                     <div className="photo photo--lg">
-                        <img src="/cycle.jpg" alt="BWorks bike" />
+                        <img src={(process.env.PUBLIC_URL || '') + '/cycle.jpg'} alt="BWorks bike" />
                     </div>
                     <div className="photo photo--sm">
-                        <img src="/image.jpg" alt="BWorks kids" />
+                        <img src={(process.env.PUBLIC_URL || '') + '/image.jpg'} alt="BWorks kids" />
                     </div>
                 </div>
             </div>
