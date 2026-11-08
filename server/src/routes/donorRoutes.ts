@@ -240,7 +240,24 @@ router.get('/users', async (req: Request, res: Response) => {
             orderBy: { createdAt: 'desc' },
         });
 
-        res.status(200).json(users);
+        const donorEmails = await prisma.donor.findMany({
+            where: {
+                email: { in: users.map(user => user.email) },
+            },
+            select: { email: true },
+        });
+
+        const donorEmailSet = new Set(
+            donorEmails.map(donor => donor.email),
+        );
+
+        const usersWithProfiles = users.map(user => ({
+            ...user,
+            hasDonorProfile: donorEmailSet.has(user.email),
+        }));
+
+        res.status(200).json(usersWithProfiles);
+
     } catch (error) {
         console.error('Error fetching users:', error);
         res.status(500).json({ message: 'Error fetching users' });
@@ -288,32 +305,107 @@ router.put('/users/:userId', async (req: Request, res: Response) => {
         )
             dataToUpdate.status = status;
 
-        // If no updates happened, don't send a request
-        if (Object.keys(dataToUpdate).length === 0) {
-            return res
-                .status(200)
-                .json({ message: 'No valid fields to update' });
+        // Allow donor profiles to be checked even when the user's role has not changed
+        const needsDonorCheck =
+            role === 'DONOR' || currentUser.role === 'DONOR';
+
+        if (
+            Object.keys(dataToUpdate).length === 0 &&
+            !needsDonorCheck
+        ) {
+            return res.status(200).json({
+                message: 'No valid fields to update',
+            });
         }
 
-        // Updates happened, send a request
-        const updatedUser = await prisma.user.update({
-            where: { id: String(userId) },
-            data: dataToUpdate,
+        // Check if a donor profile is needed and validate the required information
+        const needsDonorProfile =
+            role === 'DONOR' ||
+            (currentUser.role === 'DONOR' &&
+                dataToUpdate.role === undefined);
+
+        if (needsDonorProfile) {
+            const existingDonor = await prisma.donor.findUnique({
+                where: { email: currentUser.email },
+            });
+
+            if (!existingDonor) {
+                const { donorDetails } = req.body;
+
+                if (
+                    typeof donorDetails?.firstName !== 'string' ||
+                    typeof donorDetails?.lastName !== 'string' ||
+                    typeof donorDetails?.zipcode !== 'string' ||
+                    !donorDetails.firstName.trim() ||
+                    !donorDetails.lastName.trim() ||
+                    !donorDetails.zipcode.trim()
+                ) {
+                    return res.status(400).json({
+                        message: 'Donor name and ZIP code must be non-empty strings.',
+                    });
+                }
+
+                if (
+                    donorDetails.firstName.trim().length > 50 ||
+                    donorDetails.lastName.trim().length > 50 ||
+                    donorDetails.zipcode.trim().length > 20
+                ) {
+                    return res.status(400).json({
+                        message: 'Donor first and last names must be at most 50 characters each, and ZIP code at most 20 characters.',
+                    });
+                }
+            }
+        }
+
+        // Create a donor profile if needed and update the user's role
+        const updatedUser = await prisma.$transaction(async tx => {
+            if (needsDonorProfile) {
+                const existingDonor = await tx.donor.findUnique({
+                    where: { email: currentUser.email },
+                });
+
+                if (!existingDonor) {
+                    const { donorDetails } = req.body;
+
+                    await tx.donor.create({
+                        data: {
+                            firstName: donorDetails.firstName.trim(),
+                            lastName: donorDetails.lastName.trim(),
+                            email: currentUser.email,
+                            zipcode: donorDetails.zipcode.trim(),
+                            emailOptIn: false,
+                        },
+                    });
+                }
+            }
+
+            return tx.user.update({
+                where: { id: String(userId) },
+                data: dataToUpdate,
+            });
         });
 
         res.status(200).json({ message: 'User updated', user: updatedUser });
 
-        // Inform the person updated that they were updated, along with their new role and status
-        await sendAccountUpdateEmail(
-            updatedUser.email,
-            updatedUser.name,
-            updatedUser.role || 'User',
-            updatedUser.status,
-        );
-        console.log(`Account status update email sent to ${updatedUser.email}`);
+        // Only send an email if the user's role or status changed
+        if (Object.keys(dataToUpdate).length > 0) {
+            try {
+                await sendAccountUpdateEmail(
+                    updatedUser.email,
+                    updatedUser.name,
+                    updatedUser.role || 'User',
+                    updatedUser.status,
+                );
+                console.log(`Account status update email sent to ${updatedUser.email}`);
+            } catch (emailError) {
+                console.error('Failed to send account update email:', emailError);
+            }
+        }
     } catch (error) {
         console.error('Error updating user:', error);
-        res.status(500).json({ message: 'Error updating user' });
+        if (!res.headersSent) {
+            res.status(500).json({ message: 'Error updating user' });
+        }
     }
 });
 

@@ -8,15 +8,24 @@ type PendingUser = {
     role?: string | null;
     status?: string | null;
     createdAt: string;
+    hasDonorProfile: boolean;
 };
 
 const AdminUserManagement: React.FC = () => {
     const [users, setUsers] = useState<PendingUser[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [selectedRoles, setSelectedRoles] = useState<Record<string, string>>(
-        {},
-    );
+    const [selectedRoles, setSelectedRoles] = useState<Record<string, string>>({});
+    const [donorDetails, setDonorDetails] = useState<
+        Record<
+            string,
+            {
+                firstName: string;
+                lastName: string;
+                zipcode: string;
+            }
+        >
+    >({});
 
     const token = localStorage.getItem('token');
     const base = process.env.REACT_APP_BACKEND_API_BASE_URL || '/';
@@ -54,6 +63,7 @@ const AdminUserManagement: React.FC = () => {
     }, [token, base]);
 
     const updateUser = async (id: string) => {
+        setError(null);
         try {
             const role = selectedRoles[id] || 'DONOR';
             const status =
@@ -62,6 +72,27 @@ const AdminUserManagement: React.FC = () => {
                     : undefined;
             const body: any = { role };
             if (status) body.status = status;
+
+            const user = users.find(u => u.id === id);
+
+            if (role === 'DONOR' && user && !user.hasDonorProfile) {
+                const details = donorDetails[id];
+
+                if (
+                    !details?.firstName.trim() ||
+                    !details?.lastName.trim() ||
+                    !details?.zipcode.trim()
+                ) {
+                    setError('Please fill in the donor name and ZIP code.');
+                    return;
+                }
+
+                body.donorDetails = {
+                    firstName: details.firstName.trim(),
+                    lastName: details.lastName.trim(),
+                    zipcode: details.zipcode.trim(),
+                };
+            }
 
             const res = await fetch(
                 `${base}donor/users/${encodeURIComponent(id)}`,
@@ -97,13 +128,29 @@ const AdminUserManagement: React.FC = () => {
         setSelectedRoles(prev => ({ ...prev, [id]: value }));
     };
 
+    const onDonorDetailsChange = (
+        id: string,
+        field: 'firstName' | 'lastName' | 'zipcode',
+        value: string,
+    ) => {
+        setDonorDetails(prev => ({
+            ...prev,
+            [id]: {
+                firstName: prev[id]?.firstName ?? '',
+                lastName: prev[id]?.lastName ?? '',
+                zipcode: prev[id]?.zipcode ?? '',
+                [field]: value,
+            },
+        }));
+    };
+
     if (loading) return <div>Loading users...</div>;
-    if (error) return <div style={{ color: 'red' }}>{error}</div>;
 
     // Options below should match prisma schema, update here if they are changed (or limit what admin can set)
     return (
         <div style={{ padding: 20, paddingTop: 80 }}>
             <h2>User Management</h2>
+            {error && <div role="alert" style={{ color: 'red' }}>{error}</div>}
             {users.length === 0 ? (
                 <div>No users found</div>
             ) : (
@@ -146,6 +193,49 @@ const AdminUserManagement: React.FC = () => {
                                             TIER_THREE
                                         </option>
                                     </select>
+
+                                    {selectedRoles[u.id] === 'DONOR' &&
+                                        !u.hasDonorProfile && (
+                                            <div>
+                                                <input
+                                                    type="text"
+                                                    placeholder="First Name"
+                                                    value={donorDetails[u.id]?.firstName || ''}
+                                                    onChange={e =>
+                                                        onDonorDetailsChange(
+                                                            u.id,
+                                                            'firstName',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Last Name"
+                                                    value={donorDetails[u.id]?.lastName || ''}
+                                                    onChange={e =>
+                                                        onDonorDetailsChange(
+                                                            u.id,
+                                                            'lastName',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <input
+                                                    type="text"
+                                                    placeholder="ZIP Code"
+                                                    value={donorDetails[u.id]?.zipcode || ''}
+                                                    onChange={e =>
+                                                        onDonorDetailsChange(
+                                                            u.id,
+                                                            'zipcode',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                />
+                                            </div>
+                                        )}
+
                                 </td>
                                 <td>
                                     <select
