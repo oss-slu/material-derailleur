@@ -8,13 +8,13 @@
 
 [Submit this checkpoint index](README.md) with the [one-page context](context.md) and four linked Markdown design artifacts below. Each artifact contains a Mermaid diagram that renders in GitHub's Markdown view.
 
-| Deliverable | Markdown artifact | What it communicates |
-| --- | --- | --- |
-| One-page context | [Context](context.md) | Rationale, trade-offs, development use and current versus proposed state |
-| Current architecture and deployment | [Architecture](01-system-architecture.md) | Browser, React, API modules, PostgreSQL, integrations and local Compose ports |
-| Current data model | [Data model](02-data-model.md) | Six entities, keys, optionality and relationship multiplicities |
-| Current status workflow | [Status workflow](03-current-status-workflow.md) | Submission, immediate item mutation, review, donor timeline and email |
-| Proposed design | [Proposed design](04-proposed-design.md) | Staged changes, atomic approval, retained rejections and retryable notification delivery |
+| Deliverable                         | Markdown artifact                                | What it communicates                                                                     |
+| ----------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| One-page context                    | [Context](context.md)                            | Rationale, trade-offs, development use and current versus proposed state                 |
+| Current architecture and deployment | [Architecture](01-system-architecture.md)        | Browser, React, API modules, PostgreSQL, integrations and local Compose ports            |
+| Current data model                  | [Data model](02-data-model.md)                   | Six entities, keys, optionality and relationship multiplicities                          |
+| Current status workflow             | [Status workflow](03-current-status-workflow.md) | Submission, immediate item mutation, review, donor timeline and email                    |
+| Proposed design                     | [Proposed design](04-proposed-design.md)         | Staged changes, atomic approval, retained rejections and retryable notification delivery |
 
 The Markdown files contain the editable diagram definitions. No online design tool was used. The proposed design has an explicit label and dashed boxes; it describes recommendations for discussion with BWorks. After committing and pushing these files, submit the GitHub URL for this index, or the individual Markdown file URLs. Use the rendered file view so the diagrams are visible.
 
