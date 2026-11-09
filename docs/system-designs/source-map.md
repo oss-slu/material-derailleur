@@ -6,18 +6,18 @@ The checkpoint describes local checkout `3c75abdc`, inspected October 19, 2026. 
 
 **Text equivalent:** A donor, staff member or administrator uses a web browser. The frontend container serves the React application on host/container port 3000. Browser code calls the Express API directly at host port 5050, mapped to container port 5000. The API contains donor, auth/program, item, status review, password reset, barcode and CSV route modules. Guarded endpoints check JWT/rank/account status, but some mutations lack those checks. Routes and services use Prisma's PostgreSQL adapter to read and write the database. PostgreSQL uses port 5432 and the `postgres_data` volume. The backend waits for its database health check. Media uses Azure Blob Storage or a local adapter. Gemini optionally enriches item metadata. Nodemailer sends messages through SMTP. These integration calls currently happen during requests. The diagram summarizes components, not every internal function call or response edge.
 
-| Diagram element / decision | Repository evidence |
-| --- | --- |
-| Route composition and duplicate `/program` / `/api` mount | [server/src/index.ts](../../server/src/index.ts#L69) |
-| Single Prisma client and PostgreSQL driver adapter | [server/src/prismaClient.ts](../../server/src/prismaClient.ts#L1) |
-| Compose services, host/container port mappings, database health dependency and volume | [docker-compose.yml](../../docker-compose.yml#L1) |
-| Frontend executes React routes in the browser | [client-app/src/App.js](../../client-app/src/App.js#L41) |
-| JWT role ranks and account-status checks | [routeProtection.ts](../../server/src/routes/routeProtection.ts#L36) |
-| Missing guards on item detail update/delete, donor edit and program edit | [donatedItemRoutes.ts](../../server/src/routes/donatedItemRoutes.ts#L563), [donorRoutes.ts](../../server/src/routes/donorRoutes.ts#L320), [programRoutes.ts](../../server/src/routes/programRoutes.ts#L209) |
-| Azure/local media upload and image retrieval | [donatedItemService.ts](../../server/src/services/donatedItemService.ts#L12) |
-| Optional first-image analysis during intake; AI failure preserves donation | [donatedItemRoutes.ts](../../server/src/routes/donatedItemRoutes.ts#L318) |
-| Gemini tags stored as `analysisMetadata` JSON | [imageAnalysisService.ts](../../server/src/services/imageAnalysisService.ts#L140) |
-| SMTP messages and image links | [emailService.ts](../../server/src/services/emailService.ts#L9) |
+| Diagram element / decision                                                            | Repository evidence                                                                                                                                                                                         |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Route composition and duplicate `/program` / `/api` mount                             | [server/src/index.ts](../../server/src/index.ts#L69)                                                                                                                                                        |
+| Single Prisma client and PostgreSQL driver adapter                                    | [server/src/prismaClient.ts](../../server/src/prismaClient.ts#L1)                                                                                                                                           |
+| Compose services, host/container port mappings, database health dependency and volume | [docker-compose.yml](../../docker-compose.yml#L1)                                                                                                                                                           |
+| Frontend executes React routes in the browser                                         | [client-app/src/App.js](../../client-app/src/App.js#L41)                                                                                                                                                    |
+| JWT role ranks and account-status checks                                              | [routeProtection.ts](../../server/src/routes/routeProtection.ts#L36)                                                                                                                                        |
+| Missing guards on item detail update/delete, donor edit and program edit              | [donatedItemRoutes.ts](../../server/src/routes/donatedItemRoutes.ts#L563), [donorRoutes.ts](../../server/src/routes/donorRoutes.ts#L320), [programRoutes.ts](../../server/src/routes/programRoutes.ts#L209) |
+| Azure/local media upload and image retrieval                                          | [donatedItemService.ts](../../server/src/services/donatedItemService.ts#L12)                                                                                                                                |
+| Optional first-image analysis during intake; AI failure preserves donation            | [donatedItemRoutes.ts](../../server/src/routes/donatedItemRoutes.ts#L318)                                                                                                                                   |
+| Gemini tags stored as `analysisMetadata` JSON                                         | [imageAnalysisService.ts](../../server/src/services/imageAnalysisService.ts#L140)                                                                                                                           |
+| SMTP messages and image links                                                         | [emailService.ts](../../server/src/services/emailService.ts#L9)                                                                                                                                             |
 
 **Deployment limits and debt:** The diagram uses the committed Compose defaults, excluding local overrides. It is a local development configuration: the frontend uses `npm start`, and the backend uses development migrations/nodemon ([client Dockerfile](../../client-app/Dockerfile#L1), [server Dockerfile](../../server/Dockerfile#L1), [server scripts](../../server/package.json#L6)). There is no evidence here of replication, autoscaling or a verified production topology. The separate [CloudFormation scaffold](../../InfrastructureCode/iac.yaml#L28) has a placeholder AMI and MySQL/S3 definitions; it is not used as evidence of the implemented PostgreSQL/Azure architecture. Local media returns `/uploads/...` URLs, but [index.ts](../../server/src/index.ts#L60) has no corresponding static mount; the media adapter box represents implemented adapter code, not verified end-to-end local image serving.
 
@@ -25,15 +25,15 @@ The checkpoint describes local checkout `3c75abdc`, inspected October 19, 2026. 
 
 **Text equivalent:** Each DonatedItem must reference exactly one Donor. A Donor may own zero or many items. An item may reference zero or one Program; a Program may have zero or many items. Each status and each attribute belongs to exactly one item; an item may have zero or many of each. Deleting an item cascades to its statuses and attributes. User accounts are independent of Donor profiles: there is no database relationship between them. The `/donor/me` handler matches their email addresses in application code. The Markdown diagram uses crow's-foot notation: one required donor, an optional program and zero or more child records. Its dashed associations are non-identifying relationships. The optional SVG uses numeric UML multiplicities: `1` means required, `0..1` optional and `0..*` zero or more. Only representative fields are shown.
 
-| Entity / relationship | Repository evidence |
-| --- | --- |
-| Donor profile, unique email and `emailOptIn` | [schema.prisma](../../server/prisma/schema.prisma#L37) |
-| Program | [schema.prisma](../../server/prisma/schema.prisma#L53) |
-| DonatedItem, required donor and nullable program reference | [schema.prisma](../../server/prisma/schema.prisma#L63) |
-| DonatedItemStatus, image paths, approval and notification-intent fields | [schema.prisma](../../server/prisma/schema.prisma#L95) |
-| User, nullable role and `PENDING` default account status | [schema.prisma](../../server/prisma/schema.prisma#L113) |
-| ItemAttribute, typed nullable value columns and item cascade | [schema.prisma](../../server/prisma/schema.prisma#L127) |
-| Email-based User → Donor lookup | [donorRoutes.ts](../../server/src/routes/donorRoutes.ts#L359) |
+| Entity / relationship                                                   | Repository evidence                                           |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Donor profile, unique email and `emailOptIn`                            | [schema.prisma](../../server/prisma/schema.prisma#L37)        |
+| Program                                                                 | [schema.prisma](../../server/prisma/schema.prisma#L53)        |
+| DonatedItem, required donor and nullable program reference              | [schema.prisma](../../server/prisma/schema.prisma#L63)        |
+| DonatedItemStatus, image paths, approval and notification-intent fields | [schema.prisma](../../server/prisma/schema.prisma#L95)        |
+| User, nullable role and `PENDING` default account status                | [schema.prisma](../../server/prisma/schema.prisma#L113)       |
+| ItemAttribute, typed nullable value columns and item cascade            | [schema.prisma](../../server/prisma/schema.prisma#L127)       |
+| Email-based User → Donor lookup                                         | [donorRoutes.ts](../../server/src/routes/donorRoutes.ts#L359) |
 
 `User.role` values are ADMIN, DONOR, TIER_ONE, TIER_TWO and TIER_THREE; account status is PENDING, ACTIVE or SUSPENDED. These account statuses are separate from donated-item business statuses. `DonatedItem.currentStatus` duplicates the latest operational label; `DonatedItemStatus` holds reviewable history. Item status strings are not an enforced sequential state machine. `donorInformed` is currently populated from the request's `informDonor` flag, so the name does not mean SMTP delivery succeeded. `ItemAttribute` stores structured item properties; AI-generated tags are separate JSON metadata, and their confidence numbers are assigned by parsing heuristics ([imageAnalysisService.ts](../../server/src/services/imageAnalysisService.ts#L107)).
 
@@ -41,19 +41,19 @@ The checkpoint describes local checkout `3c75abdc`, inspected October 19, 2026. 
 
 **Text equivalent:** An authenticated staff member of Tier Three or higher opens an item and submits a status, date, optional photos/attributes and notification request. The API uploads the photos, immediately updates item state and then inserts a history row with `approval=false` in a separate database write. A Tier One reviewer or Admin approves or denies that row. Approval sets `approval=true` and attempts an email if requested; denial deletes the row. Denial does not restore the item's previous status or attributes. The donor's My Donations component displays only approved history/photos, while the `/donor/me` response still includes pending history and hydrated images. Arrows describe processing or visibility relationships, not a mandatory user navigation sequence.
 
-| Workflow step / consequence | Repository evidence |
-| --- | --- |
-| Item detail and status form routes | [item detail route](../../client-app/src/App.js#L94), [status form route](../../client-app/src/App.js#L70) |
-| Status request fields and POST | [AddNewStatus.tsx](../../client-app/src/Components/AddNewStatus.tsx#L432) |
-| Status submission requires rank 1 (Tier Three or higher) | [donatedItemStatusRoutes.ts](../../server/src/routes/donatedItemStatusRoutes.ts#L101) |
-| Immediate state/attribute mutation, followed by pending history insertion | [donatedItemStatusRoutes.ts](../../server/src/routes/donatedItemStatusRoutes.ts#L127) |
-| Review queue requires rank 3 (Tier One or Admin) | [donatedItemStatusRoutes.ts](../../server/src/routes/donatedItemStatusRoutes.ts#L190) |
-| Bulk approval and notification loop | [donatedItemStatusRoutes.ts](../../server/src/routes/donatedItemStatusRoutes.ts#L230) |
-| Single approval and conditional notification | [donatedItemStatusRoutes.ts](../../server/src/routes/donatedItemStatusRoutes.ts#L300) |
-| Denial deletes history only | [donatedItemStatusRoutes.ts](../../server/src/routes/donatedItemStatusRoutes.ts#L347) |
-| Donor API loads statuses without an approval predicate | [donorRoutes.ts](../../server/src/routes/donorRoutes.ts#L359) |
-| Donor UI filters statuses on `approval` | [DonorDonations.tsx](../../client-app/src/Components/DonorDonations.tsx#L170) |
-| Email service catches/logs SMTP failures | [emailService.ts](../../server/src/services/emailService.ts#L245) |
+| Workflow step / consequence                                               | Repository evidence                                                                                        |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Item detail and status form routes                                        | [item detail route](../../client-app/src/App.js#L94), [status form route](../../client-app/src/App.js#L70) |
+| Status request fields and POST                                            | [AddNewStatus.tsx](../../client-app/src/Components/AddNewStatus.tsx#L432)                                  |
+| Status submission requires rank 1 (Tier Three or higher)                  | [donatedItemStatusRoutes.ts](../../server/src/routes/donatedItemStatusRoutes.ts#L101)                      |
+| Immediate state/attribute mutation, followed by pending history insertion | [donatedItemStatusRoutes.ts](../../server/src/routes/donatedItemStatusRoutes.ts#L127)                      |
+| Review queue requires rank 3 (Tier One or Admin)                          | [donatedItemStatusRoutes.ts](../../server/src/routes/donatedItemStatusRoutes.ts#L190)                      |
+| Bulk approval and notification loop                                       | [donatedItemStatusRoutes.ts](../../server/src/routes/donatedItemStatusRoutes.ts#L230)                      |
+| Single approval and conditional notification                              | [donatedItemStatusRoutes.ts](../../server/src/routes/donatedItemStatusRoutes.ts#L300)                      |
+| Denial deletes history only                                               | [donatedItemStatusRoutes.ts](../../server/src/routes/donatedItemStatusRoutes.ts#L347)                      |
+| Donor API loads statuses without an approval predicate                    | [donorRoutes.ts](../../server/src/routes/donorRoutes.ts#L359)                                              |
+| Donor UI filters statuses on `approval`                                   | [DonorDonations.tsx](../../client-app/src/Components/DonorDonations.tsx#L170)                              |
+| Email service catches/logs SMTP failures                                  | [emailService.ts](../../server/src/services/emailService.ts#L245)                                          |
 
 **Scope:** This visual covers status updates, not all intake or registration behavior. Intake creates an initial `Received` history row (default `approval=false`) and attempts a separate donation-receipt email immediately, regardless of review approval ([donatedItemRoutes.ts](../../server/src/routes/donatedItemRoutes.ts#L297)). Intake and update email paths do not currently consult `Donor.emailOptIn`. Status approval is distinct from AI image-tag inspection/reanalysis. The workflow should not be read as claiming all email or all item data is held until approval.
 
@@ -63,13 +63,13 @@ The checkpoint describes local checkout `3c75abdc`, inspected October 19, 2026. 
 
 These are recommendations inferred from the current implementation, not claims about existing code or an approved team roadmap:
 
-| Current gap | Proposed implementation decision |
-| --- | --- |
-| State and pending history written separately; denial loses the review record | Introduce a review record with PENDING/APPROVED/REJECTED state and proposed attributes; apply acceptance with a Prisma transaction. Keep rejection audit data. |
-| Approval may be repeated; notification intent is conflated with delivery | Use a conditional pending-to-approved transition, a unique event key, explicit notification intent and separate delivery/attempt/error fields. This prevents duplicate jobs for a repeated approval; SMTP itself cannot guarantee exactly-once delivery after an ambiguous failure. |
-| SMTP errors are logged rather than propagated; external calls delay handlers | Persist a transactional outbox and run a retrying worker. This adds operational work and eventual email delivery. |
-| Donor visibility relies on component filtering | Filter approval and ownership on the server; return a deliberate empty/error result when an account has no donor profile. |
-| Guard coverage and token validation vary | Centralize default-deny route guards; validate token purpose/role, require an existing ACTIVE database account and use current database permissions. |
+| Current gap                                                                  | Proposed implementation decision                                                                                                                                                                                                                                                    |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| State and pending history written separately; denial loses the review record | Introduce a review record with PENDING/APPROVED/REJECTED state and proposed attributes; apply acceptance with a Prisma transaction. Keep rejection audit data.                                                                                                                      |
+| Approval may be repeated; notification intent is conflated with delivery     | Use a conditional pending-to-approved transition, a unique event key, explicit notification intent and separate delivery/attempt/error fields. This prevents duplicate jobs for a repeated approval; SMTP itself cannot guarantee exactly-once delivery after an ambiguous failure. |
+| SMTP errors are logged rather than propagated; external calls delay handlers | Persist a transactional outbox and run a retrying worker. This adds operational work and eventual email delivery.                                                                                                                                                                   |
+| Donor visibility relies on component filtering                               | Filter approval and ownership on the server; return a deliberate empty/error result when an account has no donor profile.                                                                                                                                                           |
+| Guard coverage and token validation vary                                     | Centralize default-deny route guards; validate token purpose/role, require an existing ACTIVE database account and use current database permissions.                                                                                                                                |
 
 **Decision gate for implementation:** BWorks should confirm whether item state must wait for approval, what existing pending history means after migration, whether rejection should preserve proposed photos/attributes, and how notification requests interact with donor email preferences. The diagrams make those choices reviewable; creating the checkpoint does not implement the recommendations.
 

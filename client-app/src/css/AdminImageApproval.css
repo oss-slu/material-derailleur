@@ -1,12 +1,89 @@
+:root {
+    --card-bg: #f5f5f7;
+    --card-border: #d9d9de;
+    --card-label: #5b6270;
+}
+
+.status-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
 .image-scroll-container {
     display: flex;
+    align-items: center;
+    gap: 10px;
     overflow-x: auto;
-    white-space: wrap;
-    padding: 10px 0;
+    flex: 1 1 200px;
+    min-width: 0;
+    color: var(--card-label);
+    font-style: italic;
 }
 
 .status-image {
-    height: 150px;
+    height: 120px;
     width: auto;
-    margin-right: 10px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    border: 1px solid var(--card-border);
+}
+
+.image-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px 32px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    border-left: 5px solid #00aeff;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+    transition:
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
+}
+
+.image-card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+}
+
+.card-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(190px, 1fr));
+    gap: 8px 32px;
+    flex: 1 1 380px;
+}
+
+.card-fields strong,
+.action-group strong {
+    color: var(--card-label);
+    font-weight: 600;
+}
+
+.card-actions {
+    display: flex;
+    gap: 24px;
+}
+
+.action-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.button-row {
+    display: flex;
+    gap: 5px;
+}
+
+.status-title {
+    display: table; /* shrinks the box to the text width */
+    margin: 0 auto 24px; /* centers it horizontally */
+    padding-bottom: 8px;
+    border-bottom: 4px solid #00aeff;
+    border-radius: 2px;
 }
