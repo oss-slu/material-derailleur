@@ -24,6 +24,7 @@ jobs:
     uses: oss-slu/oss_cicd_automation/.github/workflows/slsa-build-attest.yml@main
     with:
       image-name: ghcr.io/oss-slu/material-derailleur/client
+      harbor-image: registry.oss-slu.online/mdma/client
       context: ./client-app
       file: ./client-app/Dockerfile
       sbom-artifact-name: material-derailleur-client-sbom
@@ -35,6 +36,7 @@ jobs:
     uses: oss-slu/oss_cicd_automation/.github/workflows/slsa-build-attest.yml@main
     with:
       image-name: ghcr.io/oss-slu/material-derailleur/server
+      harbor-image: registry.oss-slu.online/mdma/server
       context: ./server
       file: ./server/Dockerfile
       sbom-artifact-name: material-derailleur-server-sbom
