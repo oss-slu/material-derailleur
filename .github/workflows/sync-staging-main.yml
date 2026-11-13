@@ -32,14 +32,14 @@ jobs:
 
       - name: Reconcile Main into Staging
         run: |
-          echo "=== Fetching all remote branches ==="
-          git fetch origin main:main
+          echo "=== Fetching origin branches ==="
+          git fetch origin main
 
           # Check if staging branch exists remotely
           if git ls-remote --exit-code --heads origin staging > /dev/null 2>&1; then
-            echo "Staging branch exists. Checking out staging..."
-            git checkout staging
-            git pull origin staging
+            echo "Staging branch exists remotely. Fetching and checking out staging..."
+            git fetch origin staging
+            git checkout -B staging origin/staging
 
             echo "Attempting to reconcile main into staging..."
             # Try fast-forward first, fall back to merge commit
@@ -55,7 +55,7 @@ jobs:
             echo "Staging branch updated successfully."
           else
             echo "Staging branch does not exist yet. Creating staging from main..."
-            git checkout -b staging main
+            git checkout -B staging origin/main
             git push -u origin staging
             echo "Staging branch initialized and published."
           fi
