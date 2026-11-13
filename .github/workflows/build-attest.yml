@@ -1,0 +1,42 @@
+name: Build, Attest & Publish (SLSA Level 3)
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+    paths:
+      - 'client-app/**'
+      - 'server/**'
+      - 'package*.json'
+      - '.github/workflows/build-attest.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build-client:
+    name: Client SLSA L3 Build & Attestation
+    uses: oss-slu/oss_cicd_automation/.github/workflows/slsa-build-attest.yml@main
+    with:
+      image-name: ghcr.io/oss-slu/material-derailleur/client
+      context: ./client-app
+      file: ./client-app/Dockerfile
+      sbom-artifact-name: material-derailleur-client-sbom
+      push: true
+    secrets: inherit
+
+  build-server:
+    name: Server SLSA L3 Build & Attestation
+    uses: oss-slu/oss_cicd_automation/.github/workflows/slsa-build-attest.yml@main
+    with:
+      image-name: ghcr.io/oss-slu/material-derailleur/server
+      context: ./server
+      file: ./server/Dockerfile
+      sbom-artifact-name: material-derailleur-server-sbom
+      push: true
+    secrets: inherit
