@@ -6,7 +6,7 @@
     "@types/jest": "^30.0.0",
     "concurrently": "^10.0.6",
     "prettier": "^3.9.10",
-    "serve": "^14.2.6"
+    "serve": "^14.2.7"
   },
   "scripts": {
     "prettier:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,scss,html}\"",
