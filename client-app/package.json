@@ -27,7 +27,7 @@
         "express-validator": "^7.3.2",
         "html2canvas": "^1.4.1",
         "jest": "^30.3.0",
-        "jest-environment-jsdom": "^30.3.0",
+        "jest-environment-jsdom": "^30.5.2",
         "jest-localstorage-mock": "^2.4.26",
         "jsonwebtoken": "^9.0.3",
         "lucide-react": "^1.42.0",
