@@ -8,6 +8,7 @@ import prisma from '../prismaClient';
 import { donatedItemValidator } from '../validators/donatedItemValidator';
 import { validateDonor } from '../services/donorService';
 import { validateProgram } from '../services/programService';
+import { NotFoundError } from '../services/NotFoundError';
 import {
     fetchImagesFromCloud,
     validateDonatedItem,
@@ -245,8 +246,10 @@ router.post(
                 await validateDonor(donorId);
                 await validateProgram(programId);
             } catch (e) {
-                if (e instanceof Error)
-                    return res.status(400).json({ error: e.message });
+                if (e instanceof NotFoundError){
+                    return res.status(404).json({ error: e.message });
+                }
+                throw e;
             }
 
             // date
@@ -368,9 +371,10 @@ router.post(
                     .status(400)
                     .json({ message: 'Attached files should not exceed 5MB.' });
             }
-            if (error instanceof Error) {
-                return res.status(400).json({ error: error.message });
+            if (error instanceof NotFoundError) {
+                return res.status(404).json({ error: error.message });
             }
+
             return res
                 .status(500)
                 .json({ message: 'Error creating donated item' });
@@ -572,9 +576,10 @@ router.put(
                 await validateDonor(donorId);
                 await validateProgram(programId);
             } catch (err) {
-                if (err instanceof Error) {
-                    return res.status(400).json({ error: err.message });
+                if (err instanceof NotFoundError) {
+                    return res.status(404).json({ error: err.message });
                 }
+                throw err;
             }
 
             const updatedItem = await prisma.donatedItem.update({
@@ -593,6 +598,9 @@ router.put(
             console.log('Donated item updated:', updatedItem);
             res.status(200).json(updatedItem);
         } catch (error) {
+            if (error instanceof NotFoundError) {
+                return res.status(404).json({ error: error.message });
+            }
             console.error('Error updating donated item details:', error);
             res.status(500).json({
                 message: 'Error updating donated item details',
