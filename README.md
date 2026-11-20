@@ -4,6 +4,28 @@
 
 The Material Derailleur project by BWorks is designed to streamline the process of managing donations, providing a transparent view into the journey of each donated item. This initiative allows donors to track their contributions from the moment they are donated to their ultimate use, offering them a detailed view of how their items are making a difference. By keeping donors informed about the status and use of their donations, the project fosters a sense of trust and community, encouraging continued support and involvement. The system simplifies the administrative tasks involved in updating and managing donations, making it easier to attract and retain donors who are motivated by seeing the tangible impact of their contributions.
 
+## Tech Stack
+
+- **Client** (`client-app/`): React 19 written in JavaScript and TypeScript, built with Create React App through CRACO, Material UI (MUI) and Tailwind CSS, React Router. Tests run with Jest and React Testing Library.
+- **Server** (`server/`): Node.js with Express 5 and TypeScript. Data access uses Prisma with a PostgreSQL database. Item images are stored in Azure Blob Storage, uploaded images are analysed with Google Gemini, and emails are sent with Nodemailer. Tests run with Jest.
+- **Containers**: Docker Compose runs the database, the server and the client for development (see below). The database image is PostgreSQL 16.
+- **Infrastructure and CI**: `InfrastructureCode/iac.yaml` is an AWS CloudFormation template, and GitHub Actions workflows in `.github/workflows/` build, test, format and publish the code.
+
+## Project Structure
+
+- `client-app/`: the React client. `src/` holds the app (`App.js`, `Components/`, `Modals/`, `constants/`, `css/` and `__tests__/`).
+- `server/`: the Express API.
+  - `src/routes/`: the HTTP routes (donated items, donors, programs, import and export, password reset and so on).
+  - `src/services/`: the logic the routes call (donated items, donors, programs, email, image analysis).
+  - `src/validators/`, `src/schemas/`, `src/configs/`, `src/types/` and `src/modals/`: request validators, schemas, configuration (such as the Azure storage setup), types and the model types (`src/modals/`).
+  - `src/__tests__/` and `src/__mocks__/`: the Jest tests and their mocks.
+  - `prisma/`: the Prisma schema and migrations.
+  - `src/generated/`: the Prisma client generated from `prisma/schema.prisma`. It is generated code, so do not edit it by hand.
+- `docker-files/`: the Dockerfile and the initialisation script for the PostgreSQL database.
+- `InfrastructureCode/`: the CloudFormation template.
+- `docs/`: reports and system designs.
+- `.github/workflows/`: the GitHub Actions workflows.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
