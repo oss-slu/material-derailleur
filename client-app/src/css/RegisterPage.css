@@ -87,6 +87,8 @@
 .circle-wrapper {
     position: relative;
     display: inline-block;
+    width: clamp(200px, 24vw, 340px);
+    height: clamp(200px, 24vw, 340px);
 }
 
 .circle {
@@ -113,6 +115,11 @@
     bottom: 20px;
     right: 50px;
     z-index: 2;
+}
+
+.login-right .circle-wrapper > .circle.small {
+    right: -32px;
+    bottom: -24px;
 }
 
 .circle img {
@@ -198,6 +205,32 @@
     padding: 10px 12px;
     list-style: disc;
     padding-left: 22px;
+}
+
+.register-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+    gap: 12px;
+}
+
+.register-password-help {
+    display: grid;
+    gap: 5px;
+    color: var(--login-muted);
+}
+
+.register-password-help p,
+.register-success {
+    margin: 0;
+    font-size: inherit;
+}
+
+.register-password-help .strength-bar {
+    margin: 0;
+}
+
+.register-success {
+    color: #166534;
 }
 
 /* Responsive */
