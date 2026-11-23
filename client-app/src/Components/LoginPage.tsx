@@ -1,21 +1,11 @@
-import React, {
-    useState,
-    ChangeEvent,
-    FormEvent,
-    useEffect,
-    useRef,
-    useCallback,
-} from 'react';
-import { RefreshCw, Eye, EyeOff } from 'lucide-react';
+import React, { useState, ChangeEvent, FormEvent, useRef } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import LoadingSpinner from './LoadingSpinner';
-import '../css/LoginPage.css';
+import AuthPageLayout from './AuthPageLayout';
 import Popup from './LoginPopup';
 import Captcha from './Captcha';
-
-interface CaptchaHandle {
-    resetCaptcha: () => void;
-}
+import type { CaptchaRef } from './Captcha';
 
 interface Credentials {
     email: string;
@@ -33,7 +23,7 @@ const LoginPage: React.FC = () => {
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const captchaRef = useRef<CaptchaHandle>(null);
+    const captchaRef = useRef<CaptchaRef>(null);
 
     const { usePopup } = Popup;
     const { triggerPopup } = usePopup();
@@ -122,33 +112,34 @@ const LoginPage: React.FC = () => {
     };
 
     return (
-        <div className="login-container">
-            {/* Left side - Form */}
-            <div className="login-left">
-                <h2 className="login-label">Welcome to SLU BWORKS Platform</h2>
-
-                {errorMessage && (
-                    <div className="error-message">{errorMessage}</div>
-                )}
-
-                <form onSubmit={handleSubmit} className="login-form">
-                    <label htmlFor="email">Username/Email</label>
+        <AuthPageLayout
+            eyebrow="Welcome back"
+            title="Welcome to SLU BWORKS Platform"
+            description="Sign in and make a difference."
+        >
+            <form
+                onSubmit={handleSubmit}
+                className="login-page-form"
+                aria-busy={isLoading}
+            >
+                <div className="login-field">
+                    <label htmlFor="email">Email address</label>
                     <input
                         type="email"
-                        className="istyleu"
                         id="email"
                         name="email"
-                        placeholder="Enter your email"
+                        placeholder="you@example.com"
                         value={credentials.email}
                         onChange={onChange}
                         required
                     />
+                </div>
 
+                <div className="login-field">
                     <label htmlFor="password">Password</label>
-                    <div className="password-wrapper">
+                    <div className="login-password">
                         <input
                             type={showPassword ? 'text' : 'password'}
-                            className="istyle"
                             id="password"
                             name="password"
                             placeholder="Enter your password"
@@ -158,7 +149,10 @@ const LoginPage: React.FC = () => {
                         />
                         <button
                             type="button"
-                            className="toggle-password"
+                            className="login-password-toggle"
+                            aria-label={
+                                showPassword ? 'Hide password' : 'Show password'
+                            }
                             onClick={() => setShowPassword(!showPassword)}
                         >
                             {showPassword ? (
@@ -168,47 +162,36 @@ const LoginPage: React.FC = () => {
                             )}
                         </button>
                     </div>
+                </div>
 
-                    {/* Captcha */}
-                    <Captcha
-                        ref={captchaRef}
-                        onCaptchaGenerated={setCaptcha}
-                        onCaptchaChange={setCaptchaValue}
-                    />
+                <Captcha
+                    ref={captchaRef}
+                    onCaptchaGenerated={setCaptcha}
+                    onCaptchaChange={setCaptchaValue}
+                />
 
-                    <div className="buttongroups">
-                        <button
-                            className="btlSuccess"
-                            type="submit"
-                            disabled={!captchaValue || isLoading}
-                        >
-                            {isLoading ? <LoadingSpinner /> : 'Login'}
-                        </button>
-                        <Link to="/forgot-password" className="btn btn-link">
-                            Forgot Password?
-                        </Link>
-                    </div>
-                </form>
+                <Link to="/forgot-password">Forgot password?</Link>
 
-                <div className="register-link">
-                    <p>
-                        New to BWorks? <Link to="/register"> Register</Link>
+                {errorMessage && (
+                    <p className="login-error" role="alert">
+                        {errorMessage}
                     </p>
-                </div>
-            </div>
+                )}
 
-            {/* Right side - Overlapping Circles */}
-            <div className="login-right">
-                <div className="circle-wrapper">
-                    <div className="circle large">
-                        <img src={(process.env.PUBLIC_URL || '') + '/cycle.jpg'} alt="BWorks bike" />
-                    </div>
-                    <div className="circle small">
-                        <img src={(process.env.PUBLIC_URL || '') + '/image.jpg'} alt="BWorks kids" />
-                    </div>
-                </div>
-            </div>
-        </div>
+                <button
+                    className="login-submit"
+                    type="submit"
+                    disabled={!captchaValue || isLoading}
+                    aria-label={isLoading ? 'Signing in' : undefined}
+                >
+                    {isLoading ? <LoadingSpinner /> : 'Sign in'}
+                </button>
+
+                <p className="login-register">
+                    Need an account? <Link to="/register">Register Now</Link>
+                </p>
+            </form>
+        </AuthPageLayout>
     );
 };
 

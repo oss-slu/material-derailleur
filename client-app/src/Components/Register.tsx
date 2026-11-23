@@ -3,6 +3,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import LoadingSpinner from './LoadingSpinner';
 import Captcha from './Captcha';
+import AuthPageLayout from './AuthPageLayout';
 import '../css/RegisterPage.css';
 
 interface Credentials {
@@ -298,192 +299,197 @@ const Register: React.FC = () => {
     };
 
     return (
-        <div className="login-container">
-            {/* Left side - Form */}
-            <div className="login-left">
-                <h2 className="login-label">Welcome to SLU BWORKS Platform</h2>
-
-                {errorMessage && (
-                    <div className="alert alert-danger">{errorMessage}</div>
-                )}
-                {successMessage && (
-                    <div className="alert alert-success">{successMessage}</div>
-                )}
-
-                <form onSubmit={handleSubmit} className="login-form">
-                    <label htmlFor="name">Name</label>
-                    <input
-                        type="text"
-                        className="istyleu"
-                        value={credentials.name}
-                        onChange={handleChange}
-                        id="name"
-                        name="name"
-                        aria-describedby="nameHelp"
-                        autoComplete="name"
-                        placeholder="Enter your name"
-                    />
-
-                    <label htmlFor="email">Email address</label>
-                    <input
-                        type="email"
-                        className="istyleu"
-                        value={credentials.email}
-                        onChange={handleChange}
-                        id="email"
-                        name="email"
-                        aria-describedby="emailHelp"
-                        autoComplete="email"
-                        placeholder="Enter your email"
-                    />
-
-                    <label htmlFor="password">Password</label>
-                    <div className="password-wrapper">
+        <AuthPageLayout
+            eyebrow="Welcome"
+            title={
+                <>
+                    Create Your
+                    <br />
+                    BWORKS account
+                </>
+            }
+            description="Register to get started with the SLU BWORKS Platform."
+        >
+            <form
+                onSubmit={handleSubmit}
+                className="login-page-form"
+                aria-busy={isLoading}
+            >
+                <div className="register-fields">
+                    <div className="login-field">
+                        <label htmlFor="name">Name</label>
                         <input
-                            type={showPassword ? 'text' : 'password'}
-                            className="istyle"
-                            value={credentials.password}
+                            id="name"
+                            name="name"
+                            autoComplete="name"
+                            placeholder="Enter your name"
+                            value={credentials.name}
                             onChange={handleChange}
-                            onFocus={() => {
-                                computeRules(
-                                    credentials.password,
-                                    credentials.name,
-                                    credentials.email,
-                                );
-                                setPasswordStrength(
-                                    computeStrength(credentials.password),
-                                );
-                                setShowGuidelines(true);
-                            }}
-                            onBlur={() => {
-                                if (!credentials.password)
-                                    setShowGuidelines(false);
-                            }}
-                            name="password"
-                            id="password"
-                            autoComplete="new-password"
-                            placeholder="Create a strong password"
                         />
-                        <button
-                            type="button"
-                            aria-label={
-                                showPassword ? 'Hide password' : 'Show password'
-                            }
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="password-toggle"
-                        >
-                            {showPassword ? (
-                                <EyeOff size={18} />
-                            ) : (
-                                <Eye size={18} />
-                            )}
-                        </button>
                     </div>
-
-                    {passwordStrength && (
-                        <div className="strength-row">
-                            <div className="strength-title">Strength:</div>
-                            <div
-                                className="strength-value"
-                                style={{
-                                    color: strengthColor(passwordStrength),
+                    <div className="login-field">
+                        <label htmlFor="email">Email address</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            autoComplete="email"
+                            placeholder="you@example.com"
+                            value={credentials.email}
+                            onChange={handleChange}
+                        />
+                    </div>
+                    <div className="login-field">
+                        <label htmlFor="password">Password</label>
+                        <div className="login-password">
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                id="password"
+                                name="password"
+                                autoComplete="new-password"
+                                placeholder="Create a password"
+                                value={credentials.password}
+                                onChange={handleChange}
+                                onFocus={() => {
+                                    computeRules(
+                                        credentials.password,
+                                        credentials.name,
+                                        credentials.email,
+                                    );
+                                    setPasswordStrength(
+                                        computeStrength(credentials.password),
+                                    );
+                                    setShowGuidelines(true);
                                 }}
+                                onBlur={() => {
+                                    if (!credentials.password)
+                                        setShowGuidelines(false);
+                                }}
+                                aria-describedby={
+                                    showGuidelines
+                                        ? 'password-requirements'
+                                        : undefined
+                                }
+                            />
+                            <button
+                                type="button"
+                                className="login-password-toggle"
+                                aria-label={
+                                    showPassword
+                                        ? 'Hide password'
+                                        : 'Show password'
+                                }
+                                onClick={() => setShowPassword(!showPassword)}
                             >
-                                {passwordStrength.toUpperCase()}
-                            </div>
+                                {showPassword ? (
+                                    <EyeOff size={18} />
+                                ) : (
+                                    <Eye size={18} />
+                                )}
+                            </button>
                         </div>
-                    )}
-
-                    <div className="strength-bar" aria-hidden="true">
-                        <div
-                            className="strength-fill"
-                            style={{
-                                width: strengthWidth(passwordStrength),
-                                background: strengthColor(passwordStrength),
-                            }}
-                        />
                     </div>
-
-                    {showGuidelines && (
-                        <ul className="password-note">
-                            <li>
-                                Use at least{' '}
-                                <strong>{MIN_LEN} characters</strong>.
-                            </li>
-                            <li>
-                                Include an <strong>uppercase</strong>,{' '}
-                                <strong>lowercase</strong>,{' '}
-                                <strong>number</strong>, and{' '}
-                                <strong>special character</strong>.
-                            </li>
-                            <li>
-                                Avoid using your <strong>name</strong> or{' '}
-                                <strong>email</strong>.
-                            </li>
-                        </ul>
-                    )}
-
-                    <label htmlFor="confirm_password">Confirm Password</label>
-                    <div className="password-wrapper">
-                        <input
-                            type={showConfirm ? 'text' : 'password'}
-                            className="istyle"
-                            value={credentials.confirm_password}
-                            onChange={handleChange}
-                            name="confirm_password"
-                            id="confirm_password"
-                            autoComplete="new-password"
-                            placeholder="Re-enter your password"
-                        />
-                        <button
-                            type="button"
-                            aria-label={
-                                showConfirm ? 'Hide password' : 'Show password'
-                            }
-                            onClick={() => setShowConfirm(!showConfirm)}
-                            className="password-toggle"
-                        >
-                            {showConfirm ? (
-                                <EyeOff size={18} />
-                            ) : (
-                                <Eye size={18} />
-                            )}
-                        </button>
-                    </div>
-                    <Captcha
-                        ref={captchaRef}
-                        onCaptchaGenerated={setCaptcha}
-                        onCaptchaChange={setCaptchaValue}
-                    />
-                    <button
-                        type="submit"
-                        className="btlSuccess"
-                        disabled={!captchaValue || isLoading}
-                    >
-                        {isLoading ? <LoadingSpinner /> : 'Register'}
-                    </button>
-
-                    <div className="register-link" style={{ paddingLeft: 0 }}>
-                        <p>
-                            Already have an account?{' '}
-                            <Link to="/login">Login</Link>
-                        </p>
-                    </div>
-                </form>
-            </div>
-
-            {/* Right side - Overlapping Circles */}
-            <div className="login-right">
-                <div className="circle-wrapper">
-                    <div className="circle large">
-                        <img src={(process.env.PUBLIC_URL || '') + '/cycle.jpg'} alt="BWorks bike" />
-                    </div>
-                    <div className="circle small">
-                        <img src={(process.env.PUBLIC_URL || '') + '/image.jpg'} alt="BWorks kids" />
+                    <div className="login-field">
+                        <label htmlFor="confirm_password">
+                            Confirm password
+                        </label>
+                        <div className="login-password">
+                            <input
+                                type={showConfirm ? 'text' : 'password'}
+                                id="confirm_password"
+                                name="confirm_password"
+                                autoComplete="new-password"
+                                placeholder="Re-enter password"
+                                value={credentials.confirm_password}
+                                onChange={handleChange}
+                            />
+                            <button
+                                type="button"
+                                className="login-password-toggle"
+                                aria-label={
+                                    showConfirm
+                                        ? 'Hide confirmed password'
+                                        : 'Show confirmed password'
+                                }
+                                onClick={() => setShowConfirm(!showConfirm)}
+                            >
+                                {showConfirm ? (
+                                    <EyeOff size={18} />
+                                ) : (
+                                    <Eye size={18} />
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+
+                {showGuidelines && (
+                    <div
+                        className="register-password-help"
+                        id="password-requirements"
+                    >
+                        {passwordStrength && (
+                            <>
+                                <p>
+                                    Strength:{' '}
+                                    <strong>{passwordStrength}</strong>
+                                </p>
+                                <div
+                                    className="strength-bar"
+                                    aria-hidden="true"
+                                >
+                                    <div
+                                        className="strength-fill"
+                                        style={{
+                                            width: strengthWidth(
+                                                passwordStrength,
+                                            ),
+                                            background:
+                                                strengthColor(passwordStrength),
+                                        }}
+                                    />
+                                </div>
+                            </>
+                        )}
+                        <p>
+                            Use at least {MIN_LEN} characters with uppercase and
+                            lowercase letters, a number, and a special
+                            character. Avoid using your name or email.
+                        </p>
+                    </div>
+                )}
+
+                <Captcha
+                    ref={captchaRef}
+                    onCaptchaGenerated={setCaptcha}
+                    onCaptchaChange={setCaptchaValue}
+                />
+
+                {errorMessage && (
+                    <p className="login-error" role="alert">
+                        {errorMessage}
+                    </p>
+                )}
+                {successMessage && (
+                    <p className="register-success" role="status">
+                        {successMessage}
+                    </p>
+                )}
+
+                <button
+                    type="submit"
+                    className="login-submit"
+                    disabled={!captchaValue || isLoading}
+                    aria-label={isLoading ? 'Registering' : undefined}
+                >
+                    {isLoading ? <LoadingSpinner /> : 'Register'}
+                </button>
+
+                <p className="login-register">
+                    Already have an account? <Link to="/login">Sign in</Link>
+                </p>
+            </form>
+        </AuthPageLayout>
     );
 };
 
