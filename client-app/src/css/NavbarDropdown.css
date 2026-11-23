@@ -3,16 +3,30 @@
     top: 0;
     left: 0;
     width: 100%;
-    padding-bottom: 5px;
+    padding-bottom: 2px;
     z-index: 1000;
-    background-color: rgb(0, 171, 250); /* Bright blue */
+    background-color: #1a3148; /* Bright blue */
+    border-bottom: 4px solid #1078ef;
+    padding-left: 32px;
+    padding-right: 32px;
+    padding-top: 8px;
 }
 .custom-navbar .nav-link:hover {
     color: white !important;
 }
 
+.navbar-brand {
+    margin-right: 32px;
+    padding: 0;
+}
+
+.navbar-logo {
+    height: 40px;
+    width: auto;
+}
+
 .navbar-collapse {
-    background-color: rgb(0, 171, 250); /* Bright blue */
+    background-color: #1a3148; /* Bright blue */
 }
 
 /* Dropdown container */
@@ -49,21 +63,69 @@
 
 /* Logout button styling to match navbar look */
 .logout-button {
-    background: #ffffff;
-    color: #000000;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    padding: 6px 12px;
+    background: transparent;
+    color: #fff;
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+    padding: 6px 16px;
     border-radius: 8px;
     cursor: pointer;
+    font-family:
+        'Inter',
+        system-ui,
+        -apple-system,
+        'Segoe UI',
+        sans-serif;
     font-weight: 600;
-    box-shadow: 0 4px 10px rgba(16, 24, 40, 0.08);
-    transition: none;
+    /* box-shadow: 0 4px 10px rgba(16, 24, 40, 0.08); */
+    letter-spacing: 0.05em;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease;
 }
 
-/* Disable hover/active visual changes for logout button */
-.logout-button:hover,
+.logout-button:hover {
+    background: #1078ef;
+    border-color: #1078ef;
+}
+
 .logout-button:active {
-    background: #ffffff;
-    transform: none;
-    box-shadow: 0 4px 10px rgba(16, 24, 40, 0.08);
+    background: #0d62c9;
+    border-color: #0d62c9;
+}
+
+.logout-button:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.custom-navbar .nav-link,
+.custom-navbar .navbar-text {
+    color: #fff !important;
+    font-weight: 400 !important;
+    padding-bottom: 4px;
+    border-bottom: 3px solid transparent;
+}
+
+.custom-navbar .nav-link.active,
+.custom-navbar .nav-link:hover,
+.custom-navbar .nav-link:focus-visible,
+.custom-navbar .nav-item.dropdown:hover > .nav-link {
+    color: #fff !important;
+    font-weight: 400 !important;
+    border-bottom-color: #1078ef;
+    padding-top: 0;
+}
+
+.navbar-user {
+    color: #fff;
+    font-family:
+        'Inter',
+        system-ui,
+        -apple-system,
+        'Segoe UI',
+        sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
 }
