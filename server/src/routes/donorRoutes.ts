@@ -247,9 +247,7 @@ router.get('/users', async (req: Request, res: Response) => {
             select: { email: true },
         });
 
-        const donorEmailSet = new Set(
-            donorEmails.map(donor => donor.email),
-        );
+        const donorEmailSet = new Set(donorEmails.map(donor => donor.email));
 
         const usersWithProfiles = users.map(user => ({
             ...user,
@@ -257,7 +255,6 @@ router.get('/users', async (req: Request, res: Response) => {
         }));
 
         res.status(200).json(usersWithProfiles);
-
     } catch (error) {
         console.error('Error fetching users:', error);
         res.status(500).json({ message: 'Error fetching users' });
@@ -309,10 +306,7 @@ router.put('/users/:userId', async (req: Request, res: Response) => {
         const needsDonorCheck =
             role === 'DONOR' || currentUser.role === 'DONOR';
 
-        if (
-            Object.keys(dataToUpdate).length === 0 &&
-            !needsDonorCheck
-        ) {
+        if (Object.keys(dataToUpdate).length === 0 && !needsDonorCheck) {
             return res.status(200).json({
                 message: 'No valid fields to update',
             });
@@ -321,8 +315,7 @@ router.put('/users/:userId', async (req: Request, res: Response) => {
         // Check if a donor profile is needed and validate the required information
         const needsDonorProfile =
             role === 'DONOR' ||
-            (currentUser.role === 'DONOR' &&
-                dataToUpdate.role === undefined);
+            (currentUser.role === 'DONOR' && dataToUpdate.role === undefined);
 
         if (needsDonorProfile) {
             const existingDonor = await prisma.donor.findUnique({
@@ -341,7 +334,8 @@ router.put('/users/:userId', async (req: Request, res: Response) => {
                     !donorDetails.zipcode.trim()
                 ) {
                     return res.status(400).json({
-                        message: 'Donor name and ZIP code must be non-empty strings.',
+                        message:
+                            'Donor name and ZIP code must be non-empty strings.',
                     });
                 }
 
@@ -351,7 +345,8 @@ router.put('/users/:userId', async (req: Request, res: Response) => {
                     donorDetails.zipcode.trim().length > 20
                 ) {
                     return res.status(400).json({
-                        message: 'Donor first and last names must be at most 50 characters each, and ZIP code at most 20 characters.',
+                        message:
+                            'Donor first and last names must be at most 50 characters each, and ZIP code at most 20 characters.',
                     });
                 }
             }
@@ -396,9 +391,14 @@ router.put('/users/:userId', async (req: Request, res: Response) => {
                     updatedUser.role || 'User',
                     updatedUser.status,
                 );
-                console.log(`Account status update email sent to ${updatedUser.email}`);
+                console.log(
+                    `Account status update email sent to ${updatedUser.email}`,
+                );
             } catch (emailError) {
-                console.error('Failed to send account update email:', emailError);
+                console.error(
+                    'Failed to send account update email:',
+                    emailError,
+                );
             }
         }
     } catch (error) {

@@ -33,10 +33,16 @@ const Home: React.FC = () => {
             <div className="login-right">
                 <div className="circle-wrapper">
                     <div className="circle large">
-                        <img src={(process.env.PUBLIC_URL || '') + '/cycle.jpg'} alt="BWorks bike" />
+                        <img
+                            src={(process.env.PUBLIC_URL || '') + '/cycle.jpg'}
+                            alt="BWorks bike"
+                        />
                     </div>
                     <div className="circle small">
-                        <img src={(process.env.PUBLIC_URL || '') + '/image.jpg'} alt="BWorks kids" />
+                        <img
+                            src={(process.env.PUBLIC_URL || '') + '/image.jpg'}
+                            alt="BWorks kids"
+                        />
                     </div>
                 </div>
             </div>

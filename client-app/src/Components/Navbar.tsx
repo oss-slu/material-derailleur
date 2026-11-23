@@ -95,9 +95,11 @@ const Navbar: React.FC = () => {
             <div className="container-fluid">
                 <Link className="navbar-brand" to="/">
                     <img
-                        src={(process.env.PUBLIC_URL || '') + '/bworks.png'}
+                        src={
+                            (process.env.PUBLIC_URL || '') + '/bworks-logo.png'
+                        }
                         alt="Logo"
-                        style={{ width: '100px', height: '50px' }}
+                        className="navbar-logo"
                     />
                 </Link>
                 <button
@@ -608,22 +610,13 @@ const Navbar: React.FC = () => {
                                     }}
                                 >
                                     <Link
-                                        className="nav-link"
+                                        className={`nav-link ${
+                                            location.pathname === '/about' ||
+                                            location.pathname === '/'
+                                                ? 'active'
+                                                : ''
+                                        }`}
                                         to="/about"
-                                        style={{
-                                            fontWeight:
-                                                location.pathname ===
-                                                    '/about' ||
-                                                location.pathname === '/'
-                                                    ? 'bold'
-                                                    : 'normal',
-                                            color:
-                                                location.pathname ===
-                                                    '/about' ||
-                                                location.pathname === '/'
-                                                    ? 'black'
-                                                    : 'inherit',
-                                        }}
                                     >
                                         About
                                     </Link>
@@ -639,18 +632,12 @@ const Navbar: React.FC = () => {
                                     }}
                                 >
                                     <Link
-                                        className="nav-link active"
+                                        className={`nav-link ${
+                                            location.pathname === '/login'
+                                                ? 'active'
+                                                : ''
+                                        }`}
                                         to="/login"
-                                        style={{
-                                            fontWeight:
-                                                location.pathname === '/login'
-                                                    ? 'bold'
-                                                    : 'normal',
-                                            color:
-                                                location.pathname === '/login'
-                                                    ? 'black'
-                                                    : 'inherit',
-                                        }}
                                     >
                                         Login
                                     </Link>
@@ -663,20 +650,12 @@ const Navbar: React.FC = () => {
                                     }}
                                 >
                                     <Link
-                                        className="nav-link active"
+                                        className={`nav-link ${
+                                            location.pathname === '/register'
+                                                ? 'active'
+                                                : ''
+                                        }`}
                                         to="/register"
-                                        style={{
-                                            fontWeight:
-                                                location.pathname ===
-                                                '/register'
-                                                    ? 'bold'
-                                                    : 'normal',
-                                            color:
-                                                location.pathname ===
-                                                '/register'
-                                                    ? 'black'
-                                                    : 'inherit',
-                                        }}
                                     >
                                         Register
                                     </Link>
@@ -689,18 +668,12 @@ const Navbar: React.FC = () => {
                                     }}
                                 >
                                     <Link
-                                        className="nav-link"
+                                        className={`nav-link ${
+                                            location.pathname === '/about'
+                                                ? 'active'
+                                                : ''
+                                        }`}
                                         to="/about"
-                                        style={{
-                                            fontWeight:
-                                                location.pathname === '/about'
-                                                    ? 'bold'
-                                                    : 'normal',
-                                            color:
-                                                location.pathname === '/about'
-                                                    ? 'black'
-                                                    : 'inherit',
-                                        }}
                                     >
                                         About
                                     </Link>
@@ -717,7 +690,7 @@ const Navbar: React.FC = () => {
                             gap: 12,
                         }}
                     >
-                        <div style={{ fontSize: 16 }}>
+                        <div className="navbar-user">
                             {user}
                             {userRole ? ` (${userRole})` : ''}
                             {userStatus ? ` - ${userStatus}` : ''}
