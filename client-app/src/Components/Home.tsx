@@ -1,6 +1,5 @@
 import React from 'react';
-
-// If this ever gets updated to not mimic the about page, please update the code in Navbar.tsx that bolds the about page when directed here
+import { Link } from 'react-router-dom';
 
 const Home: React.FC = () => {
     return (
@@ -28,6 +27,17 @@ const Home: React.FC = () => {
                     tracking donations, and sending donors timely emails. This
                     encourages engagement with donors.
                 </p>
+                <div className="about-auth-actions">
+                    <Link to="/login" className="login-submit">
+                        Sign in
+                    </Link>
+                    <Link
+                        to="/register"
+                        className="login-submit about-register"
+                    >
+                        Register
+                    </Link>
+                </div>
             </div>
             {/* Right side - Overlapping Circles wrapper  */}
             <div className="login-right">

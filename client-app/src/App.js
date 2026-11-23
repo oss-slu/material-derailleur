@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, useParams } from 'react-router-dom';
+import { Navigate, Routes, Route, useMatch, useParams } from 'react-router-dom';
 import Navbar from './Components/Navbar';
 import LoginPage from './Components/LoginPage';
 import Popup from './Components/LoginPopup.tsx';
@@ -36,13 +36,16 @@ function DonatedBarcodePage() {
 }
 
 function App() {
+    const loginMatch = useMatch('/login');
+    const registerMatch = useMatch('/register');
+    const isAuthPage = Boolean(loginMatch || registerMatch);
     const handleAddProgram = formData => {
         console.log('Adding new program:', formData);
     };
 
     return (
         <div
-            className="App"
+            className={isAuthPage ? 'App auth-shell' : 'App'}
             style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -53,9 +56,15 @@ function App() {
         >
             <Popup.PopupProvider>
                 <Navbar />
-                <main style={{ flex: '1 0 auto' }}>
+                <main
+                    className={isAuthPage ? 'auth-main' : undefined}
+                    style={isAuthPage ? undefined : { flex: '1 0 auto' }}
+                >
                     <Routes>
-                        <Route path="/" element={<Home />} />
+                        <Route
+                            path="/"
+                            element={<Navigate to="/about" replace />}
+                        />
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/about" element={<Home />} />
