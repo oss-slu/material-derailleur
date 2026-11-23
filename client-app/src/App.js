@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, useMatch, useParams } from 'react-router-dom';
+import { Navigate, Routes, Route, useMatch, useParams } from 'react-router-dom';
 import Navbar from './Components/Navbar';
 import LoginPage from './Components/LoginPage';
 import Popup from './Components/LoginPopup.tsx';
@@ -61,7 +61,10 @@ function App() {
                     style={isAuthPage ? undefined : { flex: '1 0 auto' }}
                 >
                     <Routes>
-                        <Route path="/" element={<Home />} />
+                        <Route
+                            path="/"
+                            element={<Navigate to="/about" replace />}
+                        />
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/about" element={<Home />} />

@@ -209,6 +209,35 @@
     cursor: not-allowed;
 }
 
+.about-auth-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 24px;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+.about-auth-actions a {
+    min-width: 132px;
+    padding: 0 24px;
+    text-decoration: none;
+}
+
+.about-auth-actions a:focus-visible {
+    outline: 2px solid #247494;
+    outline-offset: 2px;
+}
+
+.about-auth-actions .about-register {
+    border: 1px solid #247494;
+    background: transparent;
+    color: #18354b;
+}
+
+.about-auth-actions .about-register:hover {
+    background: #e7f0f4;
+}
+
 .login-submit .spinner-container {
     margin: 0;
 }
