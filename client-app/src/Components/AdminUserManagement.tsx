@@ -15,7 +15,9 @@ const AdminUserManagement: React.FC = () => {
     const [users, setUsers] = useState<PendingUser[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [selectedRoles, setSelectedRoles] = useState<Record<string, string>>({});
+    const [selectedRoles, setSelectedRoles] = useState<Record<string, string>>(
+        {},
+    );
     const [donorDetails, setDonorDetails] = useState<
         Record<
             string,
@@ -148,124 +150,149 @@ const AdminUserManagement: React.FC = () => {
 
     // Options below should match prisma schema, update here if they are changed (or limit what admin can set)
     return (
-        <div style={{ padding: 20, paddingTop: 80 }}>
-            <h2>User Management</h2>
-            {error && <div role="alert" style={{ color: 'red' }}>{error}</div>}
+        <div className="um-page">
+            <div className="um-header">
+                <h1 className="um-title">User Management</h1>
+                <span className="um-count">{users.length} users</span>
+            </div>
+
+            {error && (
+                <div role="alert" className="um-error">
+                    {error}
+                </div>
+            )}
+
             {users.length === 0 ? (
-                <div>No users found</div>
+                <div className="um-empty">No users found</div>
             ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {users.map(u => (
-                            <tr key={u.id}>
-                                <td>{u.name || '—'}</td>
-                                <td>{u.email}</td>
-                                <td>
-                                    <select
-                                        value={
-                                            selectedRoles[u.id] ||
-                                            u.role ||
-                                            'DONOR'
-                                        }
-                                        onChange={e =>
-                                            onRoleChange(u.id, e.target.value)
-                                        }
-                                    >
-                                        <option value="DONOR">DONOR</option>
-                                        <option value="ADMIN">ADMIN</option>
-                                        <option value="TIER_ONE">
-                                            TIER_ONE
-                                        </option>
-                                        <option value="TIER_TWO">
-                                            TIER_TWO
-                                        </option>
-                                        <option value="TIER_THREE">
-                                            TIER_THREE
-                                        </option>
-                                    </select>
+                <>
+                    <div className="um-columns">
+                        <span>User</span>
+                        <span>Role</span>
+                        <span>Status</span>
+                        <span>Created</span>
+                        <span>Action</span>
+                    </div>
 
-                                    {selectedRoles[u.id] === 'DONOR' &&
-                                        !u.hasDonorProfile && (
-                                            <div>
-                                                <input
-                                                    type="text"
-                                                    placeholder="First Name"
-                                                    value={donorDetails[u.id]?.firstName || ''}
-                                                    onChange={e =>
-                                                        onDonorDetailsChange(
-                                                            u.id,
-                                                            'firstName',
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                />
-                                                <input
-                                                    type="text"
-                                                    placeholder="Last Name"
-                                                    value={donorDetails[u.id]?.lastName || ''}
-                                                    onChange={e =>
-                                                        onDonorDetailsChange(
-                                                            u.id,
-                                                            'lastName',
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                />
-                                                <input
-                                                    type="text"
-                                                    placeholder="ZIP Code"
-                                                    value={donorDetails[u.id]?.zipcode || ''}
-                                                    onChange={e =>
-                                                        onDonorDetailsChange(
-                                                            u.id,
-                                                            'zipcode',
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                />
-                                            </div>
-                                        )}
+                    {users.map(u => (
+                        <div
+                            className="um-card"
+                            data-status={u.status || 'PENDING'}
+                            key={u.id}
+                        >
+                            {/* Column 1: avatar, name, email */}
+                            <div className="um-user">
+                                <div className="um-avatar">
+                                    {(u.name || u.email || '?')
+                                        .charAt(0)
+                                        .toUpperCase()}
+                                </div>
+                                <div>
+                                    <div className="um-name">
+                                        {u.name || '—'}
+                                    </div>
+                                    <div className="um-email">{u.email}</div>
+                                </div>
+                            </div>
 
-                                </td>
-                                <td>
-                                    <select
-                                        value={
-                                            selectedStatus[u.id] ??
-                                            (u.status || 'PENDING')
-                                        }
-                                        onChange={e =>
-                                            onStatusChange(u.id, e.target.value)
-                                        }
-                                    >
-                                        <option value="PENDING">PENDING</option>
-                                        <option value="ACTIVE">ACTIVE</option>
-                                        <option value="SUSPENDED">
-                                            SUSPENDED
-                                        </option>
-                                    </select>
-                                </td>
-                                <td>
-                                    {new Date(u.createdAt).toLocaleString()}
-                                </td>
-                                <td>
-                                    <button onClick={() => updateUser(u.id)}>
-                                        Update
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                            {/* Column 2: role */}
+                            <select
+                                className="um-select"
+                                value={selectedRoles[u.id] || u.role || 'DONOR'}
+                                onChange={e =>
+                                    onRoleChange(u.id, e.target.value)
+                                }
+                            >
+                                <option value="DONOR">DONOR</option>
+                                <option value="ADMIN">ADMIN</option>
+                                <option value="TIER_ONE">TIER_ONE</option>
+                                <option value="TIER_TWO">TIER_TWO</option>
+                                <option value="TIER_THREE">TIER_THREE</option>
+                            </select>
+
+                            {/* Column 3: status */}
+                            <select
+                                className="um-select"
+                                value={
+                                    selectedStatus[u.id] ??
+                                    (u.status || 'PENDING')
+                                }
+                                onChange={e =>
+                                    onStatusChange(u.id, e.target.value)
+                                }
+                            >
+                                <option value="PENDING">PENDING</option>
+                                <option value="ACTIVE">ACTIVE</option>
+                                <option value="SUSPENDED">SUSPENDED</option>
+                            </select>
+
+                            {/* Column 4: created */}
+                            <div className="um-date">
+                                {new Date(u.createdAt).toLocaleString()}
+                            </div>
+
+                            {/* Column 5: action */}
+                            <button
+                                className="um-update"
+                                onClick={() => updateUser(u.id)}
+                            >
+                                Update
+                            </button>
+
+                            {/* Full-width row, only for new DONOR users */}
+                            {selectedRoles[u.id] === 'DONOR' &&
+                                !u.hasDonorProfile && (
+                                    <div className="um-donor">
+                                        <input
+                                            type="text"
+                                            placeholder="First Name"
+                                            value={
+                                                donorDetails[u.id]?.firstName ||
+                                                ''
+                                            }
+                                            onChange={e =>
+                                                onDonorDetailsChange(
+                                                    u.id,
+                                                    'firstName',
+                                                    e.target.value,
+                                                )
+                                            }
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Last Name"
+                                            value={
+                                                donorDetails[u.id]?.lastName ||
+                                                ''
+                                            }
+                                            onChange={e =>
+                                                onDonorDetailsChange(
+                                                    u.id,
+                                                    'lastName',
+                                                    e.target.value,
+                                                )
+                                            }
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="ZIP Code"
+                                            value={
+                                                donorDetails[u.id]?.zipcode ||
+                                                ''
+                                            }
+                                            onChange={e =>
+                                                onDonorDetailsChange(
+                                                    u.id,
+                                                    'zipcode',
+                                                    e.target.value,
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                )}
+                        </div>
+                    ))}
+                </>
             )}
         </div>
     );
